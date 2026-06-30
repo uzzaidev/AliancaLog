@@ -1,0 +1,9 @@
+# Configuração mínima do Supabase CLI para o projeto Aliança Log.
+# Uso (após instalar o CLI: https://supabase.com/docs/guides/cli):
+#   supabase link --project-ref <ref-do-projeto>
+#   supabase db push        # aplica as migrations em supabase/migrations
+project_id = "alianca-log"
+
+[db]
+# Versão do Postgres usada pelo Supabase.
+major_version = 17

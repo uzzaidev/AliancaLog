@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* ─── Design tokens Aliança Log ──────────────────────────────────────────────
+   Tema claro de alto contraste: o app do motorista é usado no celular, ao sol.
+   Tokens viram utilitários do Tailwind v4 (bg-brand, text-ink, border-line...). */
+@theme {
+  --color-brand: #1d4ed8;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+  --color-brand-50: #eff6ff;
+
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-canvas: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-line: #e2e8f0;
+
+  --color-success: #16a34a;
+  --color-success-50: #f0fdf4;
+  --color-danger: #dc2626;
+  --color-danger-50: #fef2f2;
+  --color-warning: #d97706;
+  --color-warning-50: #fffbeb;
+  --color-info: #2563eb;
+  --color-info-50: #eff6ff;
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Alvos de toque confortáveis no app do motorista. */
+.touch-target {
+  min-height: 48px;
+}
