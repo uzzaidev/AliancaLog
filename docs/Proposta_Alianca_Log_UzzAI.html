@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliança Log — Proposta Comercial UzzAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800;900&family=Exo+2:wght@600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#000000;--black-2:#070707;--black-3:#0e0e0e;
+  --card:#101010;--card-2:#161616;
+  --yellow:#19E3C0;--yellow-2:#0E8F8F;--yellow-3:#7FFFE0;--yellow-deep:#0E8F8F;
+  --cyan:#2BA8E0;--cyan-2:#1B6FA0;
+  --white:#F7F7F7;--muted:rgba(255,255,255,.68);--dim:rgba(255,255,255,.42);
+  --line:rgba(255,255,255,.10);--line-y:rgba(25,227,192,.38);--glow:rgba(25,227,192,.26);
+  --green:#2CE07C;--red:#FF5C5C;--blue:#2BA8E0;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-snap-type:y mandatory;overflow-y:scroll;scroll-behavior:smooth;background:var(--black)}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 10%,rgba(25,227,192,.14),transparent 29%),radial-gradient(circle at 82% 80%,rgba(43,168,224,.12),transparent 27%),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px);background-size:auto,auto,92px 92px,92px 92px;z-index:0}
+
+/* NAV */
+nav{height:58px;position:fixed;top:0;left:0;right:0;z-index:80;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(0,0,0,.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-y)}
+.nav-brand{display:flex;align-items:center;gap:12px;font-family:'Poppins',sans-serif;font-weight:800;letter-spacing:.02em;font-size:1.05rem}
+.logo-mark{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#0a0a0a 0 18%,transparent 19%),conic-gradient(from 200deg,var(--cyan),var(--yellow),var(--cyan));box-shadow:0 0 22px var(--glow);position:relative}
+.logo-mark::after{content:"";position:absolute;inset:7px;border-radius:50%;background:#000;box-shadow:inset 0 0 6px rgba(25,227,192,.6)}
+.nav-brand .x{color:var(--yellow);font-family:'Exo 2',sans-serif;font-weight:700;text-shadow:0 0 16px var(--glow)}
+.nav-sub{font-size:.68rem;color:var(--dim);font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-left:1px solid var(--line);padding-left:12px}
+.nav-dots{display:flex;gap:7px;align-items:center}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:.25s;border:none;padding:0}
+.nav-dot.active{background:var(--yellow);transform:scale(1.5);box-shadow:0 0 14px var(--glow)}
+
+/* SLIDE SHELL */
+.slide{min-height:100vh;scroll-snap-align:start;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 6vw 64px;z-index:1}
+.slide::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(25,227,192,.045),transparent 38%,rgba(43,168,224,.03));pointer-events:none}
+.slide-inner{position:relative;z-index:2;width:100%;max-width:1200px}
+.slide-label{position:absolute;top:80px;left:6vw;white-space:nowrap;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.18em;color:#000;background:var(--yellow);border-radius:999px;padding:5px 12px;box-shadow:0 0 24px var(--glow);z-index:3}
+.slide-num{position:absolute;bottom:22px;right:32px;font-size:.7rem;color:rgba(255,255,255,.28);letter-spacing:.12em;z-index:3;font-family:'Fira Code',monospace}
+.footer-note{position:absolute;left:6vw;bottom:22px;font-size:.7rem;color:rgba(255,255,255,.26);z-index:3}
+
+/* INVERTED slides (neon teal/blue field) */
+.slide.invert{background:linear-gradient(150deg,#19E3C0,#2BA8E0 70%,#19E3C0)}
+.slide.invert::after{background:radial-gradient(circle at 80% 20%,rgba(255,255,255,.32),transparent 40%)}
+.slide.invert .slide-label{background:#000;color:var(--yellow)}
+.slide.invert .slide-num{color:rgba(0,0,0,.4)}
+.slide.invert .footer-note{color:rgba(0,0,0,.5)}
+.slide.invert .eyebrow{color:rgba(0,0,0,.6)}
+.slide.invert .title{color:#021510}
+.slide.invert .subtitle{color:rgba(0,0,0,.74)}
+.slide.invert .bigline{background:linear-gradient(90deg,#000,transparent)}
+
+/* TYPE */
+.eyebrow{font-size:.76rem;letter-spacing:.22em;text-transform:uppercase;color:var(--yellow);font-weight:900;margin-bottom:16px}
+.title{font-family:'Poppins',sans-serif;font-size:clamp(2.1rem,5.4vw,4.85rem);line-height:1.03;font-weight:900;letter-spacing:-.05em;color:var(--white);max-width:1100px;text-wrap:balance}
+.title.sm{font-size:clamp(1.8rem,4vw,3.3rem)}
+.title .y{color:var(--yellow);text-shadow:0 0 38px var(--glow)}
+.title .b{color:var(--cyan);text-shadow:0 0 32px rgba(43,168,224,.35)}
+.subtitle{font-size:clamp(1rem,1.5vw,1.32rem);color:var(--muted);max-width:830px;margin-top:22px;text-wrap:pretty}
+.bigline{width:84px;height:5px;background:linear-gradient(90deg,var(--yellow),var(--cyan));border-radius:10px;margin:24px 0}
+.center{text-align:center;margin-left:auto;margin-right:auto}
+.center .bigline{margin-left:auto;margin-right:auto;background:linear-gradient(90deg,transparent,var(--yellow),transparent)}
+.center .subtitle{margin-left:auto;margin-right:auto}
+
+/* BADGES */
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.center .badges{justify-content:center}
+.badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-y);background:rgba(25,227,192,.08);color:var(--yellow-3);font-size:.78rem;font-weight:800;border-radius:999px;padding:7px 13px}
+.badge svg{width:15px;height:15px}
+.badge.blue{border-color:rgba(43,168,224,.4);background:rgba(43,168,224,.1);color:#9fd6f5}
+.badge.dark{background:rgba(255,255,255,.05);border-color:var(--line);color:var(--muted)}
+.badge.green{border-color:rgba(44,224,124,.35);background:rgba(44,224,124,.08);color:var(--green)}
+.invert .badge{border-color:rgba(0,0,0,.28);background:rgba(0,0,0,.1);color:#021510}
+.invert .badge.solid{background:#000;color:var(--yellow);border-color:#000}
+
+/* GRID */
+.grid{display:grid;gap:18px;width:100%}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}.slide{padding:88px 22px 60px}nav{padding:0 16px}.nav-sub{display:none}.slide-label{left:22px}.footer-note{left:22px}}
+
+/* CARDS */
+.card{background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.032));border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 18px 70px rgba(0,0,0,.4)}
+.card.y{border-color:var(--line-y);background:linear-gradient(180deg,rgba(25,227,192,.14),rgba(25,227,192,.035))}
+.card.b{border-color:rgba(43,168,224,.35);background:linear-gradient(180deg,rgba(43,168,224,.14),rgba(43,168,224,.035))}
+.card .icon{color:var(--yellow);margin-bottom:13px;display:flex}
+.card.b .icon{color:var(--cyan)}
+.card-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.1rem;color:var(--white);margin-bottom:8px}
+.card-body{font-size:.92rem;color:var(--muted);text-wrap:pretty}
+.card .tag{display:inline-block;font-size:.66rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--yellow);margin-bottom:10px}
+.micro{font-size:.72rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.12em;font-weight:800;margin-bottom:8px}
+
+/* QUOTE */
+.quote{border-left:5px solid var(--yellow);background:linear-gradient(90deg,rgba(25,227,192,.1),rgba(43,168,224,.04));border-radius:0 16px 16px 0;padding:24px 30px;max-width:940px;font-size:clamp(1.05rem,1.7vw,1.4rem);color:rgba(255,255,255,.86);font-style:italic;line-height:1.4}
+.quote b{color:var(--yellow-3);font-style:normal}
+.quote .who{display:block;font-size:.8rem;font-style:normal;color:var(--dim);margin-top:14px;letter-spacing:.04em}
+
+/* STATS */
+.stats{display:flex;gap:46px;flex-wrap:wrap;align-items:flex-start;margin-top:8px}
+.center .stats{justify-content:center}
+.stat-v{font-family:'Poppins',sans-serif;font-weight:900;font-size:clamp(2.1rem,4vw,3.7rem);line-height:1;color:var(--yellow);letter-spacing:-.04em;text-shadow:0 0 28px var(--glow)}
+.stat-l{font-size:.78rem;color:var(--dim);margin-top:8px;max-width:190px;font-weight:500}
+.invert .stat-v{color:#021510;text-shadow:none}
+.invert .stat-l{color:rgba(0,0,0,.6)}
+
+/* FLOW */
+.flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap}
+.flow-step{flex:1;min-width:160px;border:1px solid var(--line-y);background:rgba(25,227,192,.08);border-radius:16px;padding:16px}
+.flow-step .n{font-family:'Fira Code',monospace;font-size:.68rem;color:var(--cyan);font-weight:600}
+.flow-step strong{display:block;color:var(--yellow);font-family:'Poppins',sans-serif;font-size:.98rem;margin:6px 0 4px}
+.flow-step span{font-size:.78rem;color:var(--muted)}
+.flow-arrow{display:flex;align-items:center;color:var(--cyan);opacity:.7}
+
+/* CHECK LISTS */
+.check{display:flex;gap:11px;align-items:flex-start;margin:11px 0;color:var(--muted);font-size:.94rem;text-wrap:pretty}
+.check svg{color:var(--yellow);width:18px;height:18px;flex:0 0 18px;margin-top:2px}
+.check.x svg{color:var(--red)}
+.check b{color:var(--white)}
+
+/* TABLE */
+.table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.table th,.table td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:.88rem;vertical-align:middle}
+.table th{color:#000;background:var(--yellow);font-weight:900;text-transform:uppercase;letter-spacing:.07em;font-size:.68rem}
+.table td{color:var(--muted)}
+.table tr:last-child td{border-bottom:none}
+.table .white{color:var(--white);font-weight:800}
+.table .money{color:var(--yellow);font-weight:900;font-family:'Poppins',sans-serif;white-space:nowrap}
+
+/* MODULES */
+.mod{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:18px;padding:20px;position:relative}
+.mod .badge-mini{position:absolute;top:16px;right:16px;font-size:.62rem;font-weight:900;letter-spacing:.06em;color:#000;background:var(--yellow);border-radius:6px;padding:3px 7px}
+.mod .icon{color:var(--yellow);margin-bottom:12px;display:flex}
+.mod h4{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.04rem;color:#fff;margin-bottom:6px}
+.mod p{font-size:.85rem;color:var(--muted)}
+
+/* MILESTONE / PAY */
+.ms-list{display:grid;gap:14px;margin-top:8px;width:100%}
+.ms{display:grid;grid-template-columns:46px 1fr auto;gap:18px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:16px;padding:18px 22px}
+.ms.hl{border-color:var(--line-y);background:rgba(25,227,192,.08)}
+.ms .dot{width:46px;height:46px;border-radius:13px;background:var(--yellow);color:#000;font-family:'Poppins',sans-serif;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:.92rem;flex:0 0 46px}
+.ms .dot.ghost{background:rgba(25,227,192,.16);color:var(--yellow);border:1px solid var(--line-y)}
+.ms h4{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.02rem;color:#fff}
+.ms p{font-size:.82rem;color:var(--muted);margin-top:3px}
+.ms .val{font-family:'Poppins',sans-serif;font-weight:900;font-size:1.45rem;color:var(--yellow);white-space:nowrap;text-align:right}
+.ms .val small{display:block;font-size:.62rem;color:var(--dim);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+@media(max-width:600px){.ms{grid-template-columns:40px 1fr;gap:12px}.ms .val{grid-column:2;text-align:left;margin-top:6px}}
+
+/* PRICE HERO (invert) */
+.price-hero{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;width:100%}
+.price-num{font-family:'Poppins',sans-serif;font-weight:900;font-size:clamp(3.4rem,9vw,7.4rem);line-height:.86;letter-spacing:-.06em;color:#021510}
+.price-num small{display:block;font-size:.18em;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,0,0,.55);margin-bottom:10px;font-weight:800}
+.price-side{background:rgba(0,0,0,.92);border-radius:22px;padding:28px;color:#fff}
+.price-side .row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.price-side .row:last-child{border-bottom:none}
+.price-side .row span{color:var(--dim);font-size:.9rem}
+.price-side .row b{color:#fff;font-weight:800}
+.price-side .row .m{color:var(--yellow);font-family:'Poppins',sans-serif;font-weight:900}
+@media(max-width:900px){.price-hero{grid-template-columns:1fr}}
+
+/* PAY OPTIONS */
+.pay-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:8px;width:100%}
+.pay-opt{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:18px;padding:22px;position:relative}
+.pay-opt.best{border-color:var(--line-y);background:rgba(25,227,192,.09);box-shadow:0 0 50px rgba(25,227,192,.12)}
+.pay-opt .rec{position:absolute;top:-11px;left:22px;font-size:.62rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#000;background:var(--yellow);border-radius:6px;padding:4px 9px}
+.pay-opt h4{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.06rem;color:#fff;margin-bottom:4px}
+.pay-opt .pv{font-family:'Poppins',sans-serif;font-weight:900;font-size:1.9rem;color:var(--yellow);letter-spacing:-.03em;margin:10px 0 4px}
+.pay-opt .pd{font-size:.84rem;color:var(--muted)}
+@media(max-width:900px){.pay-grid{grid-template-columns:1fr}}
+
+/* TIMELINE horizontal */
+.rail{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:30px;position:relative;width:100%}
+.rail::before{content:"";position:absolute;left:5%;right:5%;top:21px;height:2px;background:linear-gradient(90deg,var(--yellow),var(--cyan))}
+.rail-step{text-align:center;position:relative;padding:0 6px}
+.rail-step .d{width:42px;height:42px;border-radius:50%;background:var(--yellow);color:#000;font-family:'Poppins',sans-serif;font-weight:900;font-size:.78rem;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 0 20px var(--glow);position:relative;z-index:2}
+.rail-step h5{font-size:.82rem;color:#fff;font-weight:800;margin-bottom:4px;font-family:'Poppins',sans-serif}
+.rail-step p{font-size:.72rem;color:var(--dim)}
+@media(max-width:760px){.rail{grid-template-columns:repeat(2,1fr);gap:20px}.rail::before{display:none}}
+
+/* NEXT STEPS */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:30px;width:100%}
+.step{border:1px solid var(--line-y);background:rgba(25,227,192,.07);border-radius:18px;padding:22px;position:relative}
+.step .sn{font-family:'Poppins',sans-serif;font-weight:900;font-size:2.1rem;color:rgba(25,227,192,.55);line-height:1}
+.step h4{font-family:'Poppins',sans-serif;font-weight:800;color:#fff;font-size:1rem;margin:8px 0 6px}
+.step p{font-size:.83rem;color:var(--muted)}
+@media(max-width:760px){.steps{grid-template-columns:1fr 1fr}}
+
+/* COVER ORB */
+.cover-grid{display:grid;grid-template-columns:1.18fr .82fr;gap:54px;align-items:center;width:100%}
+.cover-grid .title{font-size:clamp(2rem,4.5vw,3.95rem)}
+.cover-grid .subtitle{margin-top:30px}
+.orb{width:min(340px,72vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--yellow) 0 3%,rgba(25,227,192,.22) 4% 36%,rgba(43,168,224,.08) 37% 58%,transparent 59%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 90px rgba(25,227,192,.25);margin-left:auto}
+.orb-inner{font-family:'Poppins',sans-serif;font-size:clamp(2.2rem,5vw,3.6rem);font-weight:900;color:var(--yellow);letter-spacing:-.07em;text-align:center;line-height:.9;text-shadow:0 0 30px var(--glow)}
+.orb-inner span{display:block;color:var(--white);font-size:.26em;letter-spacing:.08em;text-transform:uppercase;margin-top:14px;font-weight:700;text-shadow:none}
+@media(max-width:900px){.cover-grid{grid-template-columns:1fr}.orb{margin:30px auto 0}}
+
+.kbd-hint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:70;display:flex;gap:8px;align-items:center;font-size:.7rem;color:var(--dim);background:rgba(0,0,0,.6);border:1px solid var(--line);border-radius:999px;padding:6px 14px;backdrop-filter:blur(8px);transition:opacity .5s}
+.kbd-hint kbd{font-family:'Fira Code',monospace;background:rgba(255,255,255,.1);border-radius:5px;padding:1px 6px;color:var(--yellow-3)}
+@media(max-width:600px){.kbd-hint{display:none}}
+
+/* ROMANEIO SLIDE */
+.rom-rail{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr auto 1fr;gap:4px;align-items:start;margin-top:28px;width:100%}
+.rom-step{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));border:1px solid var(--line);border-radius:16px;padding:16px 14px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.rom-step-hl{border-color:var(--line-y);background:linear-gradient(180deg,rgba(25,227,192,.12),rgba(25,227,192,.03))}
+.rom-icon{color:var(--yellow);flex:0 0 auto}
+.rom-step-hl .rom-icon{color:var(--yellow)}
+.rom-n{font-family:'Fira Code',monospace;font-size:.6rem;color:var(--cyan);font-weight:700}
+.rom-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:.82rem;color:var(--white);line-height:1.1}
+.rom-body{font-size:.72rem;color:var(--muted);line-height:1.35;text-wrap:pretty}
+.rom-arrow{display:flex;align-items:center;justify-content:center;color:var(--cyan);opacity:.6;padding-top:38px;flex:0 0 auto}
+.nf-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:22px;padding:16px 20px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px}
+.nf-label{font-size:.68rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-right:4px;white-space:nowrap}
+.nf-pill{font-size:.75rem;font-weight:800;border-radius:999px;padding:5px 12px;white-space:nowrap}
+.nf-pill.pend{background:rgba(255,255,255,.08);color:var(--muted);border:1px solid var(--line)}
+.nf-pill.rout{background:rgba(43,168,224,.15);color:#9fd6f5;border:1px solid rgba(43,168,224,.35)}
+.nf-pill.ok{background:rgba(44,224,124,.15);color:var(--green);border:1px solid rgba(44,224,124,.35)}
+.nf-pill.held{background:rgba(242,178,61,.13);color:#f2b23d;border:1px solid rgba(242,178,61,.35)}
+.nf-pill.ref{background:rgba(255,92,92,.13);color:var(--red);border:1px solid rgba(255,92,92,.35)}
+.nf-arr{color:var(--cyan);opacity:.5;display:flex;align-items:center}
+.nf-sep{font-size:.68rem;color:var(--dim)}
+@media(max-width:1100px){.rom-rail{grid-template-columns:1fr auto 1fr;row-gap:14px}.rom-arrow:nth-child(4),.rom-arrow:nth-child(8),.rom-arrow:nth-child(10){display:none}}
+@media(max-width:700px){.rom-rail{grid-template-columns:1fr 1fr;gap:10px}.rom-arrow{display:none!important}.nf-flow{gap:6px}}
+
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="logo-mark"></div>
+    Uzz<span class="x">AI</span>
+    <span class="nav-sub">ALIANÇA LOG</span>
+  </div>
+  <div class="nav-dots" id="navDots"></div>
+</nav>
+
+<div class="kbd-hint" id="kbdHint"><kbd>↑</kbd><kbd>↓</kbd> navegar entre as seções</div>
+
+<!-- 01 — COVER -->
+<section class="slide" id="s0">
+  <span class="slide-label">01 — Proposta Comercial</span>
+  <div class="slide-inner cover-grid">
+    <div>
+      <div class="eyebrow">UzzAI × Rotta Logística</div>
+      <h1 class="title">O canhoto que <span class="y">todo mundo vê</span>, na hora que acontece</h1>
+      <p class="subtitle">Gerência, motoristas e clientes num só sistema — sem planilha, sem WhatsApp, sem ligação pra saber se a entrega chegou.</p>
+      <div class="badges">
+        <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Web responsiva</span>
+        <span class="badge blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Tempo real</span>
+        <span class="badge green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>Funciona offline</span>
+      </div>
+    </div>
+    <div class="orb">
+      <div class="orb-inner">MVP<span>em 3 a 4 semanas</span></div>
+    </div>
+  </div>
+  <span class="footer-note">Aliança Log · Junho 2026</span>
+  <span class="slide-num">01/12</span>
+</section>
+
+<!-- 02 — PROBLEMA -->
+<section class="slide" id="s1">
+  <span class="slide-label">02 — O Ponto de Partida</span>
+  <div class="slide-inner">
+    <div class="eyebrow">O problema</div>
+    <h2 class="title sm">Hoje, a operação roda no <span class="y">improviso</span></h2>
+    <p class="subtitle">Canhoto se perde e não sobra comprovante. Cliente liga pra saber se a entrega chegou. E a gerência só descobre o que aconteceu quando o motorista volta pro escritório, no fim do dia.</p>
+    <div class="stats">
+      <div><div class="stat-v">2.000+</div><div class="stat-l">entregas por mês</div></div>
+      <div><div class="stat-v">16</div><div class="stat-l">entregadores</div></div>
+      <div><div class="stat-v">9</div><div class="stat-l">veículos</div></div>
+      <div><div class="stat-v">~20</div><div class="stat-l">empresas clientes</div></div>
+    </div>
+    <div class="quote" style="margin-top:34px">"Controle dos canhotos em tempo real."<span class="who">— Matheus Rotta, sobre o que é inegociável nesse projeto</span></div>
+  </div>
+  <span class="footer-note">Rotta Logística · Serra Gaúcha</span>
+  <span class="slide-num">02/12</span>
+</section>
+
+<!-- 03 — SOLUÇÃO / 3 PERFIS -->
+<section class="slide" id="s2">
+  <span class="slide-label">03 — A Solução</span>
+  <div class="slide-inner">
+    <div class="eyebrow">Como funciona</div>
+    <h2 class="title sm">Três perfis. <span class="y">Um só sistema.</span> Tudo em <span class="b">tempo real</span>.</h2>
+    <div class="grid g3" style="margin-top:36px">
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="card-title">Gerência</div>
+        <div class="card-body">Vê cada entrega e cada canhoto no instante em que acontecem — visão completa da operação, sem esperar o motorista voltar.</div>
+      </div>
+      <div class="card y">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
+        <div class="card-title">Motorista</div>
+        <div class="card-body">Tira a foto, marca o status, segue o dia. Tudo direto do celular, em poucos toques.</div>
+      </div>
+      <div class="card b">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></div>
+        <div class="card-title">Cliente Final</div>
+        <div class="card-body">Acompanha a própria entrega e acessa o comprovante assim que ele é registrado — sem precisar perguntar.</div>
+      </div>
+    </div>
+    <div class="flow" style="margin-top:26px">
+      <div class="flow-step"><span class="n">01</span><strong>Motorista registra</strong><span>Foto do canhoto + status, direto pelo celular</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="flow-step"><span class="n">02</span><strong>Sistema sincroniza</strong><span>Em segundos, mesmo se o sinal voltar mais tarde</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="flow-step"><span class="n">03</span><strong>Todo mundo vê</strong><span>Gerência e cliente, sem precisar perguntar a ninguém</span></div>
+    </div>
+  </div>
+  <span class="slide-num">03/12</span>
+</section>
+
+<!-- 04 — ROMANEIO DIGITAL -->
+<section class="slide" id="s3r">
+  <span class="slide-label">04 — O Romaneio Digital</span>
+  <div class="slide-inner">
+    <div class="eyebrow">Do Excel ao comprovante</div>
+    <h2 class="title sm">Seis etapas. <span class="y">Um ciclo fechado.</span> Zero papel.</h2>
+    <div class="rom-rail">
+      <div class="rom-step">
+        <div class="rom-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="rom-n">01</div>
+        <div class="rom-title">Importação</div>
+        <div class="rom-body">Gerência sobe o Excel do dia. Sistema cria as NFs automaticamente.</div>
+      </div>
+      <div class="rom-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="rom-step">
+        <div class="rom-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div>
+        <div class="rom-n">02</div>
+        <div class="rom-title">Atribuição</div>
+        <div class="rom-body">Gerência atribui as NFs a um motorista + veículo específico.</div>
+      </div>
+      <div class="rom-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="rom-step rom-step-hl">
+        <div class="rom-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
+        <div class="rom-n">03</div>
+        <div class="rom-title">Motorista confirma</div>
+        <div class="rom-body">Abre o app, vê o romaneio do dia e confirma o recebimento. Responsabilidade registrada.</div>
+      </div>
+      <div class="rom-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="rom-step rom-step-hl">
+        <div class="rom-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <div class="rom-n">04</div>
+        <div class="rom-title">Em campo</div>
+        <div class="rom-body">Para cada NF: tira a foto do canhoto e atualiza o status. Funciona sem sinal.</div>
+      </div>
+      <div class="rom-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="rom-step">
+        <div class="rom-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="rom-n">05</div>
+        <div class="rom-title">Tempo real</div>
+        <div class="rom-body">Gerência e cliente final veem cada NF no instante em que é registrada.</div>
+      </div>
+      <div class="rom-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="rom-step">
+        <div class="rom-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+        <div class="rom-n">06</div>
+        <div class="rom-title">Fechamento</div>
+        <div class="rom-body">Motorista fecha o romaneio. Resumo automático: X entregues, Y ocorrências.</div>
+      </div>
+    </div>
+    <div class="nf-flow">
+      <div class="nf-label">Ciclo de cada NF</div>
+      <div class="nf-pill pend">Pendente</div>
+      <div class="nf-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="nf-pill rout">Em rota</div>
+      <div class="nf-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+      <div class="nf-pill ok">Aceito ✓</div>
+      <div class="nf-sep">ou</div>
+      <div class="nf-pill held">Retido ⚠</div>
+      <div class="nf-sep">ou</div>
+      <div class="nf-pill ref">Recusado ✗</div>
+    </div>
+    <div class="badges" style="margin-top:24px">
+      <span class="badge">Proposta A — etapas 1 a 6 incluídas</span>
+      <span class="badge blue">Proposta B — + ordem automática de paradas por rota</span>
+      <span class="badge green">Offline garantido na etapa 4</span>
+    </div>
+  </div>
+  <span class="footer-note">Cada NF tem histórico completo: atribuição → saída → entrega → foto</span>
+  <span class="slide-num">04/12</span>
+</section>
+
+<!-- 05 — PROPOSTA A -->
+<section class="slide" id="s4">
+  <span class="slide-label">04 — Proposta A · MVP Enxuto</span>
+  <div class="slide-inner">
+    <div class="eyebrow">O essencial, primeiro</div>
+    <h2 class="title sm">A dor mais urgente, resolvida <span class="y">agora</span></h2>
+    <p class="subtitle">Os três perfis acompanhando o ciclo do canhoto em tempo real — com importação de planilha e funcionamento garantido mesmo sem sinal.</p>
+    <div class="grid g3" style="margin-top:30px">
+      <div>
+        <div class="micro">Gerência</div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Painel em tempo real com contadores por status</span></div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Importação de entregas <b>via planilha Excel</b></span></div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Gestão de motoristas e clientes</span></div>
+      </div>
+      <div>
+        <div class="micro">Motorista</div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Lista de entregas do dia, com progresso</span></div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Foto do canhoto + 4 status de entrega</span></div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span><b>Funciona sem sinal</b> — sincroniza depois</span></div>
+      </div>
+      <div>
+        <div class="micro">Cliente Final</div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Acompanhamento em tempo real</span></div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Acesso à foto do canhoto</span></div>
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span>Filtro por status</span></div>
+      </div>
+    </div>
+  </div>
+  <span class="footer-note">Fora desta versão: roteirização GPS, financeiro, dashboards</span>
+  <span class="slide-num">05/12</span>
+</section>
+
+<!-- 05 — PROPOSTA B -->
+<section class="slide" id="s5">
+  <span class="slide-label">06 — Proposta B · MVP Completo</span>
+  <div class="slide-inner">
+    <div class="eyebrow">Quando a operação pedir mais</div>
+    <h2 class="title sm">Tudo do A. Mais <span class="y">inteligência</span> pra escalar.</h2>
+    <div class="grid g4" style="margin-top:30px">
+      <div class="mod">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <h4>Roteirização GPS</h4>
+        <p>Ordem ideal de visita aos endereços, com um toque pra abrir no Google Maps.</p>
+      </div>
+      <div class="mod">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <h4>Financeiro &amp; Rentabilidade</h4>
+        <p>Custo por km, por hora e tarifa cadastrados — lucro ou prejuízo calculado automaticamente.</p>
+      </div>
+      <div class="mod">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+        <h4>KPIs dos Motoristas</h4>
+        <p>Taxa de sucesso, tempo médio entre entregas e ranking de desempenho.</p>
+      </div>
+      <div class="mod">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10h-10z"/></svg></div>
+        <h4>Dashboards &amp; Relatórios</h4>
+        <p>Gráficos da operação e exportação de relatórios filtrados em Excel.</p>
+      </div>
+    </div>
+  </div>
+  <span class="footer-note">Pressupõe a Proposta A já em produção e validada</span>
+  <span class="slide-num">06/12</span>
+</section>
+
+<!-- 06 — POR QUE A MENSALIDADE -->
+<section class="slide" id="s6">
+  <span class="slide-label">07 — Transparência</span>
+  <div class="slide-inner">
+    <div class="eyebrow">De onde vem o custo</div>
+    <h2 class="title sm">Por que existe uma <span class="y">mensalidade</span></h2>
+    <p class="subtitle">O Aliança Log não é um arquivo que se entrega e pronto — é um sistema vivo, rodando todo santo dia, com custo real de manter no ar.</p>
+    <table class="table" style="margin-top:28px">
+      <tr><th>Item</th><th>Proposta A</th><th>Proposta B</th></tr>
+      <tr><td class="white">Hospedagem + banco de dados</td><td>Incluído</td><td>Incluído</td></tr>
+      <tr><td class="white">Armazenamento das fotos</td><td>Incluído</td><td>Incluído</td></tr>
+      <tr><td class="white">Domínio, SSL e monitoramento</td><td>Incluído</td><td>Incluído</td></tr>
+      <tr><td class="white">APIs do Google Maps (rota + distância)</td><td>—</td><td>R$ 130–280/mês, absorvido na mensalidade</td></tr>
+      <tr><td class="white">Suporte e pequenos ajustes</td><td>Incluído</td><td>Incluído, ampliado</td></tr>
+      <tr><td class="white">Mensalidade final</td><td class="money">R$ 300/mês</td><td class="money">R$ 500/mês</td></tr>
+    </table>
+    <p class="subtitle" style="margin-top:18px;font-size:.85rem">Modelo padrão de mercado em software como serviço: manutenção costuma representar 10% a 20% do valor do projeto por ano — os valores aqui estão dentro dessa faixa.</p>
+  </div>
+  <span class="slide-num">07/12</span>
+</section>
+
+<!-- 07 — INVESTIMENTO A -->
+<section class="slide invert" id="s7">
+  <span class="slide-label">08 — Investimento</span>
+  <div class="slide-inner price-hero">
+    <div>
+      <div class="price-num"><small>Proposta A — MVP Enxuto</small>R$ 10.000</div>
+      <p class="subtitle">Pagamento único de desenvolvimento. Valor abaixo da média de mercado (R$ 30.000–60.000), refletindo a parceria e o momento de validação do negócio.</p>
+    </div>
+    <div class="price-side">
+      <div class="row"><span>Forma de pagamento</span><b>50%+50% ou 30%+30%+40%</b></div>
+      <div class="row"><span>Mensalidade</span><b class="m">R$ 300/mês</b></div>
+      <div class="row"><span>Prazo estimado</span><b>3 a 4 semanas</b></div>
+      <div class="row"><span>Alternativa recorrência</span><b class="m">R$ 600/mês + sinal R$ 1.800</b></div>
+    </div>
+  </div>
+  <span class="slide-num">08/12</span>
+</section>
+
+<!-- 08 — INVESTIMENTO B + MODALIDADES -->
+<section class="slide" id="s8">
+  <span class="slide-label">09 — Investimento Proposta B</span>
+  <div class="slide-inner">
+    <div class="eyebrow">Duas formas de fechar</div>
+    <h2 class="title sm">Compra do sistema, ou <span class="y">só recorrência</span></h2>
+    <div class="pay-grid" style="margin-top:30px">
+      <div class="pay-opt best">
+        <span class="rec">Modalidade 1</span>
+        <h4>Compra do Sistema</h4>
+        <div class="pv">R$ 25.000</div>
+        <div class="pd">+ R$ 500/mês de manutenção e hospedagem. Pagamento 40%+30%+30%. Prazo de 2 a 3 meses, a partir da Proposta A validada.</div>
+      </div>
+      <div class="pay-opt">
+        <span class="rec" style="background:#fff">Modalidade 2</span>
+        <h4>Apenas Recorrência</h4>
+        <div class="pv">R$ 1.500/mês</div>
+        <div class="pd">Sinal de adesão de R$ 4.500. Sem pagamento único de desenvolvimento — o investimento fica diluído na mensalidade.</div>
+      </div>
+    </div>
+    <p class="subtitle" style="margin-top:24px;font-size:.85rem">Prazo mínimo de permanência e propriedade do código-fonte na Modalidade 2 serão formalizados no Contrato de Desenvolvimento de Software.</p>
+  </div>
+  <span class="slide-num">09/12</span>
+</section>
+
+<!-- 09 — CRONOGRAMA -->
+<section class="slide" id="s9">
+  <span class="slide-label">10 — Cronograma</span>
+  <div class="slide-inner">
+    <div class="eyebrow">Proposta A</div>
+    <h2 class="title sm">Quatro semanas. <span class="y">Sem mistério.</span></h2>
+    <div class="rail">
+      <div class="rail-step"><div class="d">1</div><h5>Estrutura técnica</h5><p>Autenticação dos 3 perfis e importação de Excel com arquivos reais</p></div>
+      <div class="rail-step"><div class="d">2</div><h5>App do motorista</h5><p>Lista de entregas, câmera e funcionamento offline</p></div>
+      <div class="rail-step"><div class="d">3</div><h5>Painel + portal</h5><p>Gerência em tempo real e portal do cliente final</p></div>
+      <div class="rail-step"><div class="d">4</div><h5>Piloto e go-live</h5><p>Ajustes, treinamento e lançamento com todos ativados</p></div>
+    </div>
+    <p class="subtitle" style="margin-top:30px">Para a Proposta B, o prazo adicional de 2 a 3 meses começa a contar depois da Proposta A em produção e validada no dia a dia.</p>
+  </div>
+  <span class="slide-num">10/12</span>
+</section>
+
+<!-- 10 — O QUE ESTÁ INCLUSO -->
+<section class="slide" id="s10">
+  <span class="slide-label">11 — Além do Sistema</span>
+  <div class="slide-inner">
+    <div class="eyebrow">O que está incluso</div>
+    <h2 class="title sm">Por trás do código: <span class="y">jurídico, treino e suporte</span></h2>
+    <div class="grid g3" style="margin-top:30px">
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/></svg></div>
+        <div class="card-title">Jurídico</div>
+        <div class="card-body">Contrato de Desenvolvimento, NDA e Política de Privacidade em conformidade com a LGPD.</div>
+      </div>
+      <div class="card b">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+        <div class="card-title">Treinamento</div>
+        <div class="card-body">Sessão com coordenadores, guia passo a passo para motoristas e ativação dos clientes.</div>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="card-title">Suporte pós-lançamento</div>
+        <div class="card-body">30 dias de suporte prioritário + 60 dias de correção de bugs sem custo adicional.</div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-num">11/12</span>
+</section>
+
+<!-- 11 — CLOSING CTA -->
+<section class="slide invert" id="s11">
+  <span class="slide-label">12 — Próximo Passo</span>
+  <div class="slide-inner center">
+    <div class="eyebrow">O próximo passo é seu</div>
+    <h2 class="title center">Bora tirar a <span class="y" style="text-shadow:none">Aliança Log</span> do papel?</h2>
+    <p class="subtitle">Validar a proposta, enviar as planilhas e listas de motoristas e clientes, assinar o contrato — e o time já começa.</p>
+    <div class="steps" style="text-align:left">
+      <div class="step"><div class="sn">01</div><h4>Escolher a proposta</h4><p>Proposta A ou B, Modalidade 1 ou 2</p></div>
+      <div class="step"><div class="sn">02</div><h4>Enviar planilhas reais</h4><p>2 a 3 arquivos Excel das empresas clientes</p></div>
+      <div class="step"><div class="sn">03</div><h4>Enviar listas</h4><p>16 motoristas e ~20 empresas clientes</p></div>
+      <div class="step"><div class="sn">04</div><h4>Assinar e iniciar</h4><p>Contrato + sinal e o time já começa</p></div>
+    </div>
+  </div>
+  <span class="footer-note">Vítor Pirolli — UzzAI · Junho de 2026</span>
+  <span class="slide-num">12/12</span>
+</section>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const navDots = document.getElementById('navDots');
+  slides.forEach((s, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => s.scrollIntoView({ behavior: 'smooth' }));
+    navDots.appendChild(dot);
+  });
+  const dots = Array.from(navDots.children);
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const idx = slides.indexOf(e.target);
+        dots.forEach(d => d.classList.remove('active'));
+        if (dots[idx]) dots[idx].classList.add('active');
+      }
+    });
+  }, { threshold: 0.55 });
+  slides.forEach(s => io.observe(s));
+
+  const hint = document.getElementById('kbdHint');
+  let hintHidden = false;
+  function hideHint() { if (!hintHidden) { hint.style.opacity = '0'; hintHidden = true; } }
+  window.addEventListener('wheel', hideHint, { once: true });
+  window.addEventListener('touchstart', hideHint, { once: true });
+
+  document.addEventListener('keydown', (e) => {
+    const current = slides.findIndex(s => {
+      const r = s.getBoundingClientRect();
+      return r.top <= window.innerHeight * 0.5 && r.bottom >= window.innerHeight * 0.5;
+    });
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+      e.preventDefault();
+      hideHint();
+      const next = slides[Math.min(current + 1, slides.length - 1)];
+      next.scrollIntoView({ behavior: 'smooth' });
+    } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      hideHint();
+      const prev = slides[Math.max(current - 1, 0)];
+      prev.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+</script>
+
+</body>
+</html>
