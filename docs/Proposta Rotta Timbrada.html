@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Papel Timbrado Uzz.Ai — Proposta Aliança Log</title>
+   <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&family=Exo+2:wght@400;600&display=swap"
+      rel="stylesheet">
+   <style>
+      /* ============================================================
+         PADRAO OFICIAL Uzz.Ai - NAO ALTERAR ESTA SECAO DE ESTILO.
+         ============================================================ */
+      :root {
+         --mint: #1ABC9C;   /* Verde principal - destaques */
+         --black: #1C1C1C;  /* Preto base - titulos */
+         --silver: #B0B0B0; /* Prata - textos secundarios */
+         --blue: #2E86AB;   /* Azul - apoio/links */
+         --gold: #FFD700;   /* Dourado - uso pontual */
+         --white: #FFFFFF;
+         --bg-page: #F4F4F4;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+         background-color: var(--bg-page);
+         font-family: 'Inter', sans-serif;
+         display: flex;
+         justify-content: center;
+         padding: 40px 20px;
+         color: var(--black);
+      }
+
+      /* Folha A4 */
+      .a4-page {
+         width: 210mm;
+         min-height: 297mm;
+         background: var(--white);
+         box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+         position: relative;
+         padding: 42mm 25mm 35mm 25mm;
+         display: flex;
+         flex-direction: column;
+         overflow: hidden;
+      }
+
+      /* Detalhe lateral mint */
+      .side-accent {
+         position: absolute;
+         top: 0;
+         right: 0;
+         width: 5px;
+         height: 100%;
+         background-color: var(--mint);
+      }
+
+      /* Cabecalho - logo oficial */
+      header {
+         position: absolute;
+         top: 16mm;
+         left: 25mm;
+         right: 25mm;
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         z-index: 10;
+      }
+
+      .uzzai-logo {
+         height: 42px;
+         width: auto;
+         display: block;
+      }
+
+      .header-meta { text-align: right; }
+
+      .header-doc-type {
+         font-family: 'Exo 2', sans-serif;
+         font-size: 11px;
+         text-transform: uppercase;
+         letter-spacing: 3px;
+         color: var(--mint);
+         font-weight: 600;
+      }
+
+      /* Corpo */
+      main {
+         z-index: 5;
+         position: relative;
+         flex-grow: 1;
+      }
+
+      .doc-header {
+         margin-bottom: 45px;
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-end;
+         border-bottom: 2px solid #f0f0f0;
+         padding-bottom: 15px;
+      }
+
+      .doc-info h1 {
+         font-family: 'Poppins', sans-serif;
+         font-size: 22px;
+         font-weight: 700;
+         color: var(--black);
+         margin-bottom: 5px;
+      }
+
+      .doc-id {
+         font-size: 12px;
+         color: var(--blue);
+         font-weight: 600;
+         font-family: 'Exo 2', sans-serif;
+      }
+
+      .doc-date {
+         font-size: 13px;
+         color: var(--silver);
+         white-space: nowrap;
+      }
+
+      .doc-content {
+         font-size: 14px;
+         line-height: 1.6;
+         color: #333;
+      }
+
+      .doc-content p { margin-bottom: 18px; }
+      .doc-content strong { color: var(--black); font-weight: 600; }
+      .doc-content ul { margin: 0 0 20px 20px; }
+      .doc-content li { margin-bottom: 8px; }
+
+      /* Estilos extras para estruturar a proposta comercial */
+      .doc-content h2 { 
+         font-family: 'Poppins', sans-serif; 
+         font-size: 18px; 
+         color: var(--mint); 
+         margin: 40px 0 15px; 
+         border-bottom: 2px solid #f0f0f0; 
+         padding-bottom: 5px; 
+      }
+      .doc-content h3 { 
+         font-family: 'Poppins', sans-serif; 
+         font-size: 15px; 
+         color: var(--black); 
+         margin: 25px 0 10px; 
+         text-transform: uppercase;
+         letter-spacing: 0.5px;
+      }
+      .doc-content h4 {
+         font-family: 'Poppins', sans-serif;
+         font-size: 14px;
+         color: var(--blue);
+         margin: 20px 0 10px;
+      }
+      .doc-content table { 
+         width: 100%; 
+         border-collapse: collapse; 
+         margin: 20px 0; 
+         font-size: 13px; 
+      }
+      .doc-content th, .doc-content td { 
+         border: 1px solid #e0e0e0; 
+         padding: 10px 12px; 
+      }
+      .doc-content th { 
+         background-color: #f8fdfc; 
+         color: var(--black); 
+         font-weight: 600; 
+         text-align: left; 
+      }
+      .doc-content tr:nth-child(even) td { background-color: #fafafa; }
+
+      /* Caixa de destaque */
+      .highlight-box {
+         background: linear-gradient(90deg, #f8fdfc 0%, #ffffff 100%);
+         border-left: 4px solid var(--mint);
+         padding: 22px 25px;
+         margin: 30px 0;
+         border-radius: 0 12px 12px 0;
+         font-style: italic;
+         color: #2a2a2a;
+      }
+
+      /* Assinatura */
+      .signature { margin-top: 50px; }
+      .signature .greet { font-size: 13px; color: var(--silver); margin-bottom: 5px; }
+      .signature .name {
+         font-weight: 700;
+         font-family: 'Poppins', sans-serif;
+         border-bottom: 2px solid var(--mint);
+         display: inline-block;
+         padding-bottom: 5px;
+      }
+
+      /* Rodape */
+      footer {
+         position: absolute;
+         bottom: 15mm;
+         left: 25mm;
+         right: 25mm;
+         border-top: 1px solid #f0f0f0;
+         padding-top: 18px;
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         z-index: 10;
+      }
+
+      .contact-grid { display: grid; grid-template-columns: auto auto; gap: 9px 30px; }
+      .contact-item { font-size: 11px; color: var(--black); display: flex; align-items: center; gap: 8px; }
+      .contact-item svg { color: var(--mint); flex-shrink: 0; }
+      .footer-brand { text-align: right; }
+      .slogan { font-family: 'Exo 2', sans-serif; font-size: 13px; font-weight: 600; color: var(--blue); }
+
+      /* Painel de instrucoes e botao - nao imprime */
+      .no-print {
+         position: fixed;
+         top: 20px;
+         left: 20px;
+         z-index: 1000;
+         max-width: 270px;
+         font-family: 'Inter', sans-serif;
+      }
+
+      .btn {
+         background: var(--black);
+         color: white;
+         padding: 12px 24px;
+         border-radius: 30px;
+         border: none;
+         cursor: pointer;
+         font-family: 'Poppins', sans-serif;
+         font-weight: 600;
+         font-size: 14px;
+         transition: all 0.3s ease;
+         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn:hover { background: var(--mint); transform: translateY(-2px); }
+
+      .help {
+         margin-top: 14px;
+         background: var(--white);
+         border: 1px solid #e6e6e6;
+         border-left: 4px solid var(--mint);
+         border-radius: 10px;
+         padding: 16px 18px;
+         font-size: 12px;
+         line-height: 1.6;
+         color: #444;
+         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      }
+
+      .help h4 { font-family: 'Poppins', sans-serif; font-size: 13px; color: var(--black); margin-bottom: 8px; }
+      .help ol { margin: 0 0 0 16px; }
+      .help li { margin-bottom: 5px; }
+      .help .tip { color: var(--mint); font-weight: 600; }
+
+      @media print {
+         /* Remove o cabecalho/rodape automatico do navegador (URL e numero da pagina) */
+         @page { size: A4; margin: 0; }
+         body { background: white; padding: 0; }
+         
+         /* Ajuste crucial para permitir multiplas paginas sem cortar o texto */
+         .a4-page { 
+            box-shadow: none; 
+            margin: 0; 
+            width: 210mm; 
+            height: max-content; 
+            min-height: 297mm; 
+            display: block; 
+            overflow: visible; 
+            page-break-after: always; 
+            padding-bottom: 40mm; 
+         }
+         
+         .no-print { display: none; }
+         footer { position: fixed; bottom: 15mm; }
+         table, .highlight-box, h2, h3 { page-break-inside: avoid; }
+         h2, h3 { page-break-after: avoid; }
+      }
+   </style>
+</head>
+
+<body>
+
+   <!-- ===== PAINEL DE AJUDA ===== -->
+   <div class="no-print">
+      <button class="btn" onclick="window.print()">Salvar PDF / Imprimir</button>
+      <div class="help">
+         <h4>Como usar este modelo</h4>
+         <ol>
+            <li>Edite <strong>somente</strong> os trechos marcados com [colchetes] dentro do texto.</li>
+            <li>Troque o título, a data, o REF e o corpo da proposta.</li>
+            <li>Clique em <span class="tip">Salvar PDF / Imprimir</span> e escolha o destino <span class="tip">"Salvar como PDF"</span>.</li>
+            <li>Não mexa no logo, cores, rodapé nem no slogan.</li>
+         </ol>
+         <p style="margin-top:10px;font-weight:600;color:#444;">⚠️ Na janela de impressão (Ctrl+P):</p>
+         <ol style="margin-top:4px;">
+            <li>Abra <span class="tip">"Mais configurações"</span>.</li>
+            <li><strong>Desmarque</strong> <span class="tip">"Cabeçalhos e rodapés"</span> (tira o link e o número da página).</li>
+            <li>Em <strong>Margens</strong>, selecione <span class="tip">"Nenhuma"</span>.</li>
+         </ol>
+      </div>
+   </div>
+
+   <div class="a4-page">
+      <div class="side-accent"></div>
+
+      <!-- CABECALHO -->
+      <header>
+         <img class="uzzai-logo" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iXzAyX0hvcml6b250YWxfUHJpbmNpcGFsIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDg5Ny44IDQwNC4wMSI+CiAgPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDMwLjQuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDIuMS40IEJ1aWxkIDIyNikgIC0tPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuc3QwIHsKICAgICAgICBmaWxsOiBub25lOwogICAgICB9CgogICAgICAuc3QxIHsKICAgICAgICBmaWxsOiAjMWMxYzFjOwogICAgICB9CgogICAgICAuc3QyIHsKICAgICAgICBmaWxsOiAjMWFiYzljOwogICAgICB9CgogICAgICAuc3QzIHsKICAgICAgICBmaWxsOiAjMGUwZTBiOwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8Zz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0xODEuOTQsMzg5LjQyYy0xMC4zMS0uNDQtMTkuNTEtMi43Ny0yOS4zMS01LjI1LTE2LjE0LTQuMDktMzAuNjctMTAuNTItNDQuOTUtMTkuMjctOC43Mi01LjM1LTE3LjA0LTEwLjI3LTI0LjU2LTE3LjMxLTcuNTgsNC44My0xNi43NCwzLjQ4LTIyLjk4LTIuMzItNi4xNi01LjczLTcuODUtMTQuNy0zLjYxLTIyLjUzLTE2LjA0LTIwLjI3LTI4LjUzLTQyLjc4LTM2LjAyLTY3LjQ4bC03LjM4LTM1LjU1QzYuNDQsMjE1LjgyLS4wNCwyMDkuOTMsMCwyMDEuNDljLjA0LTcuNzcsNC42MS0xNC42NSwxMi42Mi0xNy41NCwxLjMtMjguMDEsOC4xNS00OC4zNiwxOS44OS03Mi43Myw0LjUzLTkuNDEsOS42Ni0xNy43NiwxNi40NC0yNS44MS01LjIxLTYuODctNS44Ny0xNS43NC0uODUtMjIuMDUsNS44NC03LjM0LDE1LjQ0LTkuNjMsMjQuMjktNC4yNCw3Ljc1LTkuMDIsMTcuMS0xNS4zLDI3LjQ2LTIxLjQ1LDIxLjEtMTIuNTIsNDQuMTMtMjAuNDEsNjkuMzYtMjIuNjhDMTcxLjMsNi4wNSwxNzguNDIuMTUsMTg3LjEzLDBjOC44Ni0uMTUsMTYuNjUsNS40NSwxOS42LDE0Ljc4LDIwLjQ0LDEuMjEsNDAuMDQsNyw1OC45MiwxNS44OSwxNS42OSw3LjQsMjkuOTIsMTYuMSw0Mi4yMSwyOC4zNCw3LjQ1LTQuNzksMTYuNTYtMy4zLDIyLjQ3LDIuODcsNS42Niw1LjksNy4yNywxNC45MSwyLjUzLDIyLjQ0LDIzLjg5LDMwLjY5LDM3LjY2LDYxLjY0LDQzLjE5LDEwMC4zMyw1LjQ0LDIuMzEsMTAuMTMsNi4wOSwxMi4xNiwxMC42Niw0LjUzLDEwLjE4LjIzLDIwLjE5LTEwLjU4LDI1LjM0LTEuMDEsMjUuMzgtNy45NSw1My43NC0yMC4wNCw3NS44LTUuMTMsOS4zNS0xMC4wNiwxOC4zOC0xNy4wNywyNi4yNCw0LjY5LDcuNiwzLjk1LDE2LjQ1LTEuNzQsMjIuMjEtNS41MSw1LjU3LTE0LjA0LDcuNTQtMjEuOTQsMy4wNC0xNS4yNSwxNC43Ny0zMy4zNSwyNS4wNS01My43MSwzMi4yMi0xNC4yOSw1LjAzLTI4LjE0LDguOTYtNDMuNSw5LjMtMS45Myw4Ljc0LTkuMjYsMTQuMzktMTcuNDgsMTQuNTQtOC43OC4xNi0xNi45LTUuMTMtMjAuMi0xNC41OGgtLjAxWk04My45Nyw3MS4zNmw1MC4wNiw0LjgxYzEzLjA3LTE1LjAzLDI0LjQxLTMwLjA4LDM2LjA1LTQ3LjAzLTMzLjU2LDMuNzktNjQuMSwxOC41My04OC41NCw0MC4yMy44NywxLjI1LDEuNTUsMS42MSwyLjQzLDJoMFpNMjk5Ljc3LDcwLjUzYy0yNi4zOC0yNC4zOS01OC4wNC0zNy42LTkxLjk0LTQxLDEyLjU4LDE2Ljc0LDI1LjcxLDMxLjYzLDQwLjIxLDQ2Ljg5bDUxLjczLTUuODlaTTIxMC4zMyw3NS45bDE4LjA5LDEuOTZjLTExLjE3LTEzLjU1LTIxLjk0LTI2LjA4LTMzLjYzLTM4Ljc2LTMuOTEuNjQtNy4xNy44Ni0xMS4yMS0uMTZsLTE4Ljg1LDIzLjI1LTExLjQ1LDE1LjYyYzE4LjU2LTMuMzEsMzcuMjEtNC4wNiw1Ny4wNS0xLjkxaDBaTTkxLjcyLDEyMy45M2M5LjgyLTEyLjI1LDE5LjY0LTIzLjE5LDMxLjY3LTMyLjk0bC0yMC42MS0yLjkyLTIxLjk1LTIuNzFjLTEuOTUsMi42NS0zLjc2LDQuNDEtNi42NSw2LjEzbDQuODksNDYuNDVjMy42Ny01LjI5LDguNDktOC44MiwxMi42NS0xNC4wMmgwWk0zMDYuMzcsMTM3LjE1YzEuMzctMTUuODgsMS44Mi0zMC44MiwyLjA1LTQ2LjQyLTIuNy0xLjQ4LTQuNy0yLjkxLTYuNTktNS42NWwtNDQuNyw1LjYzYzcuMTgsNC43NCwxMy4wMiw5LjY0LDE4Ljg3LDE1LjU5bDMwLjM3LDMwLjg1aDBaTTMwNi45MSwyMDEuOTJjLTIuMTYtNjEuOS01NC4xNy0xMTIuMDktMTE2LjE1LTExMi4wOXMtMTEwLjQ4LDUwLjE4LTEwOC4zMSwxMTIuMDljMi4xNiw2MS45LDU0LjE3LDExMi4wOSwxMTYuMTUsMTEyLjA5czExMC40OC01MC4xOCwxMDguMzEtMTEyLjA5aDBaTTM4LjgsMTc0LjhsMjYuNi0yNi45LTUuNzMtNTMuNTdjLTEwLjI0LDEyLjYzLTE2LjYzLDI2LjA3LTIyLjI1LDQwLjcyLTYuMTQsMTUuODMtOC43NCwzMi40Ni05LjE5LDQ5LjM5bDEwLjU3LTkuNjVoMFpNMzYxLjQ4LDE4NS4zM2MtMi4yLTE4Ljk4LTcuMzItMzYuMzUtMTQuODctNTMuNDMtNi43Mi0xMy4wMS0xNC4wMy0yNS4wOS0yMy41OS0zNi44NmwtMi4wOSw1Mi4wNyw0MC41NCwzOC4yMWgwWk0zNy4wNCwyMDguMDRsMzkuNzksMzguMzNjLjY0LTIuMDYuMTQtNC4xNS0uNjItNi4zOC04LjY0LTI1LjU4LTkuNDEtNTIuMTgtMy4xMi03OC4zOWwtMTcuMDUsMTcuOTJjLTYuNDgsNi44MS0xMy40OSwxMi43My0xOS42NiwxOS41OSwxLjQ2LDMuMjEsMS4xLDUuODguNjYsOC45NGgwWk0zMTUuMywxNjIuOTJjLS45NC0uNy0xLjU1LjUzLS43OSwxLjA0bC43OS0xLjA0Wk0zMTUuNjYsMTYzLjM1bC0xLjE0Ljg5YzcuMjgsMjMuMTEsNy41Myw1MS40NSwyLjEyLDc1LjIxLS41NSwyLjQyLS44Myw0LjcxLS44NCw3LjQzbDM2Ljk3LTM5LjJjLTEuNDctMy41NS0uOTItNi4zNi0uMjMtOS42M2wtMzYuODctMzQuNzFoMFpNMzMwLjM4LDMxMi4zNWM4Ljc2LTkuNzEsMTMuNjYtMTkuNTcsMTguMjItMzAuNDgsOC43NC0xOS43NCwxMy44NS00MC41LDE0LjIzLTYyLjk1bC0xNS43NSwxNi44LTIxLjk3LDIzLjgsNS4yNyw1Mi44M2gwWk02Ny4zLDMxMi44NWMxLjEzLTE4Ljk0LDEuNjYtMzYuOTEsMS42NC01NS4xMmwtNDAuNTMtMzguMDNjMS42MiwxNy43Myw1LjA3LDM0LjIsMTIuMzIsNDkuOTksNi44LDE1LjYyLDE0LjkxLDI5Ljc0LDI2LjU3LDQzLjE2Wk0xMzIuNzIsMzE2LjE3Yy05Ljk1LTguMDgtMTcuOTgtMTcuMDctMjYuOTEtMjUuNzhsLTIyLjQ1LTIxLjktMS44MSw0Ni43MWMzLjEsMS43Miw1LjQzLDMuNCw3LjUyLDYuNTcsMTQuNjEtMS41LDI4LjczLTIuNiw0My42NS01LjZaTTMwOC4wOCwzMjEuOTRjMS43LTQuMDQsNC4yOC01LjIsNy4zMy02LjYybC0xLjYxLTE5LjctMy4xNS0yNy4zNC0yMC44NywyMi40MWMtNy43Myw5LjA4LTE1LjU3LDE3LjE1LTI1LjAxLDI1Ljc1bDQzLjMyLDUuNTFoLS4wMVpNMjA2LjAxLDM2NS45N2MxMC4zOC0xMi45OCwyMC45LTI0LjgyLDMwLjM5LTM4Ljg0LTI1LjMyLDQuNDYtNDkuMzYsNC43Ni03NC43OC0uMDRsMzMuNjQsMzguODUsMTAuNzUuMDNaTTE4My4yNiwzNzUuNjZjLTEyLjQyLTE2LjU4LTI1LjQxLTMxLjE4LTM5LjMtNDUuOGwtNTIuODQsNi41N2MyNi43NCwyMi4yNSw1OC4wNywzNS4wNyw5Mi4xMywzOS4yM2gwWk0yNjguOTYsMzYyLjI1YzE0LjI3LTYuODYsMjcuNTQtMTQuMzMsMzcuNzktMjYuMzRsLTUyLjY5LTYuMjJjLTEyLjMxLDE1LjA0LTI0LjIsMjkuNC0zNS40Myw0NS45MiwxOC4zMi0xLjg3LDM0LjE4LTYuNyw1MC4zMy0xMy4zNmgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTMwNi45MSwyMDEuOTJjMi4xNiw2MS45LTQ2LjMzLDExMi4wOS0xMDguMzEsMTEyLjA5cy0xMTMuOTktNTAuMTgtMTE2LjE1LTExMi4wOWMtMi4xNi02MS45LDQ2LjMzLTExMi4wOSwxMDguMzEtMTEyLjA5czExMy45OSw1MC4xOCwxMTYuMTUsMTEyLjA5aDBaTTI4Mi40NiwyMDIuMTFjLTEuNjktNDguNC00Mi4zNS04Ny42NC05MC44Mi04Ny42NHMtODYuMzgsMzkuMjQtODQuNjksODcuNjRjMS42OSw0OC40LDQyLjM1LDg3LjY0LDkwLjgyLDg3LjY0czg2LjM4LTM5LjI0LDg0LjY5LTg3LjY0WiIvPgogICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTI5OS43Nyw3MC41M2wtNTEuNzMsNS44OWMtMTQuNS0xNS4yNi0yNy42My0zMC4xNS00MC4yMS00Ni44OSwzMy45MSwzLjQsNjUuNTYsMTYuNjIsOTEuOTQsNDFaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODMuOTcsNzEuMzZjLS44OC0uMzktMS41NS0uNzUtMi40My0yLDI0LjQ0LTIxLjcsNTQuOTgtMzYuNDQsODguNTQtNDAuMjMtMTEuNjQsMTYuOTUtMjIuOTksMzIuMDEtMzYuMDUsNDcuMDNsLTUwLjA2LTQuODFoMFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0yNjguOTYsMzYyLjI1Yy0xNi4xNSw2LjY2LTMyLjAxLDExLjQ5LTUwLjMzLDEzLjM2LDExLjIzLTE2LjUyLDIzLjEyLTMwLjg4LDM1LjQzLTQ1LjkybDUyLjY5LDYuMjJjLTEwLjI2LDEyLjAyLTIzLjUzLDE5LjQ4LTM3Ljc5LDI2LjM0WiIvPgogICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTE4My4yNiwzNzUuNjZjLTM0LjA3LTQuMTYtNjUuMzktMTYuOTgtOTIuMTMtMzkuMjNsNTIuODQtNi41N2MxMy44OSwxNC42MiwyNi44OCwyOS4yMiwzOS4zLDQ1LjhoLS4wMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik02Ny4zLDMxMi44NWMtMTEuNjYtMTMuNDMtMTkuNzgtMjcuNTQtMjYuNTctNDMuMTYtNy4yNS0xNS43OS0xMC43LTMyLjI3LTEyLjMyLTQ5Ljk5bDQwLjUzLDM4LjAzYy4wMiwxOC4yMS0uNTEsMzYuMTgtMS42NCw1NS4xMmgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTMzMC4zOCwzMTIuMzVsLTUuMjctNTIuODMsMjEuOTctMjMuOCwxNS43NS0xNi44Yy0uMzksMjIuNDQtNS40OSw0My4yMS0xNC4yMyw2Mi45NS00LjU2LDEwLjkxLTkuNDUsMjAuNzYtMTguMjIsMzAuNDhoMFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0zOC44LDE3NC44bC0xMC41Nyw5LjY1Yy40NS0xNi45MywzLjA1LTMzLjU3LDkuMTktNDkuMzksNS42MS0xNC42NSwxMi4wMS0yOC4wOSwyMi4yNS00MC43Mmw1LjczLDUzLjU3LTI2LjYsMjYuOWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2MS40OCwxODUuMzNsLTQwLjU0LTM4LjIxLDIuMDktNTIuMDdjOS41NiwxMS43NywxNi44NywyMy44NCwyMy41OSwzNi44Niw3LjU1LDE3LjA4LDEyLjY3LDM0LjQ0LDE0Ljg3LDUzLjQzaDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjEwLjMzLDc1LjljLTE5Ljg0LTIuMTUtMzguNDktMS40LTU3LjA1LDEuOTFsMTEuNDUtMTUuNjIsMTguODUtMjMuMjVjNC4wNCwxLjAyLDcuMy44LDExLjIxLjE2LDExLjY5LDEyLjY4LDIyLjQ2LDI1LjIxLDMzLjYzLDM4Ljc2bC0xOC4wOS0xLjk2aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjA2LjAxLDM2NS45N2wtMTAuNzUtLjAzLTMzLjY0LTM4Ljg1YzI1LjQyLDQuODEsNDkuNDYsNC41LDc0Ljc4LjA0LTkuNDgsMTQuMDEtMjAuMDEsMjUuODYtMzAuMzksMzguODRaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzcuMDQsMjA4LjA0Yy40NC0zLjA2LjgtNS43My0uNjYtOC45NCw2LjE3LTYuODYsMTMuMTgtMTIuNzgsMTkuNjYtMTkuNTlsMTcuMDUtMTcuOTJjLTYuMjksMjYuMjEtNS41Miw1Mi44MiwzLjEyLDc4LjM5Ljc1LDIuMjMsMS4yNSw0LjMyLjYyLDYuMzhsLTM5Ljc5LTM4LjMzaDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTMyLjcyLDMxNi4xN2MtMTQuOTIsMy0yOS4wNCw0LjExLTQzLjY1LDUuNi0yLjA5LTMuMTctNC40Mi00Ljg1LTcuNTItNi41N2wxLjgxLTQ2LjcxLDIyLjQ1LDIxLjljOC45Myw4LjcxLDE2Ljk1LDE3LjY5LDI2LjkxLDI1Ljc4WiIvPgogICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTMwOC4wOCwzMjEuOTRsLTQzLjMyLTUuNTFjOS40NS04LjYsMTcuMjgtMTYuNjgsMjUuMDEtMjUuNzVsMjAuODctMjIuNDEsMy4xNSwyNy4zNCwxLjYxLDE5LjdjLTMuMDUsMS40Mi01LjYzLDIuNTktNy4zMyw2LjYyaC4wMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0zMDYuMzcsMTM3LjE1bC0zMC4zNy0zMC44NWMtNS44NS01Ljk1LTExLjY5LTEwLjg0LTE4Ljg3LTE1LjU5bDQ0LjctNS42M2MxLjg5LDIuNzQsMy44OSw0LjE4LDYuNTksNS42NS0uMjQsMTUuNTktLjY5LDMwLjU0LTIuMDUsNDYuNDJoMFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik05MS43MiwxMjMuOTNjLTQuMTcsNS4yLTguOTgsOC43My0xMi42NSwxNC4wMmwtNC44OS00Ni40NWMyLjg5LTEuNzIsNC43LTMuNDksNi42NS02LjEzbDIxLjk1LDIuNzEsMjAuNjEsMi45MmMtMTIuMDMsOS43NS0yMS44NSwyMC42OS0zMS42NywzMi45NGgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTMxNC41MSwxNjMuOTdjLS43Ni0uNTItLjE1LTEuNzQuNzktMS4wNC4wNS4xLjIxLjI3LjM3LjQzbDM2Ljg3LDM0LjcxYy0uNjgsMy4yNy0xLjI0LDYuMDcuMjMsOS42M2wtMzYuOTcsMzkuMmMwLTIuNzIuMjktNS4wMS44NC03LjQzLDUuNDEtMjMuNzYsNS4xNi01Mi4xLTIuMTItNzUuMjFsLS4wMi0uMjd2LS4wMloiLz4KICAgIDxnPgogICAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMjgyLjQ2LDIwMi4xMWMxLjY5LDQ4LjQtMzYuMjIsODcuNjQtODQuNjksODcuNjRzLTg5LjEyLTM5LjI0LTkwLjgyLTg3LjY0Yy0xLjY5LTQ4LjQsMzYuMjItODcuNjQsODQuNjktODcuNjRzODkuMTIsMzkuMjQsOTAuODIsODcuNjRaTTI0My4wNywxNzcuMTdjLS4zNS05LjktOC42Ni0xNy45Mi0xOC41Ny0xNy45MnMtMTcuNjYsOC4wMi0xNy4zMiwxNy45MmMuMzUsOS45LDguNjYsMTcuOTIsMTguNTcsMTcuOTJzMTcuNjYtOC4wMiwxNy4zMi0xNy45MloiLz4KICAgICAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTI0My4wNywxNzcuMTdjLjM1LDkuOS03LjQxLDE3LjkyLTE3LjMyLDE3Ljkycy0xOC4yMi04LjAyLTE4LjU3LTE3LjkyLDcuNDEtMTcuOTIsMTcuMzItMTcuOTIsMTguMjIsOC4wMiwxOC41NywxNy45MloiLz4KICAgIDwvZz4KICA8L2c+CiAgPGc+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNNDM3LjY1LDE1NC4yOHY1My43OWMwLDQuNC45Nyw3Ljg5LDIuOTIsMTAuNDUsMS45NCwyLjU2LDUuMDgsMy44NCw5LjQyLDMuODRzNy41NS0xLjI4LDkuNjMtMy44NGMyLjA4LTIuNTYsMy4xMi02LjA0LDMuMTItMTAuNDV2LTUzLjc5aDI5Ljk3djUzLjc5YzAsOS4wOC0xLjksMTYuODMtNS43LDIzLjI2LTMuOCw2LjQzLTksMTEuMjYtMTUuNiwxNC40OS02LjYsMy4yNC0xMy45Nyw0Ljg1LTIyLjExLDQuODVzLTE1LjM1LTEuNjItMjEuNjMtNC44NWMtNi4yOS0zLjI0LTExLjE5LTguMDQtMTQuNzEtMTQuNDMtMy41My02LjM4LTUuMjktMTQuMTYtNS4yOS0yMy4zMnYtNTMuNzloMjkuOThaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNNTM5LjA5LDIyNS44N2gzOC41MnYyMy44NmgtNzEuODh2LTIyLjUxbDM3Ljk3LTQ5LjIxaC0zNy45N3YtMjMuNzNoNzEuODh2MjIuNTFsLTM4LjUyLDQ5LjA3aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNNjI0LjUzLDIyNS44N2gzOC41MnYyMy44NmgtNzEuODh2LTIyLjUxbDM3Ljk3LTQ5LjIxaC0zNy45N3YtMjMuNzNoNzEuODh2MjIuNTFsLTM4LjUyLDQ5LjA3aDBaIi8+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik02ODQuNzUsMjM0LjE4YzEuNjEsMCwyLjcuMzUsMy4yOCwxLjA2cy43OCwxLjguNiwzLjI5bC0uOTQsNy4yNWMtLjE4LDEuMzItLjYyLDIuMzEtMS4zNSwyLjk2cy0xLjc5Ljk5LTMuMjEuOTloLTMuNzZjLTMuMDQsMC00LjM4LTEuNDUtNC4wMy00LjM1bDEuMDctNy4zOGMuMzYtMi41NSwxLjg4LTMuODIsNC41Ni0zLjgyaDMuNzdaIi8+CiAgPGc+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNzQ3LjY0LDE1My4xM2MxLjIxLDAsMi4yOS4zNSwzLjIyLDEuMDUuOTMuNywxLjU5LDEuNjEsMS45NiwyLjczbDMwLjUyLDkyLjgyaC0xNC41NmwtMjQuMDgtNzcuN2MtLjM3LTEuMzEtLjc1LTIuNjgtMS4xMi00LjEzLS4zNy0xLjQ1LS43NS0yLjc4LTEuMTItMy45OWgtMy45MmMtLjM3LDEuMjEtLjc1LDIuNTQtMS4xMiwzLjk5LS4zNywxLjQ1LS43OSwyLjgyLTEuMjYsNC4xM2wtMjQuMDgsNzcuN2gtMTQuNDJsMzAuNTItOTIuODJjLjM3LTEuMTIsMS4wMy0yLjAzLDEuOTYtMi43My45My0uNywyLjAxLTEuMDUsMy4yMi0xLjA1aDE0LjI4Wk03NjUsMjA4LjcxdjExLjYyaC00OS4yOHYtMTEuNjJoNDkuMjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNODA1LjMyLDE1Mi4xNWMyLjcxLDAsNC4wNiwxLjM1LDQuMDYsNC4wNnY3Ljk4YzAsMi43MS0xLjM1LDQuMDYtNC4wNi00LjA2aC02LjNjLTIuNzEsMC00LjA2LTEuMzUtNC4wNi00LjA2di03Ljk4YzAtMi43MSwxLjM1LTQuMDYsNC4wNi00LjA2aDYuM1pNODA4LjgyLDE4MS40MXY2OC4zMmgtMTMuM3YtNjguMzJoMTMuM1oiLz4KICA8L2c+Cjwvc3ZnPg==" alt="Uzz.Ai">
+         <div class="header-meta">
+            <div class="header-doc-type">PROPOSTA COMERCIAL</div>
+         </div>
+      </header>
+
+      <main>
+         <div class="doc-header">
+            <div class="doc-info">
+               <h1>Sistema de Gestão de Entregas em Tempo Real</h1>
+               <div class="doc-id">REF: ALIANÇA LOG</div>
+            </div>
+            <div class="doc-date">Junho de 2026</div>
+         </div>
+
+         <div class="doc-content">
+            <p>Preparado para <strong>Rotta Logística — Matheus Rotta</strong></p>
+
+            <h2>Parte 1 — O Contexto Atual da Rotta Logística</h2>
+            
+            <h3>QUEM É A ROTTA LOGÍSTICA</h3>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Dado Operacional</th>
+                     <th>Valor</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Entregas/mês</td>
+                     <td>2.000+</td>
+                  </tr>
+                  <tr>
+                     <td>Entregadores</td>
+                     <td>16</td>
+                  </tr>
+                  <tr>
+                     <td>Veículos</td>
+                     <td>9</td>
+                  </tr>
+                  <tr>
+                     <td>Clientes (embarcadores)</td>
+                     <td>~20 empresas</td>
+                  </tr>
+                  <tr>
+                     <td>Cobertura</td>
+                     <td>Serra Gaúcha (Caxias, Gramado, Canela, Petrópolis...)</td>
+                  </tr>
+                  <tr>
+                     <td>Sistema atual</td>
+                     <td>Planilha + WhatsApp + canhoto físico</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h3>O PROBLEMA</h3>
+            <p>Toda a operação roda hoje de forma manual. Quando um canhoto se perde, não existe comprovante digital. Quando o cliente quer saber o status de uma entrega, precisa ligar ou mandar mensagem. E a gerência só sabe o que de fato aconteceu quando o motorista volta para o escritório no fim do dia. Esse modelo já gerou prejuízo real por falta de rastreabilidade — e o ponto mais urgente, segundo o próprio Matheus, é:</p>
+
+            <div class="highlight-box">
+               "Controle dos canhotos em tempo real." — Matheus Rotta
+            </div>
+
+            <h3>O OBJETIVO</h3>
+            <p>Construir o Aliança Log: uma plataforma web que digitaliza o ciclo completo do canhoto, conectando gerência, motoristas e clientes finais em tempo real — acessível tanto pelo celular quanto pelo computador, sem precisar instalar nada de loja de aplicativo.</p>
+
+            <h2>Parte 2 — Como o Sistema Vai Funcionar</h2>
+            
+            <h3>OS TRÊS PERFIS CONECTADOS</h3>
+            <p>O sistema é estruturado em torno de três perfis de acesso, todos conectados entre si. O que um motorista registra em campo aparece quase instantaneamente para a gerência e para o cliente final — sem WhatsApp, sem planilha, sem ligação.</p>
+            <ul>
+               <li><strong>Gerência</strong> — acompanha todas as entregas e canhotos em tempo real, com visão consolidada da operação.</li>
+               <li><strong>Motorista</strong> — registra a entrega em campo (foto do canhoto + status), de forma simples e rápida pelo celular.</li>
+               <li><strong>Cliente Final</strong> — acompanha o status das próprias notas fiscais e acessa o comprovante de entrega assim que ele é registrado.</li>
+            </ul>
+
+            <table>
+               <tbody>
+                  <tr>
+                     <th>Plataforma</th>
+                     <td>Web responsiva — acesso via celular e computador, sem necessidade de instalar app em loja</td>
+                  </tr>
+                  <tr>
+                     <th>Sincronização</th>
+                     <td>Tempo real entre os três perfis — uma atualização aparece para todos em poucos segundos</td>
+                  </tr>
+                  <tr>
+                     <th>Emissão de NF / CT-e</th>
+                     <td>Fora do escopo desta fase — envolve integração fiscal própria com a SEFAZ e será avaliada separadamente, se houver interesse</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h2>Parte 3 — Proposta A: MVP Enxuto</h2>
+            
+            <h3>OBJETIVO DESTA VERSÃO</h3>
+            <p>Entregar o núcleo do que mais importa agora: os três perfis acompanhando o ciclo do canhoto em tempo real — incluindo as duas necessidades mais críticas levantadas na conversa: registrar entregas que chegam por planilha das empresas clientes, e continuar funcionando mesmo nas regiões de sinal fraco (Gramado, Canela, Petrópolis e interior da Serra).</p>
+
+            <h3>O QUE ESTÁ INCLUSO</h3>
+            
+            <h4>Perfil Gerência</h4>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Funcionalidade</th>
+                     <th>Como funciona</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Login dedicado</td>
+                     <td>Acesso próprio por e-mail e senha, com tela de recuperação caso esqueça o acesso.</td>
+                  </tr>
+                  <tr>
+                     <td>Painel em tempo real</td>
+                     <td>Visualiza todas as entregas do dia com contadores no topo (total, aceitas, recusadas, retidas, com pendência, em aberto) — atualiza automaticamente conforme os motoristas registram os canhotos, sem precisar recarregar a página.</td>
+                  </tr>
+                  <tr>
+                     <td>Filtros</td>
+                     <td>Filtra a lista por motorista, empresa cliente ou status, para encontrar rápido o que precisa.</td>
+                  </tr>
+                  <tr>
+                     <td>Visualização do canhoto</td>
+                     <td>Ao clicar em qualquer entrega, abre a foto do canhoto em alta resolução, com todos os detalhes: nota fiscal, motorista, horário e observações.</td>
+                  </tr>
+                  <tr>
+                     <td>Importação de entregas via planilha</td>
+                     <td>Em vez de cadastrar entrega por entrega, basta subir o Excel que já vem das empresas clientes. O sistema lê a planilha, mostra uma pré-visualização e permite atribuir o motorista antes de confirmar.</td>
+                  </tr>
+                  <tr>
+                     <td>Gestão de motoristas e clientes</td>
+                     <td>Cadastro de motoristas e empresas clientes, criação de logins e possibilidade de inativar usuários quando necessário.</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h4>Perfil Motorista</h4>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Funcionalidade</th>
+                     <th>Como funciona</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Login dedicado</td>
+                     <td>Acesso simples, otimizado para uso com uma mão, no celular, com pressa.</td>
+                  </tr>
+                  <tr>
+                     <td>Lista de entregas do dia</td>
+                     <td>Ao abrir o app, já vê as entregas atribuídas, organizadas com indicador de progresso (8 de 16 concluídas) e cores por status.</td>
+                  </tr>
+                  <tr>
+                     <td>Registro do canhoto</td>
+                     <td>Toca na entrega, tira a foto do canhoto direto pela câmera do celular e marca o status: aceita, recusada, retida ou item faltando. Se for item faltando, o app pede para descrever o que faltou.</td>
+                  </tr>
+                  <tr>
+                     <td>Funciona mesmo sem sinal</td>
+                     <td>Em regiões como Gramado, Canela e Petrópolis, onde o sinal costuma cair, o motorista registra a entrega normalmente. O app guarda os dados no celular e envia automaticamente para o sistema assim que o sinal voltar — sem precisar refazer nada.</td>
+                  </tr>
+                  <tr>
+                     <td>Busca</td>
+                     <td>Campo de busca por nota fiscal ou nome do destinatário, para achar rápido uma entrega específica no meio da lista do dia.</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h4>Perfil Cliente Final</h4>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Funcionalidade</th>
+                     <th>Como funciona</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Login dedicado</td>
+                     <td>Cada empresa cliente (ex.: Leite Travizão, Aurora) acessa apenas as suas próprias entregas.</td>
+                  </tr>
+                  <tr>
+                     <td>Acompanhamento em tempo real</td>
+                     <td>Vê o status de cada nota fiscal assim que o motorista atualiza — sem precisar ligar ou mandar mensagem perguntando.</td>
+                  </tr>
+                  <tr>
+                     <td>Acesso à foto do canhoto</td>
+                     <td>Assim que o motorista registra a entrega, o comprovante já fica disponível para consulta.</td>
+                  </tr>
+                  <tr>
+                     <td>Filtro por status</td>
+                     <td>Filtra entre todas, aceitas, pendentes ou com problema.</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h3>O QUE NÃO ESTÁ INCLUSO NESTA VERSÃO</h3>
+            <ul>
+               <li>Roteirização inteligente via GPS</li>
+               <li>Controle financeiro e análise de rentabilidade</li>
+               <li>Gráficos e dashboards de desempenho</li>
+               <li>Filtros avançados (cidade, período)</li>
+               <li>Emissão de NF / CT-e</li>
+            </ul>
+            <p>Esses itens fazem parte da Proposta B ou de versões futuras — aqui o foco é resolver a dor mais urgente, com o menor prazo possível.</p>
+
+            <h3>INVESTIMENTO — PROPOSTA A</h3>
+            
+            <h4>Modalidade 1 — Compra do Sistema</h4>
+            <table>
+               <tbody>
+                  <tr>
+                     <th>Desenvolvimento (pagamento único)</th>
+                     <td>R$ 10.000,00</td>
+                  </tr>
+                  <tr>
+                     <th>Forma de pagamento sugerida</th>
+                     <td>50% no início + 50% na entrega, ou 30% + 30% + 40%</td>
+                  </tr>
+                  <tr>
+                     <th>Manutenção e hospedagem (mensal)</th>
+                     <td>R$ 300,00 / mês</td>
+                  </tr>
+                  <tr>
+                     <th>Prazo estimado</th>
+                     <td>3 a 4 semanas a partir da assinatura do contrato e do sinal</td>
+                  </tr>
+               </tbody>
+            </table>
+            <p>Este valor está abaixo da média de mercado para esse tipo de sistema (que costuma variar de R$ 30.000 a R$ 60.000 para MVPs completos), refletindo a parceria entre vocês e o momento de validação do negócio.</p>
+
+            <h4>Modalidade 2 — Apenas Recorrência</h4>
+            <p>Para quem prefere diluir o investimento inicial, sem o pagamento único de desenvolvimento:</p>
+            <table>
+               <tbody>
+                  <tr>
+                     <th>Sinal de adesão</th>
+                     <td>R$ 1.800,00</td>
+                  </tr>
+                  <tr>
+                     <th>Mensalidade (produto + manutenção + hospedagem)</th>
+                     <td>R$ 600,00 / mês</td>
+                  </tr>
+                  <tr>
+                     <th>Prazo estimado</th>
+                     <td>3 a 4 semanas a partir da assinatura do contrato e do sinal</td>
+                  </tr>
+               </tbody>
+            </table>
+            <p>Nesta modalidade, o valor de desenvolvimento fica diluído dentro da mensalidade ao longo do tempo. Prazo mínimo de permanência e propriedade do código-fonte serão formalizados no Contrato de Desenvolvimento de Software.</p>
+
+            <h2>Parte 4 — Proposta B: MVP Completo</h2>
+            
+            <h3>OBJETIVO DESTA VERSÃO</h3>
+            <p>Tudo o que está na Proposta A, mais os módulos que dão à gerência visão de desempenho, financeiro e visual da operação. Pensada para quando o volume de operação já estiver validado e pedir uma base mais robusta para escalar.</p>
+
+            <h3>O QUE ESTÁ INCLUSO (ADICIONAL À PROPOSTA A)</h3>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Funcionalidade</th>
+                     <th>Como funciona</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Roteirização inteligente via GPS</td>
+                     <td>O motorista recebe a ordem ideal de visita aos endereços do dia, calculada automaticamente para economizar tempo e combustível. Um toque abre a rota direto no Google Maps, já com navegação.</td>
+                  </tr>
+                  <tr>
+                     <td>Painel de notas por empresa</td>
+                     <td>Quando o caminhão carrega entregas de várias empresas ao mesmo tempo, o motorista visualiza e busca separadamente por empresa cliente, com contagem de pendências por empresa.</td>
+                  </tr>
+                  <tr>
+                     <td>Acompanhamento de desempenho dos motoristas</td>
+                     <td>A gerência vê, para cada motorista, quantas entregas fez, taxa de sucesso, taxa de problemas e tempo médio entre entregas — útil para identificar quem precisa de apoio.</td>
+                  </tr>
+                  <tr>
+                     <td>Controle financeiro e rentabilidade</td>
+                     <td>Com o custo por km, custo por hora do motorista e o valor cobrado por entrega cadastrados, o sistema calcula automaticamente se cada entrega, rota ou cliente está dando lucro ou prejuízo.</td>
+                  </tr>
+                  <tr>
+                     <td>Gráficos e dashboards</td>
+                     <td>Visão consolidada da operação: volume de entregas por dia, distribuição de ocorrências e onde se concentram os problemas por cidade.</td>
+                  </tr>
+                  <tr>
+                     <td>Filtros avançados para o cliente final</td>
+                     <td>Filtra por cidade, período customizado e múltiplos status ao mesmo tempo.</td>
+                  </tr>
+                  <tr>
+                     <td>Relatórios exportáveis</td>
+                     <td>Exporta os dados filtrados em Excel para análises externas ou apresentações.</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h3>FORA DE ESCOPO — PARA VERSÕES FUTURAS</h3>
+            <ul>
+               <li>Emissão de NF / CT-e — requer homologação e integração fiscal própria</li>
+               <li>Integração com ERP / sistemas financeiros externos</li>
+               <li>Notificações automáticas via WhatsApp ou push — sem demanda declarada até o momento</li>
+               <li>Aplicativo nativo nas lojas — a versão web já resolve a necessidade de uso no celular</li>
+               <li>Múltiplos coordenadores com permissões distintas</li>
+               <li>Histórico de mais de 12 meses — política de retenção a definir conforme o uso</li>
+            </ul>
+
+            <h3>INVESTIMENTO — PROPOSTA B</h3>
+            
+            <h4>Modalidade 1 — Compra do Sistema</h4>
+            <table>
+               <tbody>
+                  <tr>
+                     <th>Desenvolvimento (pagamento único)</th>
+                     <td>R$ 25.000,00</td>
+                  </tr>
+                  <tr>
+                     <th>Forma de pagamento sugerida</th>
+                     <td>40% início + 30% intermediário + 30% na entrega</td>
+                  </tr>
+                  <tr>
+                     <th>Manutenção e hospedagem (mensal)</th>
+                     <td>R$ 500,00 / mês</td>
+                  </tr>
+                  <tr>
+                     <th>Prazo estimado</th>
+                     <td>2 a 3 meses, a partir do início (pressupõe a Proposta A em produção e validada)</td>
+                  </tr>
+               </tbody>
+            </table>
+            <p>Este valor já está abaixo da média de mercado para sistemas dessa complexidade (R$ 60.000 a R$ 120.000), considerando a parceria entre vocês.</p>
+
+            <h4>Modalidade 2 — Apenas Recorrência</h4>
+            <p>Para quem prefere diluir o investimento inicial, sem o pagamento único de desenvolvimento:</p>
+            <table>
+               <tbody>
+                  <tr>
+                     <th>Sinal de adesão</th>
+                     <td>R$ 4.500,00</td>
+                  </tr>
+                  <tr>
+                     <th>Mensalidade (produto + manutenção + hospedagem)</th>
+                     <td>R$ 1.500,00 / mês</td>
+                  </tr>
+                  <tr>
+                     <th>Prazo estimado</th>
+                     <td>2 a 3 meses, a partir do início (pressupõe a Proposta A em produção e validada)</td>
+                  </tr>
+               </tbody>
+            </table>
+            <p>Nesta modalidade, o valor de desenvolvimento fica diluído dentro da mensalidade ao longo do tempo. Prazo mínimo de permanência e propriedade do código-fonte serão formalizados no Contrato de Desenvolvimento de Software.</p>
+
+            <h2>Parte 5 — Por que existe uma mensalidade mesmo comprando o app?</h2>
+            
+            <h3>UM SISTEMA VIVO, NÃO UM ARQUIVO ENTREGUE</h3>
+            <p>O app Aliança Log não é um arquivo que se entrega e está pronto, como um PDF ou uma planilha. É um sistema que precisa estar rodando todos os dias para que gerência, motoristas e clientes consigam acessar, e isso tem custo real, todo mês. É como comparar com a construção de uma casa: o investimento de desenvolvimento é a construção. A mensalidade é o que mantém a casa em pé e funcionando — luz, água, manutenção.</p>
+            <ul>
+               <li>Servidor rodando 24 horas por dia, para qualquer um dos três perfis conseguir acessar o sistema a qualquer momento</li>
+               <li>Armazenamento das fotos dos canhotos — com 2.000+ entregas por mês, esse volume de imagens cresce continuamente</li>
+               <li>Banco de dados com o histórico de entregas, status e usuários</li>
+               <li>Domínio próprio e certificado de segurança (HTTPS)</li>
+               <li>Monitoramento e atualizações de segurança das dependências do sistema</li>
+               <li>Suporte contínuo: dúvidas, pequenos ajustes de interface e correções</li>
+            </ul>
+
+            <h4>Composição da mensalidade — Proposta A (R$ 300/mês)</h4>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Item</th>
+                     <th>O que cobre</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Hospedagem</td>
+                     <td>Servidor do sistema rodando continuamente (Vercel)</td>
+                  </tr>
+                  <tr>
+                     <td>Banco de dados e storage</td>
+                     <td>Armazenamento das entregas, status e fotos dos canhotos (Supabase)</td>
+                  </tr>
+                  <tr>
+                     <td>Domínio e SSL</td>
+                     <td>Endereço próprio do sistema com conexão segura (HTTPS)</td>
+                  </tr>
+                  <tr>
+                     <td>Monitoramento</td>
+                     <td>Acompanhamento de uptime e atualizações de segurança</td>
+                  </tr>
+                  <tr>
+                     <td>Suporte</td>
+                     <td>Dúvidas, pequenos ajustes de interface e correções de bugs</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h4>Composição da mensalidade — Proposta B (R$ 500/mês)</h4>
+            <p>Inclui tudo o que está na Proposta A, mais os custos específicos dos módulos de roteirização e financeiro:</p>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Item adicional</th>
+                     <th>O que cobre</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Google Maps Directions API</td>
+                     <td>Cálculo da rota otimizada do motorista — custo estimado de R$ 50 a R$ 150/mês, conforme o volume de rotas calculadas por dia</td>
+                  </tr>
+                  <tr>
+                     <td>Google Maps Distance Matrix</td>
+                     <td>Cálculo de distância usado no módulo financeiro/rentabilidade — custo estimado de R$ 30 a R$ 80/mês</td>
+                  </tr>
+                  <tr>
+                     <td>Banco de dados — plano superior</td>
+                     <td>Mais capacidade de armazenamento de histórico, necessária para os KPIs, gráficos e relatórios (+R$ 50/mês)</td>
+                  </tr>
+                  <tr>
+                     <td>Suporte ampliado</td>
+                     <td>Cobertura para o número maior de módulos em produção</td>
+                  </tr>
+               </tbody>
+            </table>
+            <p>Esses custos de API somam entre R$ 130 e R$ 280/mês, e estão incluídos dentro da mensalidade de R$ 500 — ou seja, a UzzAI absorve a variação desse custo dentro do valor fixo cobrado, sem repasses extras conforme o uso varia. Esse modelo de cobrança é padrão no mercado de software como serviço: o custo de manutenção de um sistema costuma representar entre 10% e 20% do valor do projeto por ano — os valores aqui praticados estão dentro dessa faixa.</p>
+
+            <h2>Parte 6 — O que está incluso no investimento</h2>
+            
+            <h3>SUPORTE JURÍDICO E OPERACIONAL</h3>
+            <h4>Jurídico</h4>
+            <ul>
+               <li>Contrato de Desenvolvimento de Software, com escopo, cronograma, forma de pagamento e condições claras para ambas as partes</li>
+               <li>Acordo de Confidencialidade (NDA), protegendo os dados da Rotta Logística e a tecnologia da UzzAI</li>
+               <li>Política de Privacidade e Termos de Uso do sistema, em conformidade com a LGPD</li>
+            </ul>
+
+            <h4>Implantação</h4>
+            <ul>
+               <li>Configuração do domínio próprio e certificado de segurança (HTTPS)</li>
+               <li>Criação de todos os logins — motoristas, clientes finais e gerência</li>
+            </ul>
+
+            <h4>Treinamento</h4>
+            <ul>
+               <li>Sessão de treinamento com os coordenadores</li>
+               <li>Material de apoio passo a passo para os motoristas (guia de uso do app)</li>
+               <li>Sessão de ativação dos logins das empresas clientes</li>
+            </ul>
+
+            <h4>Suporte pós-lançamento</h4>
+            <ul>
+               <li>30 dias de suporte prioritário inclusos logo após a entrega</li>
+               <li>60 dias de correção de bugs sem custo adicional</li>
+            </ul>
+            <p>Depois desse período inicial, o suporte contínuo passa a ser coberto pela mensalidade.</p>
+
+            <h2>Parte 7 — Cronograma de Implementação</h2>
+            
+            <h3>COMO O PROJETO ANDA, SEMANA A SEMANA (PROPOSTA A)</h3>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Semana</th>
+                     <th>O que acontece</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Semana 1</td>
+                     <td>Estrutura técnica, autenticação dos três perfis e importação de Excel com arquivos reais das empresas clientes</td>
+                  </tr>
+                  <tr>
+                     <td>Semana 2</td>
+                     <td>App do motorista: lista de entregas, captura de foto do canhoto e funcionamento offline</td>
+                  </tr>
+                  <tr>
+                     <td>Semana 3</td>
+                     <td>Painel da gerência em tempo real e portal do cliente final</td>
+                  </tr>
+                  <tr>
+                     <td>Semana 4</td>
+                     <td>Piloto com 2 a 3 motoristas, ajustes, treinamento da equipe completa e lançamento (16 motoristas e clientes ativados)</td>
+                  </tr>
+               </tbody>
+            </table>
+            <p>Para a Proposta B, o prazo adicional de 2 a 3 meses começa a contar depois que a Proposta A já estiver em produção e validada no dia a dia da operação.</p>
+
+            <h2>Parte 8 — Comparativo e Recomendação</h2>
+            
+            <h3>COMPARATIVO RÁPIDO</h3>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Critério</th>
+                     <th>Proposta A — Enxuto</th>
+                     <th>Proposta B — Completo</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Foco</td>
+                     <td>Canhotos em tempo real, 3 perfis</td>
+                     <td>Tudo do A + roteirização, financeiro e dashboards</td>
+                  </tr>
+                  <tr>
+                     <td>Investimento</td>
+                     <td>R$ 10.000</td>
+                     <td>R$ 25.000</td>
+                  </tr>
+                  <tr>
+                     <td>Mensalidade</td>
+                     <td>R$ 300/mês</td>
+                     <td>R$ 500/mês</td>
+                  </tr>
+                  <tr>
+                     <td>Prazo estimado</td>
+                     <td>3 a 4 semanas</td>
+                     <td>2 a 3 meses</td>
+                  </tr>
+                  <tr>
+                     <td>Indicado para</td>
+                     <td>Validar o conceito rápido, resolver a dor mais urgente</td>
+                     <td>Já nascer com base robusta para escalar</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h3>RECOMENDAÇÃO</h3>
+            <p>Dado que o que mais importa agora é resolver a dor do controle de canhotos, a Proposta A é o caminho mais rápido para colocar valor real nas mãos da operação, com investimento e prazo compatíveis com a urgência. A Proposta B pode ser o passo natural seguinte, quando a operação já estiver validando o uso do sistema no dia a dia e o orçamento permitir um investimento maior.</p>
+
+            <h2>Parte 9 — Resumo do Investimento e Formas de Pagamento</h2>
+            
+            <h4>Modalidade 1 — Compra do Sistema</h4>
+            <table>
+               <thead>
+                  <tr>
+                     <th></th>
+                     <th>Proposta A</th>
+                     <th>Proposta B</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Pagamento único (setup)</td>
+                     <td>R$ 10.000</td>
+                     <td>R$ 25.000</td>
+                  </tr>
+                  <tr>
+                     <td>Mensalidade (manutenção + hospedagem)</td>
+                     <td>R$ 300/mês</td>
+                     <td>R$ 500/mês</td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <h4>Modalidade 2 — Apenas Recorrência (sem pagamento único alto)</h4>
+            <p>Alternativa para quem prefere diluir o investimento inicial em uma mensalidade maior, sem desembolsar o valor de desenvolvimento de uma vez:</p>
+            <table>
+               <thead>
+                  <tr>
+                     <th></th>
+                     <th>Proposta A</th>
+                     <th>Proposta B</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Sinal</td>
+                     <td>R$ 1.800</td>
+                     <td>R$ 4.500</td>
+                  </tr>
+                  <tr>
+                     <td>Mensalidade</td>
+                     <td>R$ 600/mês</td>
+                     <td>R$ 1.500/mês</td>
+                  </tr>
+               </tbody>
+            </table>
+            <p>Os detalhes contratuais dessa modalidade — incluindo prazo mínimo de permanência e propriedade do código-fonte — serão formalizados no Contrato de Desenvolvimento de Software, junto com a opção escolhida.</p>
+
+            <h2>Parte 10 — Próximos Passos</h2>
+            <ul>
+               <li>Validar esta proposta e escolher entre Proposta A ou B, e entre Modalidade 1 (compra) ou Modalidade 2 (recorrência)</li>
+               <li>Enviar 2 a 3 arquivos Excel reais das empresas clientes, para ajuste fino do importador</li>
+               <li>Enviar a lista dos 16 motoristas (nome + e-mail) e das ~20 empresas clientes (nome + e-mail de acesso)</li>
+               <li>Assinatura do contrato e pagamento do sinal, para iniciar o desenvolvimento</li>
+            </ul>
+
+            <div class="signature">
+               <p class="greet">Elaborado por,</p>
+               <p class="name">Vítor Pirolli — UzzAI</p>
+            </div>
+         </div>
+      </main>
+
+      <!-- RODAPE (fixo) -->
+      <footer>
+         <div class="contact-grid">
+            <div class="contact-item">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                     d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+               </svg>
+               +55 (54) 99284-1942
+            </div>
+            <div class="contact-item">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+               </svg>
+               contato@uzzai.com.br
+            </div>
+            <div class="contact-item" style="grid-column: span 2;">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path
+                     d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+               </svg>
+               www.uzzai.com.br
+            </div>
+         </div>
+         <div class="footer-brand">
+            <p class="slogan">Use com inteligência</p>
+            <div style="height: 3px; width: 40px; background: var(--blue); margin-left: auto; margin-top: 4px; border-radius: 2px;"></div>
+         </div>
+      </footer>
+   </div>
+
+</body>
+</html>
