@@ -10,6 +10,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getConnectionString } from "./lib/pg.mjs";
@@ -26,13 +27,37 @@ if (url.port === "6543") {
   process.exit(1);
 }
 
-// Localiza o pg_dump mais recente (recusa dumpar um servidor mais novo que ele).
-function findPgDump() {
-  for (const v of ["18", "17", "16", "15"]) {
-    const exe = `C:\\Program Files\\PostgreSQL\\${v}\\bin\\pg_dump.exe`;
-    if (fs.existsSync(exe)) return exe;
+// Localiza o pg_dump de MAIOR versão (ele recusa dumpar um servidor mais novo
+// que ele). Varre Program Files e o scoop, e compara as versões de fato.
+function pgDumpMajor(exe) {
+  try {
+    const out = execFileSync(exe, ["--version"], { encoding: "utf8" });
+    const m = out.match(/(\d+)\.\d+/);
+    return m ? Number(m[1]) : 0;
+  } catch {
+    return 0;
   }
-  return "pg_dump"; // deixa o PATH resolver
+}
+function findPgDump() {
+  const candidates = [
+    ...["18", "17", "16", "15"].map(
+      (v) => `C:\\Program Files\\PostgreSQL\\${v}\\bin\\pg_dump.exe`,
+    ),
+    path.join(homedir(), "scoop", "apps", "postgresql", "current", "bin", "pg_dump.exe"),
+    path.join(homedir(), "scoop", "shims", "pg_dump.exe"),
+    "pg_dump", // fallback: deixa o PATH resolver
+  ];
+  let best = null;
+  let bestMajor = 0;
+  for (const exe of candidates) {
+    if (exe !== "pg_dump" && !fs.existsSync(exe)) continue;
+    const major = pgDumpMajor(exe);
+    if (major > bestMajor) {
+      bestMajor = major;
+      best = exe;
+    }
+  }
+  return best ?? "pg_dump";
 }
 const pgDump = findPgDump();
 

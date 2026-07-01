@@ -70,6 +70,15 @@ npm run build      # build de produção (valida TS)
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
 npm run seed       # popula dados fictícios (precisa de .env.local preenchido)
+npm run db:status  # migrations aplicadas x pendentes
+npm run db:migrate # aplica as migrations pendentes (supabase/migrations/*.sql)
+npm run db:backup  # dump do schema public em backups/ (antes de algo arriscado)
 ```
+
+**Migrations**: mudança de estrutura do banco é sempre um arquivo novo numerado em
+`supabase/migrations/` (`0005_...sql`) aplicado com `npm run db:migrate`. O runner
+(`scripts/migrate.mjs`, driver `pg`) roda cada uma em transação e registra em
+`public.schema_migrations`; não edite migrations já aplicadas. Fluxo completo em
+[docs/MIGRATIONS.md](./docs/MIGRATIONS.md). Requer `DATABASE_URL` no `.env.local`.
 
 Não há suíte de testes automatizados ainda (Playwright está planejado no Sprint 4, não implementado).

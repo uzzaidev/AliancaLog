@@ -1,7 +1,7 @@
 # Configuração mínima do Supabase CLI para o projeto Aliança Log.
-# Uso (após instalar o CLI: https://supabase.com/docs/guides/cli):
-#   supabase link --project-ref <ref-do-projeto>
-#   supabase db push        # aplica as migrations em supabase/migrations
+# As migrations em supabase/migrations/ são aplicadas pelo runner próprio:
+#   npm run db:migrate      (ver docs/MIGRATIONS.md)
+# Este config.toml só é necessário se for usar o Supabase CLI localmente.
 project_id = "alianca-log"
 
 [db]
