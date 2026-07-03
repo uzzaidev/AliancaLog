@@ -32,9 +32,10 @@ export default async function RomaneiosPage() {
           </p>
         )}
         {romaneios.map((r) => (
-          <div
+          <Link
             key={r.id}
-            className="flex items-center justify-between px-4 py-3 text-sm"
+            href={`/gerencia/romaneios/${r.id}`}
+            className="flex items-center justify-between px-4 py-3 text-sm hover:bg-canvas"
           >
             <div>
               <div className="font-medium text-ink">
@@ -45,7 +46,7 @@ export default async function RomaneiosPage() {
               </div>
             </div>
             <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>
-          </div>
+          </Link>
         ))}
       </Card>
     </div>

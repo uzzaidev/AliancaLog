@@ -114,3 +114,39 @@ export async function criarRomaneio(input: {
   revalidatePath("/gerencia/romaneios");
   return { ok: "Romaneio criado.", id: rom.id };
 }
+
+const STATUS_FINAIS = ["aceita", "recusada", "retida", "ocorrencia"];
+
+// Fecha o romaneio — só permite quando todas as NFs têm status final.
+// "Recusada" não bloqueia o fechamento (é um status final como outro qualquer).
+export async function fecharRomaneio(
+  romaneioId: string,
+): Promise<{ ok?: string; error?: string }> {
+  await requireRole("gerencia");
+  const supabase = await createClient();
+
+  const { data: nfs } = await supabase
+    .from("notas_fiscais")
+    .select("status")
+    .eq("romaneio_id", romaneioId);
+
+  const pendentes = (nfs ?? []).filter(
+    (n) => !STATUS_FINAIS.includes(n.status),
+  ).length;
+  if (pendentes > 0)
+    return {
+      error: `Ainda há ${pendentes} NF(s) sem status final. Não dá pra fechar.`,
+    };
+  if (!nfs || nfs.length === 0)
+    return { error: "Romaneio sem NFs — nada para fechar." };
+
+  const { error } = await supabase
+    .from("romaneios")
+    .update({ status: "fechado", fechado_em: new Date().toISOString() })
+    .eq("id", romaneioId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/gerencia/romaneios");
+  revalidatePath(`/gerencia/romaneios/${romaneioId}`);
+  return { ok: "Romaneio fechado." };
+}

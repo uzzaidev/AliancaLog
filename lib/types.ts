@@ -74,3 +74,24 @@ export const OCORRENCIA_LABEL: Record<OcorrenciaTipo, string> = {
   avaria: "Avaria",
   outro: "Outro",
 };
+
+// Detalhe do comprovante de entrega (modal da gerência e do cliente).
+// foto_url já vem como URL assinada temporária (não o caminho cru do bucket).
+export type ComprovanteDetalhe = {
+  id: string;
+  numero_nf: string;
+  status: NotaStatus;
+  destinatario_nome: string;
+  destinatario_endereco: string;
+  cidade: string | null;
+  empresa_nome: string | null;
+  motorista_nome: string | null;
+  criado_em: string;
+  entregue_em: string | null;
+  foto_url: string | null;
+  ocorrencias: {
+    tipo: OcorrenciaTipo;
+    descricao: string | null;
+    criado_em: string;
+  }[];
+};

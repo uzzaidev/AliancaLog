@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function RealtimeRefresher() {
+export function RealtimeRefresher({ channel: channelName = "gerencia-dashboard" }: { channel?: string }) {
   const router = useRouter();
   const [live, setLive] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -21,7 +21,7 @@ export function RealtimeRefresher() {
     };
 
     const channel = supabase
-      .channel("gerencia-dashboard")
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notas_fiscais" },
@@ -38,7 +38,7 @@ export function RealtimeRefresher() {
       if (timer.current) clearTimeout(timer.current);
       supabase.removeChannel(channel);
     };
-  }, [router]);
+  }, [router, channelName]);
 
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-muted">

@@ -1,25 +1,44 @@
-import { Card } from "@/components/ui";
+import { Suspense } from "react";
+import { RealtimeRefresher } from "@/components/gerencia/realtime-refresher";
+import { Filtros } from "@/components/cliente/filtros";
+import { NotasListCliente } from "@/components/cliente/notas-list";
+import { getNotasCliente } from "@/lib/data/cliente";
+import type { ClienteFiltro } from "@/lib/data/cliente";
 
-export default function ClienteNotas() {
+export default async function ClienteNotas({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; periodo?: string; busca?: string }>;
+}) {
+  const sp = await searchParams;
+
+  const filtro: ClienteFiltro = {
+    status: sp.status,
+    periodo: (sp.periodo as ClienteFiltro["periodo"]) ?? "hoje",
+    busca: sp.busca,
+  };
+
+  const notas = await getNotasCliente(filtro);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Minhas entregas
-        </h1>
-        <p className="text-sm text-muted">
-          Status e comprovantes das suas notas fiscais.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Minhas entregas
+          </h1>
+          <p className="text-sm text-muted">
+            Status e comprovantes das suas notas fiscais.
+          </p>
+        </div>
+        <RealtimeRefresher channel="cliente-notas" />
       </div>
 
-      <Card className="p-6">
-        <p className="text-sm text-muted">
-          <span className="font-medium text-ink">Em construção · Sprint 3.</span>{" "}
-          Aqui virá a lista das NFs da sua empresa (filtradas automaticamente),
-          com status em tempo real, filtros por período/status e o comprovante
-          (foto do canhoto + horário + motorista).
-        </p>
-      </Card>
+      <Suspense>
+        <Filtros />
+      </Suspense>
+
+      <NotasListCliente notas={notas} />
     </div>
   );
 }
