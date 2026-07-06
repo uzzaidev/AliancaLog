@@ -20,9 +20,10 @@
 - [x] PWA manifest (instalável)
 - [x] README com setup
 - [x] Build + typecheck + lint verdes; dev server servindo login
-- [ ] Projeto Supabase real criado (sa-east-1) + `.env.local` preenchido ⟵ **ação do Vítor/cliente**
-- [ ] Migrations aplicadas no projeto real (`supabase db push`) `→ Luis`
-- [ ] Seed rodado e login testado de verdade (3 perfis)
+- [x] Projeto Supabase real criado (sa-east-1) + `.env` preenchido
+- [x] Migrations aplicadas no projeto real (`npm run db:migrate`, 0001→0007)
+- [x] Seed rodado e login testado de verdade — gerência e motorista confirmados em uso real;
+      **cliente_final ainda não testado**
 - [ ] Push para o GitHub (`uzzaidev/AliancaLog`) + deploy na Vercel (URL de staging no ar) `→ Luis`
 
 ## Sprint 1 — Gerência + ingestão
@@ -83,8 +84,14 @@
 - [x] Foto do canhoto: compressão 800px→**1280px @ 0.8** (assinatura legível no zoom)
 - [x] **GPS no registro do canhoto**: coleta pontual best-effort (lat/lng/precisão) + link
       "📍 Ver local do registro" no modal de comprovante
-- [ ] Migration `0005` aplicada no Supabase real (`npm run db:migrate`) `→ Luis`
-- [ ] Smoke test de RLS: script loga com os 3 perfis e verifica isolamento (risco R-008) `→ Luis`
+- [x] Migration `0005` aplicada no Supabase real (`npm run db:migrate`)
+- [x] **Fix crítico do sync offline**: upload de foto com `upsert: true` violava RLS de
+      `storage.objects` (só havia policy de INSERT) → sync retornava 500 e a fila nunca esvaziava.
+      Corrigido: upload sem upsert (path já é idempotente pelo `client_id`, 409 tratado como
+      sucesso) + índice `uq_canhoto_client_id` trocado de parcial para completo (migrations
+      `0006`, `0007`). Validado ponta-a-ponta com sessão real do motorista (RLS aplicado).
+- [ ] Smoke test de RLS formal: script loga com os 3 perfis e verifica isolamento (risco R-008)
+      — testado manualmente para motorista nesta sessão, falta script versionado + cliente_final `→ Luis`
 - [ ] Monitoramento de erros (Sentry ou similar) antes do piloto `→ Luis`
 - [ ] Backup automático do banco (hoje `db:backup` é manual) `→ Luis`
 - [ ] Critérios de sucesso do piloto escritos (ex.: 2–3 motoristas × 5 dias, ≥95% das entregas

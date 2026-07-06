@@ -3,11 +3,27 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-07-03
-**Sprint atual:** Sprints 0–3 implementados (compilando) + correções pré-piloto → próximo é o Sprint 4 (piloto)
-**Status geral:** 🟢 MVP A completo no código; falta validar em runtime contra Supabase real e fazer deploy
+**Última atualização:** 2026-07-06
+**Sprint atual:** Sprints 0–3 implementados e **validados em runtime** contra Supabase real → próximo é o Sprint 4 (piloto)
+**Status geral:** 🟢 MVP A rodando de ponta a ponta em ambiente real (login, dashboard, sync offline, realtime); falta deploy (Vercel/HTTPS) e o piloto em si
 
-**Mudanças de hoje (2026-07-03):**
+**Mudanças de hoje (2026-07-06):**
+1. **Projeto Supabase real conectado**: `.env` preenchido e validado; migrations 0001→0005 aplicadas
+   (o runner estava travado por hash mismatch em 0001–0004, editadas após aplicadas — hashes
+   reconciliados com o conteúdo atual dos arquivos).
+2. **Bug crítico do sync offline corrigido**: o upload de foto usava `{ upsert: true }`, que exige
+   permissão de UPDATE em `storage.objects` — só havia policy de INSERT (migration `0003`). Todo
+   registro de canhoto retornava 500, a fila do motorista nunca esvaziava e o dashboard nunca
+   recebia o evento de Realtime. Corrigido em duas frentes: `app/api/sync/route.ts` faz upload
+   sem `upsert` (o path já é idempotente pelo `client_id`; um 409 "already exists" no re-sync é
+   tratado como sucesso) e o índice `uq_canhoto_client_id` foi trocado de parcial para completo,
+   já que `ON CONFLICT (client_id)` não funciona com índice parcial (migrations `0006`, `0007`).
+   Validado com sessão real do motorista (RLS aplicado): 1ª sync e re-sync retornam 200.
+3. Dashboard 404 pós-login corrigido (cache stale do `.next` sem as sub-rotas registradas).
+4. `package.json`: scripts `seed`/`db:*` agora carregam `.env.local` **ou** `.env` (antes só
+   aceitavam `.env.local`, e o projeto usa `.env`).
+
+**Mudanças de 2026-07-03:**
 1. **Sprint 3 concluído**: portal do cliente (filtros + lista + comprovante), modal de canhoto
    compartilhado (foto assinada + timeline), fechamento de romaneio com validação de pendentes,
    Realtime generalizado (canal configurável).
@@ -44,13 +60,14 @@
 - **Service Worker** próprio (`public/sw.js`) para abrir o app offline.
 - **Verificado:** build/typecheck/lint verdes (14 rotas, incl. `/api/sync`). **NÃO** testado em runtime (offline/câmera precisam de celular + HTTPS).
 
-## ⏳ Pendências para validar os Sprints 1–2 (dependem da sua conta)
-1. Criar projeto **Supabase** (região **São Paulo / sa-east-1**).
-2. `cp .env.example .env.local` e preencher as 3 chaves.
-3. Aplicar migrations `0001`→`0004` (`supabase db push` ou SQL Editor).
-4. `npm install && npm run seed`.
-5. Testar fluxo completo: gerência importa/cria romaneio → motorista confirma e registra canhoto (inclusive em modo avião) → dashboard atualiza em tempo real → (Sprint 3: portal do cliente).
-6. (Para publicar) repo no GitHub + Vercel — **a câmera e o offline exigem HTTPS**, que a URL da Vercel fornece.
+## ✅ Sprints 1–2 validados em runtime (2026-07-06)
+Itens 1–4 da lista original concluídos: Supabase real criado, `.env` preenchido, migrations
+aplicadas, seed rodado. Fluxo completo testado: login (gerência + motorista) → dashboard →
+motorista registra canhoto offline → sync → dashboard atualiza via Realtime. Falta apenas:
+- Testar o ciclo em **modo avião real** num celular (o teste desta sessão validou a chamada
+  ao `/api/sync` diretamente, não o Service Worker/IndexedDB no dispositivo)
+- Login do **cliente_final** (portal) ainda não testado de verdade
+- Repo no GitHub + deploy na Vercel — **a câmera e o offline exigem HTTPS**, que a URL da Vercel fornece
 
 ## ✅ Implementado (Sprint 3 — Realtime + Portal + fechamento) — compila, falta validar com Supabase real
 - **Modal de comprovante** compartilhado gerência/cliente: foto via URL assinada (RLS-check antes de assinar), timeline (criação → ocorrências → entrega), local do registro (GPS).
@@ -62,11 +79,12 @@
 - **Scanner**: `lib/nfe.ts` interpreta a chave de acesso do DANFE (valida DV, extrai o nº da NF); `buscarNf` casa por chave (exato) e por número; chave é gravada na NF ao bipar (enriquecimento).
 - **Foto**: 1280px @ 0.8 (era 800px @ 0.7) — assinatura legível no zoom.
 - **GPS**: coleta pontual no registro do canhoto (best-effort, nunca bloqueia) → colunas `lat/lng/gps_precisao` em `canhotos` → link "📍 Ver local do registro" no comprovante.
-- **Migration `0005_chave_acesso_gps.sql`** criada — **aplicar com `npm run db:migrate`** no Supabase real.
+- **Migration `0005_chave_acesso_gps.sql`** — **aplicada** no Supabase real em 2026-07-06.
 
 ## ▶️ Próximo bloco de trabalho (Sprint 4 — Piloto & Go-Live)
-Pré-piloto: aplicar migration 0005, smoke test de RLS, Sentry, backup automático, critérios de
-sucesso do piloto. Depois: dados reais, logins, piloto com 2–3 motoristas, treinamento, go-live.
+Pré-piloto: falta smoke test de RLS formal (script versionado, 3 perfis), Sentry, backup
+automático, critérios de sucesso do piloto. Depois: deploy (GitHub + Vercel), dados reais, logins,
+piloto com 2–3 motoristas, treinamento, go-live.
 Ver [CHECKLIST.md](./CHECKLIST.md) (seções "Pré-piloto" e "Sprint 4").
 
 ---
