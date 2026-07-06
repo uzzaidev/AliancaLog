@@ -38,13 +38,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "foto obrigatória para aceita" }, { status: 400 });
 
   // 1. Sobe a foto (se houver) no bucket privado.
+  // Sem upsert: o path é derivado do client_id, então re-sync cai no mesmo
+  // arquivo e "já existe" (409) é idempotência, não erro. (O upsert do Storage
+  // exigiria UPDATE em storage.objects, que o motorista não tem — e não deve,
+  // já que o canhoto é imutável após confirmado.)
   let fotoPath: string | null = null;
   if (foto && foto.size > 0) {
     fotoPath = `${nfId}/${clientId}.jpg`;
     const { error: upErr } = await supabase.storage
       .from("canhotos")
-      .upload(fotoPath, foto, { upsert: true, contentType: "image/jpeg" });
-    if (upErr)
+      .upload(fotoPath, foto, { contentType: "image/jpeg" });
+    if (upErr && !/already exists/i.test(upErr.message))
       return NextResponse.json({ error: upErr.message }, { status: 500 });
   }
 
