@@ -64,14 +64,34 @@
 
 ## Sprint 3 — Realtime + Portal + fechamento
 **Responsável:** Vítor (portal cliente + modal) + Luis (Realtime/Supabase)
-- [ ] Supabase Realtime: dashboard atualiza < 3s sem refresh `→ Luis`
-- [ ] Modal de canhoto: foto em alta + detalhes + timeline da NF `→ Vítor`
-- [ ] Fechamento de romaneio: resumo (X/Y entregues, ocorrências, recusadas) + arquivar `→ Vítor`
-- [ ] Regra: romaneio só fecha com todas as NFs resolvidas; recusada não bloqueia
-- [ ] Portal cliente: lista de NFs da empresa (RLS) `→ Vítor` + `→ Luis`
-- [ ] Portal cliente: filtros (status, período, NF/cidade) + status realtime `→ Vítor`
-- [ ] Portal cliente: comprovante (foto via URL assinada + horário + motorista) `→ Luis`
+> Implementado e compilando. Verificação em runtime contra Supabase real ainda pendente.
+- [x] Supabase Realtime: dashboard atualiza < 3s sem refresh `→ Luis`
+- [x] Modal de canhoto: foto em alta + detalhes + timeline da NF `→ Vítor`
+- [x] Fechamento de romaneio: resumo (X/Y entregues, ocorrências, recusadas) + arquivar `→ Vítor`
+- [x] Regra: romaneio só fecha com todas as NFs resolvidas; recusada não bloqueia
+- [x] Portal cliente: lista de NFs da empresa (RLS) `→ Vítor` + `→ Luis`
+- [x] Portal cliente: filtros (status, período, NF/cidade) + status realtime `→ Vítor`
+- [x] Portal cliente: comprovante (foto via URL assinada + horário + motorista) `→ Luis`
 - [ ] Deploy + revisão ponta-a-ponta
+
+## Pré-piloto — Revisão de produto (jul/2026)
+> Achados da revisão com pesquisa de mercado (ePOD + legislação NF-e). Itens de código
+> implementados e compilando; itens de processo/infra ainda por fazer.
+- [x] **Fix scanner**: código de barras do DANFE é a chave de acesso (44 dígitos), não o nº da NF
+      — parser em `lib/nfe.ts` (valida DV módulo 11, extrai nNF), match por chave e por número
+- [x] Coluna `chave_acesso` em `notas_fiscais` + GPS em `canhotos` (migration `0005`)
+- [x] Foto do canhoto: compressão 800px→**1280px @ 0.8** (assinatura legível no zoom)
+- [x] **GPS no registro do canhoto**: coleta pontual best-effort (lat/lng/precisão) + link
+      "📍 Ver local do registro" no modal de comprovante
+- [ ] Migration `0005` aplicada no Supabase real (`npm run db:migrate`) `→ Luis`
+- [ ] Smoke test de RLS: script loga com os 3 perfis e verifica isolamento (risco R-008) `→ Luis`
+- [ ] Monitoramento de erros (Sentry ou similar) antes do piloto `→ Luis`
+- [ ] Backup automático do banco (hoje `db:backup` é manual) `→ Luis`
+- [ ] Critérios de sucesso do piloto escritos (ex.: 2–3 motoristas × 5 dias, ≥95% das entregas
+      pelo app, zero perda no sync, Matheus abrindo o dashboard sem ser lembrado) `→ Vítor`
+- [ ] Testar foto 1280px com canhotos reais em luz ruim (validar legibilidade) `→ Vítor` (piloto)
+- [ ] Perguntar ao Matheus se as empresas conseguem encaminhar os **XMLs das NF-e** (destrava
+      a importação por XML da Fase B) `→ Vítor` (comercial)
 
 ## Sprint 4 — Piloto & Go-Live (MVP A)
 - [ ] Testes E2E (Playwright) do caminho crítico — **sem responsável definido** ⚠️ (ver gap de QA no PLAN.md)
@@ -89,6 +109,23 @@
 - [ ] KPIs de motorista (total, taxa sucesso/problema, tempo médio, ranking, histórico, gráficos)
 - [ ] Financeiro (custo/km, custo/hora, tarifa por empresa, rentabilidade, indicador 🟢🟡🔴, Distance Matrix)
 - [ ] Dashboards/relatórios (gráficos, mapa de calor, top empresas, filtros avançados, exportação Excel/CSV)
+
+### Adições da revisão de produto (jul/2026)
+- [ ] **Importar XML da NF-e** (formato nacional único — mata o mapeamento de colunas do Excel;
+      parse nativo via `DOMParser`, preenche chave de acesso + destinatário + endereço completos)
+- [ ] **Fluxo de devolução/reentrega**: lista "pendências de devolução" na gerência + ações
+      "reagendar" (nova NF vinculada) e "devolvida ao embarcador" (status terminal) — hoje a NF
+      recusada fica "recusada" para sempre depois do fechamento
+- [ ] **Web Push para o motorista** ("romaneio novo chegou") — Android ok; iOS exige PWA instalado
+      (iOS 16.4+). É também a resposta à pressão por "app nas lojas"
+- [ ] **E-mail resumo para embarcadores** (diário/semanal, ou alerta de ocorrência) — portal hoje é
+      só consulta passiva
+- [ ] Múltiplas fotos por canhoto (frente/verso, avaria)
+
+## Fase C — Visão de longo prazo (argumento de recorrência)
+- [ ] **Comprovante de Entrega Eletrônico (CE-e) oficial na SEFAZ** (Ajuste SINIEF 38/21):
+      assinatura na tela + foto + GPS + timestamp registrados como evento fiscal — substitui o
+      canhoto físico com validade jurídica. "Hoje digitalizamos seu canhoto; amanhã eliminamos o papel."
 
 ## Lojas de app (App Store / Google Play) — escopo novo
 **Responsável:** Pedro Vitor

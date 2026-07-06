@@ -20,6 +20,17 @@ export async function POST(req: Request) {
   const ocorrenciaDesc = form.get("ocorrencia_desc")?.toString() || null;
   const foto = form.get("foto") as File | null;
 
+  // GPS do registro (best-effort — ausente quando o motorista negou permissão).
+  const num = (k: string) => {
+    const v = form.get(k)?.toString();
+    if (!v) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const lat = num("lat");
+  const lng = num("lng");
+  const gpsPrecisao = num("gps_precisao");
+
   if (!clientId || !nfId || !status)
     return NextResponse.json({ error: "dados incompletos" }, { status: 400 });
   // Regra de negócio: foto obrigatória para "Aceita".
@@ -47,6 +58,9 @@ export async function POST(req: Request) {
         motorista_id: user.id,
         foto_url: fotoPath,
         status,
+        lat,
+        lng,
+        gps_precisao: gpsPrecisao,
         sincronizado: true,
       },
       { onConflict: "client_id", ignoreDuplicates: true },

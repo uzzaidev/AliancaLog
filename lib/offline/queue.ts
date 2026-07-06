@@ -11,6 +11,10 @@ export type CanhotoPendente = {
   ocorrencia_tipo?: OcorrenciaTipo;
   ocorrencia_desc?: string;
   foto?: Blob;
+  // Carimbo de localização no momento do registro (best-effort).
+  lat?: number;
+  lng?: number;
+  gps_precisao?: number;
   criado_em: number;
 };
 

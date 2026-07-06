@@ -24,6 +24,9 @@ export async function flushFila(): Promise<{ enviados: number; restantes: number
       fd.set("status", c.status);
       if (c.ocorrencia_tipo) fd.set("ocorrencia_tipo", c.ocorrencia_tipo);
       if (c.ocorrencia_desc) fd.set("ocorrencia_desc", c.ocorrencia_desc);
+      if (c.lat != null) fd.set("lat", String(c.lat));
+      if (c.lng != null) fd.set("lng", String(c.lng));
+      if (c.gps_precisao != null) fd.set("gps_precisao", String(c.gps_precisao));
       if (c.foto) fd.set("foto", c.foto, "canhoto.jpg");
 
       try {

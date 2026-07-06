@@ -1,9 +1,11 @@
 // Compressão de imagem no cliente via canvas (sem dependências).
-// Reduz para no máx. `max` px no maior lado e exporta JPEG — alvo ~200KB.
+// Reduz para no máx. `max` px no maior lado e exporta JPEG — alvo ~300-400KB.
+// 1280px é o mínimo para assinatura/manuscrito do canhoto continuarem legíveis
+// no zoom (o embarcador confere quem assinou); não reduzir sem testar isso.
 export async function comprimirImagem(
   file: File,
-  max = 800,
-  quality = 0.7,
+  max = 1280,
+  quality = 0.8,
 ): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));

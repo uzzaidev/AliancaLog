@@ -32,15 +32,31 @@ export async function getComprovante(
     .eq("nota_fiscal_id", nfId)
     .order("created_at", { ascending: true });
 
+  // Daqui pra baixo o admin só é usado DEPOIS do RLS ter confirmado (acima)
+  // que este usuário pode ver esta NF — mesmo padrão para foto e GPS.
+  const admin = createAdminClient();
+
   let fotoUrl: string | null = null;
   const fotoPath = (nf as { foto_url?: string }).foto_url;
   if (fotoPath) {
-    const admin = createAdminClient();
     const { data: signed } = await admin.storage
       .from("canhotos")
       .createSignedUrl(fotoPath, SIGNED_URL_TTL);
     fotoUrl = signed?.signedUrl ?? null;
   }
+
+  // Local do registro do canhoto (quando o motorista permitiu o GPS).
+  let gps: { lat: number; lng: number } | null = null;
+  const { data: canhoto } = await admin
+    .from("canhotos")
+    .select("lat,lng")
+    .eq("nota_fiscal_id", nfId)
+    .not("lat", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (canhoto?.lat != null && canhoto?.lng != null)
+    gps = { lat: canhoto.lat, lng: canhoto.lng };
 
   const r = nf as Record<string, unknown>;
   const empresa = r.empresas_clientes as { nome?: string } | null;
@@ -58,6 +74,7 @@ export async function getComprovante(
     criado_em: r.created_at as string,
     entregue_em: (r.entregue_em as string) ?? null,
     foto_url: fotoUrl,
+    gps,
     ocorrencias: ((ocorrencias ?? []) as Record<string, unknown>[]).map((o) => ({
       tipo: o.tipo as OcorrenciaTipo,
       descricao: (o.descricao as string) ?? null,

@@ -89,6 +89,8 @@ export type ComprovanteDetalhe = {
   criado_em: string;
   entregue_em: string | null;
   foto_url: string | null;
+  // Local do registro do canhoto (best-effort; null se o GPS não estava disponível).
+  gps: { lat: number; lng: number } | null;
   ocorrencias: {
     tipo: OcorrenciaTipo;
     descricao: string | null;

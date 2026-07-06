@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card } from "@/components/ui";
 import { comprimirImagem } from "@/lib/offline/image";
@@ -37,6 +37,24 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
 
+  // Carimbo de localização do registro (best-effort — segue sem GPS se o
+  // motorista negar ou não houver sinal; nunca bloqueia o registro).
+  const gpsRef = useRef<{ lat: number; lng: number; prec: number } | null>(null);
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        gpsRef.current = {
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+          prec: p.coords.accuracy,
+        };
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 120000 },
+    );
+  }, []);
+
   async function onFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -64,6 +82,9 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
         ocorrencia_tipo: status === "ocorrencia" ? tipo : undefined,
         ocorrencia_desc: status === "ocorrencia" ? desc.trim() : undefined,
         foto: foto ?? undefined,
+        lat: gpsRef.current?.lat,
+        lng: gpsRef.current?.lng,
+        gps_precisao: gpsRef.current?.prec,
         criado_em: Date.now(),
       });
       notificarFila();

@@ -3,14 +3,20 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-06-30
-**Sprint atual:** Sprints 1 e 2 implementados (compilando) → próximo é o Sprint 3
-**Status geral:** 🟢 Sprints 0–2 prontos no código; falta conectar o Supabase real para validar em runtime
+**Última atualização:** 2026-07-03
+**Sprint atual:** Sprints 0–3 implementados (compilando) + correções pré-piloto → próximo é o Sprint 4 (piloto)
+**Status geral:** 🟢 MVP A completo no código; falta validar em runtime contra Supabase real e fazer deploy
 
-**Mudança de hoje:** projeto consolidado neste repositório (`AliancaLog`, conectado ao GitHub
-`uzzaidev/AliancaLog`) — antes o código vivia numa pasta local separada (`C:\Users\USER\dev\Aliança Log`)
-e os documentos comerciais noutra. Agora tudo está num só lugar. Também foi formalizada a divisão de
-responsabilidades do time (ver [PLAN.md § Time e responsabilidades](./PLAN.md#time-e-responsabilidades)).
+**Mudanças de hoje (2026-07-03):**
+1. **Sprint 3 concluído**: portal do cliente (filtros + lista + comprovante), modal de canhoto
+   compartilhado (foto assinada + timeline), fechamento de romaneio com validação de pendentes,
+   Realtime generalizado (canal configurável).
+2. **Revisão de produto completa** (pesquisa ePOD + legislação NF-e) — achados e decisões em
+   [PLAN.md § 7](./PLAN.md). Destaque: **bug crítico corrigido no scanner** — o código de barras do
+   DANFE contém a chave de acesso (44 dígitos), não o número da NF; a bipagem nunca casaria com a
+   importação. Novo parser em `lib/nfe.ts` + migration `0005` (chave_acesso + GPS do canhoto) +
+   foto 1280px + carimbo de GPS no registro.
+3. AGENTS.md por pasta (app/, components/, lib/, supabase/) para agent-readiness.
 
 ---
 
@@ -46,8 +52,22 @@ responsabilidades do time (ver [PLAN.md § Time e responsabilidades](./PLAN.md#t
 5. Testar fluxo completo: gerência importa/cria romaneio → motorista confirma e registra canhoto (inclusive em modo avião) → dashboard atualiza em tempo real → (Sprint 3: portal do cliente).
 6. (Para publicar) repo no GitHub + Vercel — **a câmera e o offline exigem HTTPS**, que a URL da Vercel fornece.
 
-## ▶️ Próximo bloco de trabalho (Sprint 3)
-Realtime já wired no dashboard; falta: modal de canhoto com foto (URL assinada), **fechamento de romaneio** (resumo X/Y), e o **portal do cliente** (read-only, RLS, ver comprovante). Ver [CHECKLIST.md](./CHECKLIST.md#sprint-3--realtime--portal--fechamento).
+## ✅ Implementado (Sprint 3 — Realtime + Portal + fechamento) — compila, falta validar com Supabase real
+- **Modal de comprovante** compartilhado gerência/cliente: foto via URL assinada (RLS-check antes de assinar), timeline (criação → ocorrências → entrega), local do registro (GPS).
+- **Fechamento de romaneio**: página de detalhe com progresso, botão só habilita com zero pendentes.
+- **Portal do cliente**: lista de NFs da empresa (RLS) + filtros (status/período/busca) + realtime.
+- **Verificado:** build/typecheck/lint verdes (14 rotas). **NÃO** testado em runtime.
+
+## ✅ Correções da revisão de produto (2026-07-03) — compila, migration 0005 pendente de aplicar
+- **Scanner**: `lib/nfe.ts` interpreta a chave de acesso do DANFE (valida DV, extrai o nº da NF); `buscarNf` casa por chave (exato) e por número; chave é gravada na NF ao bipar (enriquecimento).
+- **Foto**: 1280px @ 0.8 (era 800px @ 0.7) — assinatura legível no zoom.
+- **GPS**: coleta pontual no registro do canhoto (best-effort, nunca bloqueia) → colunas `lat/lng/gps_precisao` em `canhotos` → link "📍 Ver local do registro" no comprovante.
+- **Migration `0005_chave_acesso_gps.sql`** criada — **aplicar com `npm run db:migrate`** no Supabase real.
+
+## ▶️ Próximo bloco de trabalho (Sprint 4 — Piloto & Go-Live)
+Pré-piloto: aplicar migration 0005, smoke test de RLS, Sentry, backup automático, critérios de
+sucesso do piloto. Depois: dados reais, logins, piloto com 2–3 motoristas, treinamento, go-live.
+Ver [CHECKLIST.md](./CHECKLIST.md) (seções "Pré-piloto" e "Sprint 4").
 
 ---
 

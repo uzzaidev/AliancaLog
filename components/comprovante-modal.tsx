@@ -105,6 +105,16 @@ export function ComprovanteModal({
                 Motorista: {dados.motorista_nome}
               </div>
             )}
+            {dados.gps && (
+              <a
+                href={`https://www.google.com/maps?q=${dados.gps.lat},${dados.gps.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-brand hover:underline"
+              >
+                📍 Ver local do registro
+              </a>
+            )}
           </div>
 
           {dados.foto_url ? (

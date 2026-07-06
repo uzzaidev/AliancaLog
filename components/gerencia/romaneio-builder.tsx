@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Field, Input } from "@/components/ui";
 import { BarcodeScanner } from "@/components/gerencia/barcode-scanner";
+import { interpretarCodigoBipado } from "@/lib/nfe";
 import {
   buscarNf,
   criarRomaneio,
@@ -48,18 +49,22 @@ export function RomaneioBuilder({
   }, [itens]);
   const busyRef = useRef(false);
   const lastRef = useRef<{ n: string; t: number }>({ n: "", t: 0 });
+  // Chave de acesso lida para NFs que caíram na entrada manual (numero → chave).
+  const chavesRef = useRef<Record<string, string>>({});
 
   const handleScan = useCallback(async (text: string) => {
-    const n = text.trim();
+    // O DANFE codifica a chave de acesso (44 dígitos), não o número da NF.
+    const { numero, chave } = interpretarCodigoBipado(text);
+    if (!numero) return;
     const now = Date.now();
     // Dedupe: ignora o mesmo número em sequência (janela de 2,5s).
-    if (n === lastRef.current.n && now - lastRef.current.t < 2500) return;
+    if (numero === lastRef.current.n && now - lastRef.current.t < 2500) return;
     if (busyRef.current) return;
-    if (itensRef.current.some((i) => i.numero_nf === n)) return;
-    lastRef.current = { n, t: now };
+    if (itensRef.current.some((i) => i.numero_nf === numero)) return;
+    lastRef.current = { n: numero, t: now };
     busyRef.current = true;
     try {
-      const nf = await buscarNf(n);
+      const nf = await buscarNf(text);
       if (nf) {
         setItens((prev) => [
           ...prev,
@@ -72,10 +77,11 @@ export function RomaneioBuilder({
             cidade: nf.cidade ?? undefined,
           },
         ]);
-        setMsg(`NF ${n} adicionada (${nf.destinatario_nome}).`);
+        setMsg(`NF ${nf.numero_nf} adicionada (${nf.destinatario_nome}).`);
       } else {
-        setMNum(n);
-        setMsg(`NF ${n} não está na importação — complete os dados abaixo.`);
+        if (chave) chavesRef.current[numero] = chave;
+        setMNum(numero);
+        setMsg(`NF ${numero} não está na importação — complete os dados abaixo.`);
       }
     } finally {
       busyRef.current = false;
@@ -97,6 +103,8 @@ export function RomaneioBuilder({
         destinatario_nome: mNome.trim(),
         destinatario_endereco: mEnd.trim(),
         cidade: mCidade.trim() || undefined,
+        // Se essa NF foi bipada antes de cair no manual, aproveita a chave lida.
+        chave_acesso: chavesRef.current[mNum.trim()],
       },
     ]);
     setMNum("");
@@ -125,6 +133,7 @@ export function RomaneioBuilder({
           destinatario_endereco: i.destinatario_endereco,
           cidade: i.cidade,
           empresaId: i.empresaId,
+          chave_acesso: i.chave_acesso,
         })),
       });
       if (res.error) setErro(res.error);

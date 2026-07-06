@@ -86,7 +86,8 @@ Modelo de dados, RLS e regras de negócio completos em [docs/ALIANCA-LOG-ESCOPO-
 | Fase | Conteúdo | Dono técnico principal |
 |---|---|---|
 | **MVP A** (Sprints 0–4) | Auth, dashboard gerência, import Excel, romaneio por câmera, app motorista offline, realtime, portal cliente, piloto e go-live | Vítor (frontend) + Luis (backend/offline) |
-| **Fase B** | Roteirização, KPIs de motoristas, financeiro/rentabilidade, dashboards avançados | Luis |
+| **Fase B** | Roteirização, KPIs de motoristas, financeiro/rentabilidade, dashboards avançados + import XML NF-e, fluxo de devolução, Web Push, e-mail p/ embarcadores | Luis |
+| **Fase C** (visão) | Comprovante de Entrega Eletrônico oficial (CE-e/SEFAZ, Ajuste SINIEF 38/21): assinatura na tela + validade fiscal, elimina o papel | a definir |
 | **Lojas de app** | Publicação iOS/Android | Pedro Vitor |
 
 Passo a passo detalhado, com status atual de cada item: [CHECKLIST.md](./CHECKLIST.md).
@@ -98,3 +99,23 @@ Passo a passo detalhado, com status atual de cada item: [CHECKLIST.md](./CHECKLI
 **Matheus precisa fornecer:** 2–3 Excel reais das empresas, lista dos 16 motoristas (nome+e-mail), lista das ~20 empresas (nome+e-mail).
 
 **Riscos principais:** ver aba `Riscos` da planilha original em `docs/`. Os mais críticos: sync offline falhar em região de sinal fraco (mitigado pela fila idempotente já implementada), cliente final ver dado de outra empresa (mitigado por RLS, mas precisa de QA — ver gap acima), contrato sem prazo mínimo/IP definido (UzzAI Empresa/jurídico).
+
+---
+
+## 7. Revisão de produto (jul/2026) — decisões incorporadas
+
+Revisão completa do plano contra pesquisa de mercado (líderes ePOD: Track-POD, Detrack, Onfleet) e
+legislação brasileira (NF-e/DANFE, canhoto eletrônico). Conclusão: **a receita do produto está certa** —
+foto + status + offline + realtime + portal é exatamente o núcleo dos líderes do setor. Ajustes feitos:
+
+| Achado | Ação | Status |
+|---|---|---|
+| Código de barras do DANFE é a **chave de acesso (44 díg.)**, não o nº da NF — a bipagem nunca casaria | Parser `lib/nfe.ts` (DV módulo 11 + extração do nNF) + coluna `chave_acesso` (migration 0005) + match por chave e número | ✅ corrigido |
+| Foto 800px pode deixar assinatura ilegível no zoom | Compressão 1280px @ 0.8 (~300–400KB); validar com canhotos reais no piloto | ✅ ajustado |
+| ePOD padrão de mercado inclui carimbo de GPS | Coleta pontual best-effort no registro + link no comprovante (não é rastreamento contínuo — escopo respeitado) | ✅ implementado |
+| Excel heterogêneo é frágil; **XML da NF-e é formato nacional único** e a transportadora já o recebe | "Importar XML" vira caminho preferido na Fase B; Excel permanece como fallback | 📋 Fase B |
+| NF recusada fica "recusada" para sempre — falta o retorno/devolução | Fluxo de devolução/reentrega na Fase B | 📋 Fase B |
+| "Motorista recebe notificação" prometida no doc mestre, sem implementação | Web Push na Fase B (Android ok; iOS 16.4+ com PWA instalado) | 📋 Fase B |
+| Existe moldura legal p/ substituir o canhoto físico (CE-e, Ajuste SINIEF 38/21) | Fase C como visão/argumento de recorrência | 📋 Fase C |
+
+Detalhe operacional (smoke test RLS, Sentry, backup, critérios do piloto): seção **Pré-piloto** do [CHECKLIST.md](./CHECKLIST.md).

@@ -52,6 +52,9 @@ arquivo na raiz, export `proxy`). Não recrie um `middleware.ts` — não existe
   mostrar itens/produtos da NF (o motorista já tem a NF física em mãos).
 - Commits/PRs: `main` é produção. Sem branch `develop` formalizada ainda — confirmar com o time antes de
   assumir uma convenção de branches.
+- **Git commit e git push exigem confirmação explícita do Vítor a cada vez** — nunca assuma que uma
+  aprovação anterior (de uma tarefa, ou de um commit/push específico) autoriza os próximos. Pergunte
+  antes de cada `git commit` e de cada `git push`, mesmo que a tarefa em si já esteja aprovada.
 
 ## Time — quem decide o quê
 

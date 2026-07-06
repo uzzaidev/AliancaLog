@@ -3,6 +3,7 @@
 // Montagem de romaneio por câmera (bipagem) + entrada manual.
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/dal";
+import { interpretarCodigoBipado } from "@/lib/nfe";
 import { createClient } from "@/lib/supabase/server";
 
 const hoje = () => new Date().toISOString().slice(0, 10);
@@ -16,26 +17,45 @@ export type NfEncontrada = {
   empresa_nome: string | null;
 };
 
-// Procura uma NF do dia ainda não vinculada a romaneio, pelo número bipado.
-export async function buscarNf(numero: string): Promise<NfEncontrada | null> {
+// Procura uma NF do dia ainda não vinculada a romaneio. O código bipado no
+// DANFE é a CHAVE DE ACESSO (44 dígitos) — o número da NF é extraído dela;
+// um número digitado à mão continua funcionando igual.
+export async function buscarNf(codigo: string): Promise<NfEncontrada | null> {
   await requireRole("gerencia");
-  const n = numero.trim();
-  if (!n) return null;
+  const { numero, chave } = interpretarCodigoBipado(codigo);
+  if (!numero) return null;
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("notas_fiscais")
-    .select(
-      "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,empresas_clientes(nome)",
-    )
-    .eq("numero_nf", n)
-    .eq("data_entrega", hoje())
-    .is("romaneio_id", null)
-    .limit(1)
-    .maybeSingle();
+  const query = () =>
+    supabase
+      .from("notas_fiscais")
+      .select(
+        "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,empresas_clientes(nome)",
+      )
+      .eq("data_entrega", hoje())
+      .is("romaneio_id", null)
+      .limit(1);
+
+  // 1) Match exato pela chave (NF importada por XML ou já bipada antes).
+  let data = chave
+    ? (await query().eq("chave_acesso", chave).maybeSingle()).data
+    : null;
+
+  // 2) Match pelo número (extraído da chave, ou digitado).
+  if (!data) data = (await query().eq("numero_nf", numero).maybeSingle()).data;
 
   if (!data) return null;
   const r = data as Record<string, unknown>;
+
+  // Enriquecimento: NF veio do Excel sem chave e acabou de ser bipada —
+  // grava a chave para os próximos matches serem exatos.
+  if (chave) {
+    await supabase
+      .from("notas_fiscais")
+      .update({ chave_acesso: chave })
+      .eq("id", r.id as string)
+      .is("chave_acesso", null);
+  }
   const emp = r.empresas_clientes as { nome?: string } | null;
   return {
     id: r.id as string,
@@ -54,6 +74,7 @@ export type ItemRomaneio = {
   destinatario_endereco: string;
   cidade?: string;
   empresaId?: string;
+  chave_acesso?: string;
 };
 
 export async function criarRomaneio(input: {
@@ -102,6 +123,7 @@ export async function criarRomaneio(input: {
       destinatario_nome: i.destinatario_nome.trim(),
       destinatario_endereco: i.destinatario_endereco.trim(),
       cidade: i.cidade?.trim() || null,
+      chave_acesso: i.chave_acesso ?? null,
       data_entrega: data,
       motorista_id: input.motoristaId,
       romaneio_id: rom.id,
