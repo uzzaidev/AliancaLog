@@ -3,11 +3,33 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-07-06
-**Sprint atual:** Sprints 0–3 implementados e **validados em runtime** contra Supabase real → próximo é o Sprint 4 (piloto)
-**Status geral:** 🟢 MVP A rodando de ponta a ponta em ambiente real (login, dashboard, sync offline, realtime); falta deploy (Vercel/HTTPS) e o piloto em si
+**Última atualização:** 2026-07-13
+**Sprint atual:** Pré-aplicativo **aprovado pelo cliente**; ajustes pós-aprovação implementados → próximo é deploy (Vercel/HTTPS) e piloto
+**Status geral:** 🟢 MVP A + ajustes pós-aprovação rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
 
-**Mudanças de hoje (2026-07-06):**
+**Mudanças de hoje (2026-07-13) — ajustes pós-aprovação do cliente:**
+1. **"Retida" deixou de ser status** (migration `0008`): virou o tipo de ocorrência `canhoto_retido`.
+   Dados migrados; checks de status recusam `retida` (validado por smoke test).
+2. **Foto obrigatória em TODOS os status** do canhoto (antes só "aceita") — no cliente
+   (`canhoto-form.tsx`, botão desabilitado com dica) e no servidor (`app/api/sync/route.ts`).
+3. **Cliente importa as próprias NFs** (`/cliente/importar`): empresa vem do JWT, nunca do
+   formulário; RLS `cli_nf_insert` (0008) garante no banco (smoke test confirma que cliente NÃO
+   consegue inserir para outra empresa). As NFs entram "soltas" e caem no painel da gerência via
+   Realtime — sem reimportação manual.
+4. **Importação por XML e PDF** (`lib/import-nf.ts`), nos dois perfis: XML de NF-e (recomendado —
+   traz tudo + chave de acesso) via `DOMParser`; PDF/DANFE best-effort extrai só a chave (validada
+   pelo DV) e o número, resto preenchido à mão. `ImportWizard` unificado por prop `variant`.
+5. **Fornecedor na bipagem**: ao bipar, o toast e a lista do romaneio mostram a empresa embarcadora
+   (fornecedor) + destino; XML/chave fazem a nota casar por match exato.
+6. **Painel por cliente no dashboard** (`empresas-painel.tsx`): faixa de cards por empresa (avatar
+   colorido, total, "N aguardando bipagem"); clicar abre a lista de NFs **agrupada por cidade**
+   (número da NF, cliente final, cidade), priorizando a roteirização.
+7. **Polish visual**: status badges com dot de cor, stat-cards com indicador, empty state do cliente
+   com CTA de importação.
+   Verificação: typecheck + lint + build verdes; parser XML testado (5/5 campos); smoke test de RLS
+   e constraints no banco real passou.
+
+**Mudanças de 2026-07-06:**
 1. **Projeto Supabase real conectado**: `.env` preenchido e validado; migrations 0001→0005 aplicadas
    (o runner estava travado por hash mismatch em 0001–0004, editadas após aplicadas — hashes
    reconciliados com o conteúdo atual dos arquivos).

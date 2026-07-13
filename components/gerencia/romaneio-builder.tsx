@@ -16,7 +16,10 @@ import type {
   VeiculoItem,
 } from "@/lib/data/gerencia";
 
-type Item = ItemRomaneio & { origem: "bipada" | "manual" };
+type Item = ItemRomaneio & {
+  origem: "bipada" | "manual";
+  empresa_nome?: string;
+};
 
 export function RomaneioBuilder({
   empresas,
@@ -75,9 +78,15 @@ export function RomaneioBuilder({
             destinatario_nome: nf.destinatario_nome,
             destinatario_endereco: nf.destinatario_endereco,
             cidade: nf.cidade ?? undefined,
+            empresa_nome: nf.empresa_nome ?? undefined,
           },
         ]);
-        setMsg(`NF ${nf.numero_nf} adicionada (${nf.destinatario_nome}).`);
+        // Mostra fornecedor (empresa embarcadora) + destino, o que o cliente pediu.
+        const fornecedor = nf.empresa_nome ? `${nf.empresa_nome} → ` : "";
+        const cidade = nf.cidade ? ` (${nf.cidade})` : "";
+        setMsg(
+          `NF ${nf.numero_nf} · ${fornecedor}${nf.destinatario_nome}${cidade}`,
+        );
       } else {
         if (chave) chavesRef.current[numero] = chave;
         setMNum(numero);
@@ -252,10 +261,15 @@ export function RomaneioBuilder({
             key={i.numero_nf}
             className="flex items-center justify-between px-4 py-2.5 text-sm"
           >
-            <div>
+            <div className="min-w-0">
               <span className="font-medium text-ink">NF {i.numero_nf}</span>{" "}
+              {i.empresa_nome && (
+                <span className="text-brand">· {i.empresa_nome}</span>
+              )}
               <span className="text-muted">
+                {" "}
                 · {i.destinatario_nome}
+                {i.cidade ? `, ${i.cidade}` : ""}
                 {i.origem === "manual" ? " (manual)" : ""}
               </span>
             </div>

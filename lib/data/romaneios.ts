@@ -32,7 +32,7 @@ export async function listRomaneios(): Promise<RomaneioRow[]> {
   });
 }
 
-const FINAIS: NotaStatus[] = ["aceita", "recusada", "retida", "ocorrencia"];
+const FINAIS: NotaStatus[] = ["aceita", "recusada", "ocorrencia"];
 
 export type RomaneioDetalhe = {
   id: string;

@@ -137,7 +137,7 @@ export async function criarRomaneio(input: {
   return { ok: "Romaneio criado.", id: rom.id };
 }
 
-const STATUS_FINAIS = ["aceita", "recusada", "retida", "ocorrencia"];
+const STATUS_FINAIS = ["aceita", "recusada", "ocorrencia"];
 
 // Fecha o romaneio — só permite quando todas as NFs têm status final.
 // "Recusada" não bloqueia o fechamento (é um status final como outro qualquer).

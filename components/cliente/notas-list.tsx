@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Card, StatusBadge } from "@/components/ui";
 import { ComprovanteModal } from "@/components/comprovante-modal";
 import { getComprovanteCliente } from "@/app/cliente/notas/actions";
@@ -15,8 +16,19 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
 
   if (notas.length === 0) {
     return (
-      <Card className="p-8 text-center text-sm text-muted">
-        Nenhuma NF encontrada para o filtro atual.
+      <Card className="flex flex-col items-center gap-3 p-10 text-center">
+        <span className="text-3xl" aria-hidden>
+          📦
+        </span>
+        <p className="text-sm text-muted">
+          Nenhuma entrega para o filtro atual.
+        </p>
+        <Link
+          href="/cliente/importar"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+        >
+          Enviar minhas NFs
+        </Link>
       </Card>
     );
   }

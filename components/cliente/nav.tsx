@@ -1,17 +1,15 @@
 "use client";
 
-// Sub-navegação da área de gerência (marca o item ativo pela rota).
+// Sub-navegação do portal do cliente (marca o item ativo pela rota).
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/gerencia/dashboard", label: "Painel" },
-  { href: "/gerencia/romaneios", label: "Romaneios" },
-  { href: "/gerencia/importar", label: "Importar NFs" },
-  { href: "/gerencia/cadastros", label: "Cadastros" },
+  { href: "/cliente/notas", label: "Minhas entregas" },
+  { href: "/cliente/importar", label: "Enviar NFs" },
 ];
 
-export function GerenciaNav() {
+export function ClienteNav() {
   const pathname = usePathname();
   return (
     <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-line">

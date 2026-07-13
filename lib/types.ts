@@ -6,22 +6,23 @@ export type Role = "gerencia" | "motorista" | "cliente_final";
 export type RomaneioStatus = "rascunho" | "ativo" | "fechado";
 
 // Status de uma NF ao longo do ciclo de entrega.
+// "retida" saiu (migration 0008): virou o tipo de ocorrência canhoto_retido.
 export type NotaStatus =
   | "pendente"
   | "em_rota"
   | "aceita"
   | "recusada"
-  | "retida"
   | "ocorrencia";
 
 // Status final possível registrado pelo motorista no canhoto.
-export type CanhotoStatus = "aceita" | "recusada" | "retida" | "ocorrencia";
+export type CanhotoStatus = "aceita" | "recusada" | "ocorrencia";
 
 export type OcorrenciaTipo =
   | "item_faltando"
   | "endereco_nao_encontrado"
   | "cliente_ausente"
   | "avaria"
+  | "canhoto_retido"
   | "outro";
 
 // NF na visão do motorista (compartilhada entre data layer e componentes client).
@@ -63,7 +64,6 @@ export const NOTA_STATUS_META: Record<
   em_rota: { label: "Em rota", tone: "info" },
   aceita: { label: "Aceita", tone: "success" },
   recusada: { label: "Recusada", tone: "danger" },
-  retida: { label: "Retida", tone: "warning" },
   ocorrencia: { label: "Ocorrência", tone: "warning" },
 };
 
@@ -72,6 +72,7 @@ export const OCORRENCIA_LABEL: Record<OcorrenciaTipo, string> = {
   endereco_nao_encontrado: "Endereço não encontrado",
   cliente_ausente: "Cliente ausente",
   avaria: "Avaria",
+  canhoto_retido: "Canhoto retido",
   outro: "Outro",
 };
 

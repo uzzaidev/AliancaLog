@@ -33,7 +33,15 @@ export function Badge({
 
 export function StatusBadge({ status }: { status: NotaStatus }) {
   const meta = NOTA_STATUS_META[status];
-  return <Badge tone={meta.tone}>{meta.label}</Badge>;
+  return (
+    <Badge tone={meta.tone}>
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-current opacity-70"
+        aria-hidden
+      />
+      {meta.label}
+    </Badge>
+  );
 }
 
 export function Card({

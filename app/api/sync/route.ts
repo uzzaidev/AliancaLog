@@ -33,9 +33,9 @@ export async function POST(req: Request) {
 
   if (!clientId || !nfId || !status)
     return NextResponse.json({ error: "dados incompletos" }, { status: 400 });
-  // Regra de negócio: foto obrigatória para "Aceita".
-  if (status === "aceita" && (!foto || foto.size === 0))
-    return NextResponse.json({ error: "foto obrigatória para aceita" }, { status: 400 });
+  // Regra de negócio: foto obrigatória em TODOS os status (prova da entrega/ocorrência).
+  if (!foto || foto.size === 0)
+    return NextResponse.json({ error: "foto obrigatória" }, { status: 400 });
 
   // 1. Sobe a foto (se houver) no bucket privado.
   // Sem upsert: o path é derivado do client_id, então re-sync cai no mesmo

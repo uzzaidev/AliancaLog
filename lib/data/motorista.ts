@@ -10,7 +10,7 @@ import type {
 export type { NotaMotorista };
 
 const hoje = () => new Date().toISOString().slice(0, 10);
-const FINAIS: NotaStatus[] = ["aceita", "recusada", "retida", "ocorrencia"];
+const FINAIS: NotaStatus[] = ["aceita", "recusada", "ocorrencia"];
 
 export type RomaneioMotorista = {
   id: string;

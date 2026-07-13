@@ -1,9 +1,11 @@
+import { EmpresasPainel } from "@/components/gerencia/empresas-painel";
 import { Filtros } from "@/components/gerencia/filtros";
 import { NotasList } from "@/components/gerencia/notas-list";
 import { RealtimeRefresher } from "@/components/gerencia/realtime-refresher";
 import { StatCards } from "@/components/gerencia/stat-cards";
 import {
   getNotasDoDia,
+  getPainelClientes,
   getResumoHoje,
   listEmpresas,
   listMotoristas,
@@ -19,12 +21,14 @@ export default async function GerenciaDashboard({
   }>;
 }) {
   const sp = await searchParams;
-  const [resumo, notas, empresas, motoristas] = await Promise.all([
-    getResumoHoje(),
-    getNotasDoDia(sp),
-    listEmpresas(),
-    listMotoristas(),
-  ]);
+  const [resumo, notas, empresas, motoristas, painelClientes] =
+    await Promise.all([
+      getResumoHoje(),
+      getNotasDoDia(sp),
+      listEmpresas(),
+      listMotoristas(),
+      getPainelClientes(),
+    ]);
 
   return (
     <div className="space-y-6">
@@ -37,6 +41,7 @@ export default async function GerenciaDashboard({
       </div>
 
       <StatCards resumo={resumo} />
+      <EmpresasPainel empresas={painelClientes} />
       <Filtros empresas={empresas} motoristas={motoristas} />
       <NotasList notas={notas} />
     </div>

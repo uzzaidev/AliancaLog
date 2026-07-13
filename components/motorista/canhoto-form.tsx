@@ -20,8 +20,7 @@ const STATUS_BTNS: {
 }[] = [
   { key: "aceita", label: "✅  Nota aceita", cls: "bg-success text-white" },
   { key: "recusada", label: "❌  Nota recusada", cls: "bg-danger text-white" },
-  { key: "retida", label: "⚠️  Canhoto retido", cls: "bg-warning text-white" },
-  { key: "ocorrencia", label: "📦  Ocorrência", cls: "bg-ink text-white" },
+  { key: "ocorrencia", label: "⚠️  Ocorrência", cls: "bg-warning text-white" },
 ];
 
 const TIPOS = Object.keys(OCORRENCIA_LABEL) as OcorrenciaTipo[];
@@ -67,8 +66,8 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   async function confirmar() {
     setErro(null);
     if (!status) return setErro("Selecione o status da entrega.");
-    if (status === "aceita" && !foto)
-      return setErro("Foto do canhoto é obrigatória para aceitar.");
+    // Foto obrigatória em TODOS os status — é a prova da entrega/ocorrência.
+    if (!foto) return setErro("Foto é obrigatória para registrar.");
     if (status === "ocorrencia" && !desc.trim())
       return setErro("Descreva a ocorrência.");
 
@@ -101,6 +100,15 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
     }
   }
 
+  // Mensagem do que ainda falta para poder enviar (foto é sempre obrigatória).
+  const faltando = !status
+    ? "Selecione o status da entrega."
+    : !foto
+      ? "Tire a foto para confirmar."
+      : status === "ocorrencia" && !desc.trim()
+        ? "Descreva a ocorrência."
+        : null;
+
   if (resultado) {
     return (
       <Card className="space-y-4 p-6 text-center">
@@ -127,8 +135,11 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
 
       <Card className="space-y-3 p-4">
         <label className="block">
-          <span className="mb-2 block text-sm font-medium">
+          <span className="mb-2 flex items-center gap-1.5 text-sm font-medium">
             Foto do canhoto
+            <span className="rounded-full bg-danger-50 px-1.5 py-0.5 text-xs font-semibold text-danger">
+              obrigatória
+            </span>
           </span>
           {preview ? (
             <div className="space-y-2">
@@ -218,7 +229,15 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
         </p>
       )}
 
-      <Button className="w-full" onClick={confirmar} disabled={enviando}>
+      {!erro && faltando && (
+        <p className="text-center text-sm text-muted">{faltando}</p>
+      )}
+
+      <Button
+        className="w-full"
+        onClick={confirmar}
+        disabled={enviando || !!faltando}
+      >
         {enviando ? "Salvando…" : "Confirmar e enviar"}
       </Button>
     </div>

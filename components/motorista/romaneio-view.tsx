@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, Input, StatusBadge } from "@/components/ui";
 import type { NotaMotorista } from "@/lib/types";
 
-const FINAIS = ["aceita", "recusada", "retida", "ocorrencia"];
+const FINAIS = ["aceita", "recusada", "ocorrencia"];
 
 export function RomaneioView({ notas }: { notas: NotaMotorista[] }) {
   const [q, setQ] = useState("");

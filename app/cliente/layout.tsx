@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { ClienteNav } from "@/components/cliente/nav";
 import { requireRole } from "@/lib/auth/dal";
 
 export default async function ClienteLayout({
@@ -9,6 +10,7 @@ export default async function ClienteLayout({
   const user = await requireRole("cliente_final");
   return (
     <AppShell role="cliente_final" email={user.email}>
+      <ClienteNav />
       {children}
     </AppShell>
   );

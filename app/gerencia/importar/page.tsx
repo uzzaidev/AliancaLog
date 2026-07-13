@@ -10,12 +10,17 @@ export default async function ImportarPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Importar Excel</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Importar NFs</h1>
         <p className="text-sm text-muted">
-          Suba a planilha da empresa embarcadora para criar as NFs do dia.
+          XML da NF-e (recomendado), Excel/CSV ou PDF. As notas entram na fila do
+          dia para montar os romaneios.
         </p>
       </div>
-      <ImportWizard empresas={empresas} motoristas={motoristas} />
+      <ImportWizard
+        variant="gerencia"
+        empresas={empresas}
+        motoristas={motoristas}
+      />
     </div>
   );
 }

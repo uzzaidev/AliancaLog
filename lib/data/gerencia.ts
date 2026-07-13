@@ -12,7 +12,6 @@ export type ResumoDia = {
   em_rota: number;
   aceita: number;
   recusada: number;
-  retida: number;
   ocorrencia: number;
 };
 
@@ -29,7 +28,6 @@ export async function getResumoHoje(data?: string): Promise<ResumoDia> {
     em_rota: 0,
     aceita: 0,
     recusada: 0,
-    retida: 0,
     ocorrencia: 0,
   };
   for (const row of (rows ?? []) as { status: NotaStatus }[]) {
@@ -91,6 +89,78 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
       motorista_nome: motorista?.usuarios?.nome ?? null,
     };
   });
+}
+
+// ── Painel por cliente (empresa embarcadora) do dashboard ────────────────────
+// "Cliente" da transportadora = empresa embarcadora. "Cliente final" = destinatário.
+export type NotaClienteFinal = {
+  numero_nf: string;
+  destinatario_nome: string;
+  cidade: string | null;
+  status: NotaStatus;
+  aguardando: boolean; // ainda sem romaneio (não bipada)
+};
+
+export type CidadeGrupo = { cidade: string; notas: NotaClienteFinal[] };
+
+export type EmpresaPainel = {
+  id: string;
+  nome: string;
+  total: number; // NFs importadas hoje
+  aguardando: number; // ainda sem romaneio
+  cidades: CidadeGrupo[]; // agrupadas por cidade (prioridade do cliente)
+};
+
+// Agrega as NFs do dia por empresa embarcadora e, dentro dela, por cidade.
+// Alimenta a faixa de clientes do dashboard e o painel que abre ao clicar.
+export async function getPainelClientes(
+  data?: string,
+): Promise<EmpresaPainel[]> {
+  const supabase = await createClient();
+  const { data: rows } = await supabase
+    .from("notas_fiscais")
+    .select(
+      "numero_nf,destinatario_nome,cidade,status,romaneio_id,empresa_cliente_id,empresas_clientes(nome)",
+    )
+    .eq("data_entrega", data ?? hojeISO());
+
+  const porEmpresa = new Map<string, EmpresaPainel>();
+  for (const r of (rows ?? []) as Record<string, unknown>[]) {
+    const empId = (r.empresa_cliente_id as string) ?? "sem-empresa";
+    const nome =
+      (r.empresas_clientes as { nome?: string } | null)?.nome ?? "Sem empresa";
+    let emp = porEmpresa.get(empId);
+    if (!emp) {
+      emp = { id: empId, nome, total: 0, aguardando: 0, cidades: [] };
+      porEmpresa.set(empId, emp);
+    }
+    const aguardando = !(r.romaneio_id as string | null);
+    emp.total++;
+    if (aguardando) emp.aguardando++;
+
+    const cidade = (r.cidade as string) || "Sem cidade";
+    let grupo = emp.cidades.find((c) => c.cidade === cidade);
+    if (!grupo) {
+      grupo = { cidade, notas: [] };
+      emp.cidades.push(grupo);
+    }
+    grupo.notas.push({
+      numero_nf: r.numero_nf as string,
+      destinatario_nome: r.destinatario_nome as string,
+      cidade: (r.cidade as string) ?? null,
+      status: r.status as NotaStatus,
+      aguardando,
+    });
+  }
+
+  const lista = Array.from(porEmpresa.values());
+  for (const emp of lista) {
+    emp.cidades.sort((a, b) => b.notas.length - a.notas.length);
+    for (const c of emp.cidades)
+      c.notas.sort((a, b) => a.numero_nf.localeCompare(b.numero_nf));
+  }
+  lista.sort((a, b) => b.total - a.total);
+  return lista;
 }
 
 export type EmpresaItem = { id: string; nome: string };

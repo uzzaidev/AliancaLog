@@ -11,6 +11,8 @@ export type ImportRow = {
   destinatario_endereco: string;
   cidade?: string;
   observacao?: string;
+  // Chave de acesso da NF-e (44 díg.) — vem do XML/PDF; Excel geralmente não tem.
+  chave_acesso?: string;
 };
 
 export async function confirmarImportacao(input: {
@@ -51,7 +53,9 @@ export async function confirmarImportacao(input: {
     destinatario_endereco: String(r.destinatario_endereco).trim(),
     cidade: r.cidade ? String(r.cidade).trim() : null,
     observacao: r.observacao ? String(r.observacao).trim() : null,
+    chave_acesso: r.chave_acesso?.trim() || null,
     data_entrega: hoje,
+    origem_importacao: "gerencia",
     motorista_id: input.motoristaId || null,
     romaneio_id: romaneioId,
   }));
