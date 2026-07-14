@@ -4,6 +4,7 @@ import "server-only";
 // (cli_nf_select em supabase/migrations/0002_rls.sql) — aqui só aplicamos os
 // filtros extras de UI por cima do que o banco já retorna.
 import { createClient } from "@/lib/supabase/server";
+import { diasAtrasSP, hojeSP } from "@/lib/date";
 import type { NotaStatus } from "@/lib/types";
 
 export type NotaCliente = {
@@ -23,20 +24,11 @@ export type ClienteFiltro = {
 };
 
 function inicioPeriodo(periodo?: ClienteFiltro["periodo"]): string | null {
-  const hoje = new Date();
-  if (periodo === "semana") {
-    const d = new Date(hoje);
-    d.setDate(d.getDate() - 7);
-    return d.toISOString().slice(0, 10);
-  }
-  if (periodo === "mes") {
-    const d = new Date(hoje);
-    d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
-  }
+  if (periodo === "semana") return diasAtrasSP(7);
+  if (periodo === "mes") return diasAtrasSP(30);
   if (periodo === "todos") return null;
   // padrão "hoje"
-  return hoje.toISOString().slice(0, 10);
+  return hojeSP();
 }
 
 export async function getNotasCliente(f: ClienteFiltro): Promise<NotaCliente[]> {

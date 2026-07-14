@@ -8,6 +8,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
+import { hojeSP } from "@/lib/date";
 import type { ImportRow } from "@/app/gerencia/importar/actions";
 
 export async function confirmarImportacaoCliente(input: {
@@ -26,7 +27,7 @@ export async function confirmarImportacaoCliente(input: {
     };
 
   const supabase = await createClient();
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeSP();
 
   const payload = rows.map((r) => ({
     numero_nf: String(r.numero_nf).trim(),

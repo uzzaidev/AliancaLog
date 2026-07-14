@@ -50,15 +50,17 @@ Preencha com os valores de **Settings → API** do seu projeto Supabase:
 - `SUPABASE_SERVICE_ROLE_KEY` (secreta — só servidor)
 
 ### 3. Banco de dados (migrations)
-As migrations estão em `supabase/migrations/`. Aplique de uma destas formas:
+As migrations estão em `supabase/migrations/` (`0001_schema.sql` até a mais recente).
+Aplique com o runner do projeto (requer `DATABASE_URL` no `.env`):
 
-**Opção A — Supabase CLI** (recomendado)
 ```bash
-supabase link --project-ref <ref-do-seu-projeto>
-supabase db push
+npm run db:status    # mostra aplicadas x pendentes
+npm run db:migrate   # aplica todas as pendentes, em ordem, cada uma em transação
 ```
 
-**Opção B — SQL Editor do painel**: cole o conteúdo de `0001_schema.sql` até `0004_realtime.sql`, na ordem.
+Cada migration roda uma vez e é registrada em `public.schema_migrations`. Nunca
+edite uma migration já aplicada — crie uma nova numerada. Detalhes em
+[docs/MIGRATIONS.md](./docs/MIGRATIONS.md).
 
 ### 4. Seed (dados fictícios para demonstração)
 ```bash
@@ -86,9 +88,9 @@ Abra http://localhost:3000.
 ```
 app/
   login/                  Tela de login (Server Action + useActionState)
-  gerencia/               Painel realtime, importar Excel, romaneios, cadastros
+  gerencia/               Painel realtime, importar NFs (XML/Excel/PDF), romaneios, cadastros
   motorista/               App de campo offline-first
-  cliente/notas/          Portal read-only
+  cliente/                Portal do cliente: acompanhar entregas + importar NFs
   api/sync/               Recebe a fila offline do motorista
   manifest.ts             PWA manifest
 components/               UI base, app-shell, marca

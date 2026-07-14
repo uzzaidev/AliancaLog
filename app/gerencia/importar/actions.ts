@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
+import { hojeSP } from "@/lib/date";
 
 export type ImportRow = {
   numero_nf: string;
@@ -32,7 +33,7 @@ export async function confirmarImportacao(input: {
     };
 
   const supabase = await createClient();
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeSP();
 
   // Se um motorista foi escolhido, já cria o romaneio do dia e vincula as NFs.
   let romaneioId: string | null = null;

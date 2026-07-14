@@ -1,7 +1,13 @@
-// Service Worker mínimo do Aliança Log — cache do app shell para abrir offline.
+// Service Worker mínimo do Aliança Log.
 // O envio de canhotos NÃO depende deste SW: a fila vive no IndexedDB e sincroniza
-// pela própria aplicação (lib/offline). Aqui só garantimos que o app carregue sem rede.
-const CACHE = "alianca-log-v1";
+// pela própria aplicação (lib/offline).
+//
+// SEGURANÇA: este SW NÃO cacheia páginas autenticadas (navegações) — elas são
+// específicas do usuário e cachear vazaria dados para o próximo login no mesmo
+// aparelho. Só cacheamos assets estáticos (versionados, sem dados). O cache e a
+// fila também são limpos no logout (LogoutButton). v2 = purga qualquer cache
+// antigo que ainda tenha páginas autenticadas.
+const CACHE = "alianca-log-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -24,23 +30,12 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return; // não intercepta Supabase/externos
   if (url.pathname.startsWith("/api/")) return; // nunca cacheia API
 
-  // Navegações: rede primeiro, com fallback ao cache (offline).
-  if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() =>
-          caches.match(req).then((r) => r || caches.match("/motorista/entregas")),
-        ),
-    );
-    return;
-  }
+  // Navegações (páginas autenticadas): SÓ rede, nunca grava no cache.
+  // Sem rede, deixa o navegador exibir seu próprio estado offline — não
+  // servimos página de outro usuário a partir do cache.
+  if (req.mode === "navigate") return;
 
-  // Estáticos: cache primeiro.
+  // Estáticos (versionados, sem dados do usuário): cache primeiro.
   if (
     url.pathname.startsWith("/_next/") ||
     ["style", "script", "image", "font"].includes(req.destination)

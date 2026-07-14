@@ -2,9 +2,11 @@ import "server-only";
 
 // Consultas server-side da área de gerência (RLS aplica: gerência vê tudo).
 import { createClient } from "@/lib/supabase/server";
+import { hojeSP } from "@/lib/date";
 import type { NotaStatus } from "@/lib/types";
 
-export const hojeISO = () => new Date().toISOString().slice(0, 10);
+// Dia operacional em São Paulo (não UTC — ver lib/date.ts).
+export const hojeISO = () => hojeSP();
 
 export type ResumoDia = {
   total: number;

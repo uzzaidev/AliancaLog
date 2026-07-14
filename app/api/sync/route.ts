@@ -38,6 +38,19 @@ export async function POST(req: Request) {
   if (!foto || foto.size === 0)
     return NextResponse.json({ error: "foto obrigatória" }, { status: 400 });
 
+  // 0. Idempotência de ponta a ponta: se a NF já tem canhoto, o reenvio é no-op.
+  // Evita reescrever entregue_em, duplicar ocorrência ou registrar 2º canhoto.
+  // (A imutabilidade também é garantida no banco por índice único + trigger.)
+  const { data: jaRegistrada } = await supabase
+    .from("canhotos")
+    .select("client_id")
+    .eq("nota_fiscal_id", nfId)
+    .limit(1);
+  if (jaRegistrada && jaRegistrada.length > 0) {
+    // 409 = já existia; a fila offline trata como sucesso e remove o item.
+    return NextResponse.json({ ok: true, already: true }, { status: 409 });
+  }
+
   // 1. Sobe a foto (se houver) no bucket privado.
   // Sem upsert: o path é derivado do client_id, então re-sync cai no mesmo
   // arquivo e "já existe" (409) é idempotência, não erro. (O upsert do Storage
@@ -84,13 +97,17 @@ export async function POST(req: Request) {
     .eq("id", nfId);
   if (nErr) return NextResponse.json({ error: nErr.message }, { status: 500 });
 
-  // 4. Ocorrência (quando aplicável).
+  // 4. Ocorrência (quando aplicável) — idempotente pelo client_id do canhoto.
   if (status === "ocorrencia" && ocorrenciaTipo) {
-    await supabase.from("ocorrencias").insert({
-      nota_fiscal_id: nfId,
-      tipo: ocorrenciaTipo,
-      descricao: ocorrenciaDesc,
-    });
+    await supabase.from("ocorrencias").upsert(
+      {
+        nota_fiscal_id: nfId,
+        tipo: ocorrenciaTipo,
+        descricao: ocorrenciaDesc,
+        client_id: clientId,
+      },
+      { onConflict: "client_id", ignoreDuplicates: true },
+    );
   }
 
   return NextResponse.json({ ok: true });

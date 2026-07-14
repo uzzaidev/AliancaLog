@@ -2,8 +2,7 @@
 // usuário/perfil e botão de sair. Recebe os dados já resolvidos pela DAL.
 import { type ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
-import { Button } from "@/components/ui";
-import { logout } from "@/lib/auth/actions";
+import { LogoutButton } from "@/components/logout-button";
 import { ROLE_LABEL, type Role } from "@/lib/types";
 
 export function AppShell({
@@ -31,11 +30,7 @@ export function AppShell({
                 {email}
               </span>
             )}
-            <form action={logout}>
-              <Button variant="ghost" type="submit" className="px-3">
-                Sair
-              </Button>
-            </form>
+            <LogoutButton />
           </div>
         </div>
       </header>

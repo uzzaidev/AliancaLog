@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/dal";
 import { interpretarCodigoBipado } from "@/lib/nfe";
 import { createClient } from "@/lib/supabase/server";
+import { hojeSP } from "@/lib/date";
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = () => hojeSP();
 
 export type NfEncontrada = {
   id: string;

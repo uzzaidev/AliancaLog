@@ -50,3 +50,7 @@ export function idbGetAll<T>(store: string): Promise<T[]> {
 export function idbDelete(store: string, key: IDBValidKey): Promise<undefined> {
   return tx(store, "readwrite", (s) => s.delete(key));
 }
+
+export function idbClear(store: string): Promise<undefined> {
+  return tx(store, "readwrite", (s) => s.clear());
+}

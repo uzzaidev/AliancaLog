@@ -1,6 +1,6 @@
 // Fila offline de canhotos. Cada registro tem um client_id idempotente para o
 // sync não duplicar no servidor. A foto vai como Blob (sobrevive ao IndexedDB).
-import { idbDelete, idbGetAll, idbPut, STORE_FILA } from "./db";
+import { idbClear, idbDelete, idbGetAll, idbPut, STORE_CACHE, STORE_FILA } from "./db";
 import type { CanhotoStatus, OcorrenciaTipo } from "@/lib/types";
 
 export type CanhotoPendente = {
@@ -35,4 +35,11 @@ export async function contarPendentes(): Promise<number> {
 
 export async function removerDaFila(clientId: string): Promise<void> {
   await idbDelete(STORE_FILA, clientId);
+}
+
+// Limpa fila + cache local do dispositivo. Chamado no logout para não vazar
+// dados/canhotos de um motorista para o próximo login no mesmo aparelho.
+export async function limparDadosLocais(): Promise<void> {
+  await idbClear(STORE_FILA);
+  await idbClear(STORE_CACHE);
 }

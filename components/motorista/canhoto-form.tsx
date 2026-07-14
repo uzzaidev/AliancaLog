@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card } from "@/components/ui";
 import { comprimirImagem } from "@/lib/offline/image";
-import { enfileirar } from "@/lib/offline/queue";
+import { enfileirar, listarPendentes } from "@/lib/offline/queue";
 import { flushFila, notificarFila } from "@/lib/offline/sync";
 import {
   OCORRENCIA_LABEL,
@@ -75,8 +75,9 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
 
     setEnviando(true);
     try {
+      const clientId = crypto.randomUUID();
       await enfileirar({
-        client_id: crypto.randomUUID(),
+        client_id: clientId,
         nf_id: nf.id,
         numero_nf: nf.numero_nf,
         status,
@@ -92,10 +93,15 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
       });
       notificarFila();
       await flushFila();
+      // Só diz "Registrado" se ESTE item saiu mesmo da fila (o servidor confirmou).
+      // Se continua na fila, foi salvo mas ainda não sincronizou.
+      const aindaNaFila = (await listarPendentes()).some(
+        (p) => p.client_id === clientId,
+      );
       setResultado(
-        navigator.onLine
-          ? "Registrado! ✅"
-          : "Salvo offline — enviando quando tiver sinal.",
+        aindaNaFila
+          ? "Salvo — pendente de sincronização. Envia sozinho quando tiver sinal."
+          : "Registrado! ✅",
       );
     } catch {
       setErro("Não consegui salvar. Tente novamente.");

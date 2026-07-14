@@ -4,8 +4,27 @@
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
 **Última atualização:** 2026-07-13
-**Sprint atual:** Pré-aplicativo **aprovado pelo cliente**; ajustes pós-aprovação implementados → próximo é deploy (Vercel/HTTPS) e piloto
-**Status geral:** 🟢 MVP A + ajustes pós-aprovação rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
+**Sprint atual:** Pré-aplicativo aprovado + ajustes pós-aprovação + **Sprint 3.5 (segurança/confiabilidade)** → próximo é deploy (Vercel/HTTPS) e piloto
+**Status geral:** 🟢 MVP A + ajustes + endurecimento de segurança rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
+
+**Sprint 3.5 — segurança e confiabilidade (2026-07-13), a partir de revisão cruzada externa:**
+1. **Data operacional em São Paulo** (`lib/date.ts` + migration `0010`): `.slice(0,10)` (UTC) trocado
+   por dia-calendário de SP no app E na RLS (`mot_nf_select` usava `current_date` UTC → à noite o
+   motorista não via as NFs do dia). Instantes `timestamptz` seguem em UTC (correto).
+2. **Sync idempotente de ponta a ponta** (migration `0009` + `app/api/sync/route.ts`): reenvio do
+   mesmo canhoto é no-op (não reescreve `entregue_em`, não duplica ocorrência — dedup por
+   `client_id`); no máximo 1 canhoto por NF (índice único).
+3. **Imutabilidade + RLS mais restrita do motorista** (`0009`): NF finalizada não muda mais; motorista
+   só altera status/foto/observação; canhoto só na própria NF em romaneio ativo; romaneio fechado não
+   reabre. Trigger + policies, validados por `scripts/smoke-seguranca.mjs` (8/8 controles).
+4. **Mensagem de sync real** (`canhoto-form.tsx`): usa o resultado do flush — "pendente de
+   sincronização" quando não confirmou, em vez de sempre "Registrado".
+5. **Cache/fila por usuário** (`public/sw.js` v2 + `LogoutButton`): SW não cacheia mais páginas
+   autenticadas; logout limpa caches do SW e a fila/cache no IndexedDB (evita vazamento entre
+   motoristas no mesmo aparelho).
+6. **Docs/higiene**: README aponta o runner real (`npm run db:migrate`, 0001→0010); removidos
+   `pnpm-lock.yaml` (projeto usa npm) e o arquivo vazio `Plano`.
+   Verificação: typecheck + lint + build verdes; `smoke-seguranca.mjs` 8/8.
 
 **Mudanças de hoje (2026-07-13) — ajustes pós-aprovação do cliente:**
 1. **"Retida" deixou de ser status** (migration `0008`): virou o tipo de ocorrência `canhoto_retido`.

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { hojeSP } from "@/lib/date";
 import type {
   NotaMotorista,
   NotaStatus,
@@ -9,7 +10,7 @@ import type {
 
 export type { NotaMotorista };
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = () => hojeSP();
 const FINAIS: NotaStatus[] = ["aceita", "recusada", "ocorrencia"];
 
 export type RomaneioMotorista = {

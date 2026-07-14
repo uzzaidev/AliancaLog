@@ -24,7 +24,14 @@ const db = createClient(url, serviceKey, {
 });
 
 const SENHA_PADRAO = "alianca123";
-const hoje = new Date().toISOString().slice(0, 10);
+// Dia operacional em São Paulo (mesmo critério de lib/date.ts) — para os dados
+// semeados caírem no mesmo "hoje" que o app enxerga, inclusive à noite.
+const hoje = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Sao_Paulo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
 
 async function getOrCreateEmpresa(nome, cnpj) {
   const { data: found } = await db
