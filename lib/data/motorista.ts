@@ -57,12 +57,16 @@ export async function getNotasDoRomaneio(
   return (data ?? []) as unknown as NotaMotorista[];
 }
 
-export async function getNota(nfId: string): Promise<NotaMotorista | null> {
+// Inclui romaneio_id para a tela do canhoto ter um "Voltar" que leva de volta
+// à lista de NFs daquele romaneio.
+export type NotaComRomaneio = NotaMotorista & { romaneio_id: string | null };
+
+export async function getNota(nfId: string): Promise<NotaComRomaneio | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("notas_fiscais")
-    .select(NF_COLS)
+    .select(NF_COLS + ",romaneio_id")
     .eq("id", nfId)
     .maybeSingle();
-  return (data as NotaMotorista) ?? null;
+  return (data as unknown as NotaComRomaneio) ?? null;
 }

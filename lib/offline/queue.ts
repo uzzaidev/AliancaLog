@@ -10,6 +10,8 @@ export type CanhotoPendente = {
   status: CanhotoStatus;
   ocorrencia_tipo?: OcorrenciaTipo;
   ocorrencia_desc?: string;
+  // Observação livre do motorista (aceita/recusada) → notas_fiscais.observacao.
+  observacao?: string;
   foto?: Blob;
   // Carimbo de localização no momento do registro (best-effort).
   lat?: number;

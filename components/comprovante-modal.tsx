@@ -130,6 +130,13 @@ export function ComprovanteModal({
             </div>
           )}
 
+          {dados.observacao && (
+            <div className="rounded-lg bg-canvas p-3 text-sm">
+              <span className="font-semibold text-ink">Observação: </span>
+              <span className="text-muted">{dados.observacao}</span>
+            </div>
+          )}
+
           {eventos.length > 0 && (
             <div>
               <h3 className="mb-2 text-sm font-semibold text-ink">Linha do tempo</h3>

@@ -18,6 +18,7 @@ export async function POST(req: Request) {
   const status = String(form.get("status") ?? "");
   const ocorrenciaTipo = form.get("ocorrencia_tipo")?.toString() || null;
   const ocorrenciaDesc = form.get("ocorrencia_desc")?.toString() || null;
+  const observacao = form.get("observacao")?.toString() || null;
   const foto = form.get("foto") as File | null;
 
   // GPS do registro (best-effort — ausente quando o motorista negou permissão).
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
       status,
       foto_url: fotoPath,
       entregue_em: new Date().toISOString(),
+      ...(observacao ? { observacao } : {}),
     })
     .eq("id", nfId);
   if (nErr) return NextResponse.json({ error: nErr.message }, { status: 500 });

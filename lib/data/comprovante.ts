@@ -19,7 +19,7 @@ export async function getComprovante(
   const { data: nf } = await supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,created_at,entregue_em,foto_url,empresas_clientes(nome),motoristas(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,created_at,entregue_em,foto_url,observacao,empresas_clientes(nome),motoristas(usuarios(nome))",
     )
     .eq("id", nfId)
     .maybeSingle();
@@ -74,6 +74,7 @@ export async function getComprovante(
     criado_em: r.created_at as string,
     entregue_em: (r.entregue_em as string) ?? null,
     foto_url: fotoUrl,
+    observacao: (r.observacao as string) ?? null,
     gps,
     ocorrencias: ((ocorrencias ?? []) as Record<string, unknown>[]).map((o) => ({
       tipo: o.tipo as OcorrenciaTipo,

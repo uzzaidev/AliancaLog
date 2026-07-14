@@ -32,6 +32,8 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   const [status, setStatus] = useState<CanhotoStatus | null>(null);
   const [tipo, setTipo] = useState<OcorrenciaTipo>("item_faltando");
   const [desc, setDesc] = useState("");
+  // Observação livre (opcional) para aceita/recusada.
+  const [obs, setObs] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
@@ -80,6 +82,8 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
         status,
         ocorrencia_tipo: status === "ocorrencia" ? tipo : undefined,
         ocorrencia_desc: status === "ocorrencia" ? desc.trim() : undefined,
+        observacao:
+          status !== "ocorrencia" && obs.trim() ? obs.trim() : undefined,
         foto: foto ?? undefined,
         lat: gpsRef.current?.lat,
         lng: gpsRef.current?.lng,
@@ -189,6 +193,23 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
           </button>
         ))}
       </div>
+
+      {(status === "aceita" || status === "recusada") && (
+        <Card className="p-4">
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">
+              Observação (opcional)
+            </span>
+            <textarea
+              value={obs}
+              onChange={(e) => setObs(e.target.value)}
+              rows={2}
+              placeholder="Ex.: entregue ao porteiro; recebedor João"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-brand"
+            />
+          </label>
+        </Card>
+      )}
 
       {status === "ocorrencia" && (
         <Card className="space-y-3 p-4">
