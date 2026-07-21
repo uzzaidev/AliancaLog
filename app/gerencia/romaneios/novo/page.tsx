@@ -19,7 +19,7 @@ export default async function NovoRomaneio() {
       </div>
       <RomaneioBuilder
         empresas={empresas}
-        motoristas={motoristas}
+        motoristas={motoristas.filter((m) => m.ativo)}
         veiculos={veiculos}
       />
     </div>

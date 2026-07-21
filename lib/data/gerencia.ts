@@ -96,6 +96,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
 // ── Painel por cliente (empresa embarcadora) do dashboard ────────────────────
 // "Cliente" da transportadora = empresa embarcadora. "Cliente final" = destinatário.
 export type NotaClienteFinal = {
+  id: string;
   numero_nf: string;
   destinatario_nome: string;
   cidade: string | null;
@@ -122,7 +123,7 @@ export async function getPainelClientes(
   const { data: rows } = await supabase
     .from("notas_fiscais")
     .select(
-      "numero_nf,destinatario_nome,cidade,status,romaneio_id,empresa_cliente_id,empresas_clientes(nome)",
+      "id,numero_nf,destinatario_nome,cidade,status,romaneio_id,empresa_cliente_id,empresas_clientes(nome)",
     )
     .eq("data_entrega", data ?? hojeISO());
 
@@ -147,6 +148,7 @@ export async function getPainelClientes(
       emp.cidades.push(grupo);
     }
     grupo.notas.push({
+      id: r.id as string,
       numero_nf: r.numero_nf as string,
       destinatario_nome: r.destinatario_nome as string,
       cidade: (r.cidade as string) ?? null,
@@ -165,12 +167,12 @@ export async function getPainelClientes(
   return lista;
 }
 
-export type EmpresaItem = { id: string; nome: string };
+export type EmpresaItem = { id: string; nome: string; ativo: boolean };
 export async function listEmpresas(): Promise<EmpresaItem[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("empresas_clientes")
-    .select("id,nome")
+    .select("id,nome,ativo")
     .order("nome");
   return (data ?? []) as EmpresaItem[];
 }

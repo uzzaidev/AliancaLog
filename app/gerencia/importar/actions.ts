@@ -5,6 +5,14 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { hojeSP } from "@/lib/date";
+import {
+  encontrarDuplicatas,
+  mensagemDuplicatas,
+  traduzErroSupabase,
+  type DuplicataInfo,
+} from "@/lib/import-duplicatas";
+
+export type { DuplicataInfo };
 
 export type ImportRow = {
   numero_nf: string;
@@ -16,11 +24,18 @@ export type ImportRow = {
   chave_acesso?: string;
 };
 
+export type ImportResult = {
+  ok?: string;
+  error?: string;
+  count?: number;
+  duplicadas?: DuplicataInfo[];
+};
+
 export async function confirmarImportacao(input: {
   empresaId: string;
   motoristaId?: string;
   rows: ImportRow[];
-}): Promise<{ ok?: string; error?: string; count?: number }> {
+}): Promise<ImportResult> {
   await requireRole("gerencia");
 
   if (!input.empresaId) return { error: "Selecione a empresa embarcadora." };
@@ -34,6 +49,12 @@ export async function confirmarImportacao(input: {
 
   const supabase = await createClient();
   const hoje = hojeSP();
+
+  // Checa duplicidade (mesma chave de acesso) ANTES de tentar inserir — dá pra
+  // dizer exatamente qual NF é a repetida em vez do erro cru do Postgres.
+  const duplicadas = await encontrarDuplicatas(supabase, rows);
+  if (duplicadas.length > 0)
+    return { error: mensagemDuplicatas(duplicadas), duplicadas };
 
   // Se um motorista foi escolhido, já cria o romaneio do dia e vincula as NFs.
   let romaneioId: string | null = null;
@@ -62,7 +83,7 @@ export async function confirmarImportacao(input: {
   }));
 
   const { error } = await supabase.from("notas_fiscais").insert(payload);
-  if (error) return { error: error.message };
+  if (error) return { error: traduzErroSupabase(error.message) };
 
   revalidatePath("/gerencia/dashboard");
   return { ok: `${rows.length} NF(s) importada(s).`, count: rows.length };

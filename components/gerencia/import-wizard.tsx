@@ -12,11 +12,17 @@ import { useRouter } from "next/navigation";
 import { Button, Card, Field, Input } from "@/components/ui";
 import {
   confirmarImportacao,
+  type DuplicataInfo,
   type ImportRow,
 } from "@/app/gerencia/importar/actions";
 import { confirmarImportacaoCliente } from "@/app/cliente/importar/actions";
 import { parseNfeXml, parsePdfChaves, tipoDoArquivo } from "@/lib/import-nf";
 import type { EmpresaItem, MotoristaItem } from "@/lib/data/gerencia";
+
+const MOTIVO_LABEL: Record<DuplicataInfo["motivo"], string> = {
+  repetida_no_arquivo: "repetida no arquivo (mesma chave de acesso 2x)",
+  ja_importada: "já importada antes (chave de acesso já existe)",
+};
 
 type Linha = Record<string, unknown>;
 
@@ -74,6 +80,8 @@ export function ImportWizard({
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
   const [lendo, setLendo] = useState(false);
+  // Duplicatas apontadas pelo servidor: index (na `rows`) → motivo específico.
+  const [duplicadas, setDuplicadas] = useState<Map<number, DuplicataInfo["motivo"]>>(new Map());
   const [pending, start] = useTransition();
 
   function resetTudo() {
@@ -81,6 +89,7 @@ export function ImportWizard({
     setLinhas([]);
     setRows(null);
     setAviso(null);
+    setDuplicadas(new Map());
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -163,14 +172,24 @@ export function ImportWizard({
       next[i] = { ...next[i], [campo]: valor };
       return next;
     });
+    // A linha mudou — a marcação de duplicata (do envio anterior) ficou stale.
+    setDuplicadas((prev) => {
+      if (!prev.has(i)) return prev;
+      const next = new Map(prev);
+      next.delete(i);
+      return next;
+    });
   }
 
   function removerRow(i: number) {
     setRows((prev) => (prev ? prev.filter((_, idx) => idx !== i) : prev));
+    // Índices deslocam após remover — limpa tudo, o próximo envio recalcula.
+    setDuplicadas(new Map());
   }
 
   function confirmar() {
     setErro(null);
+    setDuplicadas(new Map());
     if (variant === "gerencia" && !empresaId)
       return setErro("Selecione a empresa embarcadora.");
 
@@ -192,8 +211,14 @@ export function ImportWizard({
               rows: payload,
             })
           : await confirmarImportacaoCliente({ rows: payload });
-      if (res.error) setErro(res.error);
-      else {
+      if (res.error) {
+        setErro(res.error);
+        // Marca exatamente as linhas duplicadas — a grade fica como está, pra
+        // dar pra corrigir/remover ali mesmo, sem perder o que já foi digitado.
+        if (res.duplicadas?.length) {
+          setDuplicadas(new Map(res.duplicadas.map((d) => [d.index, d.motivo])));
+        }
+      } else {
         setResultado(res.ok ?? "Importado.");
         resetTudo();
         router.refresh();
@@ -323,47 +348,62 @@ export function ImportWizard({
         <Card className="space-y-3 p-5">
           <h2 className="font-semibold">Confira as NFs ({rows.length})</h2>
           <div className="space-y-3">
-            {rows.map((r, i) => (
-              <div
-                key={i}
-                className="grid gap-2 rounded-lg border border-line p-3 sm:grid-cols-[7rem_1fr_1fr_9rem_auto]"
-              >
-                <Input
-                  aria-label="Número da NF"
-                  placeholder="NF"
-                  value={r.numero_nf}
-                  onChange={(e) => editarRow(i, "numero_nf", e.target.value)}
-                />
-                <Input
-                  aria-label="Destinatário"
-                  placeholder="Destinatário"
-                  value={r.destinatario_nome}
-                  onChange={(e) =>
-                    editarRow(i, "destinatario_nome", e.target.value)
-                  }
-                />
-                <Input
-                  aria-label="Endereço"
-                  placeholder="Endereço"
-                  value={r.destinatario_endereco}
-                  onChange={(e) =>
-                    editarRow(i, "destinatario_endereco", e.target.value)
-                  }
-                />
-                <Input
-                  aria-label="Cidade"
-                  placeholder="Cidade"
-                  value={r.cidade ?? ""}
-                  onChange={(e) => editarRow(i, "cidade", e.target.value)}
-                />
-                <button
-                  onClick={() => removerRow(i)}
-                  className="text-xs text-danger hover:underline"
+            {rows.map((r, i) => {
+              const motivo = duplicadas.get(i);
+              return (
+                <div
+                  key={i}
+                  className={`rounded-lg border p-3 ${
+                    motivo
+                      ? "border-danger bg-danger-50"
+                      : "border-line"
+                  }`}
                 >
-                  remover
-                </button>
-              </div>
-            ))}
+                  {motivo && (
+                    <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-danger">
+                      <span aria-hidden>✕</span>
+                      <span>Duplicada — {MOTIVO_LABEL[motivo]}</span>
+                    </div>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-[7rem_1fr_1fr_9rem_auto]">
+                    <Input
+                      aria-label="Número da NF"
+                      placeholder="NF"
+                      value={r.numero_nf}
+                      onChange={(e) => editarRow(i, "numero_nf", e.target.value)}
+                    />
+                    <Input
+                      aria-label="Destinatário"
+                      placeholder="Destinatário"
+                      value={r.destinatario_nome}
+                      onChange={(e) =>
+                        editarRow(i, "destinatario_nome", e.target.value)
+                      }
+                    />
+                    <Input
+                      aria-label="Endereço"
+                      placeholder="Endereço"
+                      value={r.destinatario_endereco}
+                      onChange={(e) =>
+                        editarRow(i, "destinatario_endereco", e.target.value)
+                      }
+                    />
+                    <Input
+                      aria-label="Cidade"
+                      placeholder="Cidade"
+                      value={r.cidade ?? ""}
+                      onChange={(e) => editarRow(i, "cidade", e.target.value)}
+                    />
+                    <button
+                      onClick={() => removerRow(i)}
+                      className="text-xs text-danger hover:underline"
+                    >
+                      remover
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       )}
@@ -375,7 +415,7 @@ export function ImportWizard({
       )}
 
       {erro && (
-        <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
+        <p className="whitespace-pre-line rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
           {erro}
         </p>
       )}

@@ -9,11 +9,16 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { hojeSP } from "@/lib/date";
-import type { ImportRow } from "@/app/gerencia/importar/actions";
+import {
+  encontrarDuplicatas,
+  mensagemDuplicatas,
+  traduzErroSupabase,
+} from "@/lib/import-duplicatas";
+import type { ImportResult, ImportRow } from "@/app/gerencia/importar/actions";
 
 export async function confirmarImportacaoCliente(input: {
   rows: ImportRow[];
-}): Promise<{ ok?: string; error?: string; count?: number }> {
+}): Promise<ImportResult> {
   const user = await requireRole("cliente_final");
   if (!user.empresaId)
     return { error: "Sua conta não está vinculada a uma empresa embarcadora." };
@@ -29,6 +34,10 @@ export async function confirmarImportacaoCliente(input: {
   const supabase = await createClient();
   const hoje = hojeSP();
 
+  const duplicadas = await encontrarDuplicatas(supabase, rows);
+  if (duplicadas.length > 0)
+    return { error: mensagemDuplicatas(duplicadas), duplicadas };
+
   const payload = rows.map((r) => ({
     numero_nf: String(r.numero_nf).trim(),
     empresa_cliente_id: user.empresaId,
@@ -42,7 +51,7 @@ export async function confirmarImportacaoCliente(input: {
   }));
 
   const { error } = await supabase.from("notas_fiscais").insert(payload);
-  if (error) return { error: error.message };
+  if (error) return { error: traduzErroSupabase(error.message) };
 
   revalidatePath("/cliente/notas");
   return { ok: `${rows.length} NF(s) enviada(s).`, count: rows.length };

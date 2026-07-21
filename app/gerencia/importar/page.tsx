@@ -19,7 +19,7 @@ export default async function ImportarPage() {
       <ImportWizard
         variant="gerencia"
         empresas={empresas}
-        motoristas={motoristas}
+        motoristas={motoristas.filter((m) => m.ativo)}
       />
     </div>
   );

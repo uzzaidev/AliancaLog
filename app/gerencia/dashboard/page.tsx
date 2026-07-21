@@ -41,7 +41,10 @@ export default async function GerenciaDashboard({
       </div>
 
       <StatCards resumo={resumo} />
-      <EmpresasPainel empresas={painelClientes} />
+      <EmpresasPainel
+        empresas={painelClientes}
+        motoristas={motoristas.filter((m) => m.ativo)}
+      />
       <Filtros empresas={empresas} motoristas={motoristas} />
       <NotasList notas={notas} />
     </div>
