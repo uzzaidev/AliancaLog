@@ -1,32 +1,41 @@
 "use client";
 
-// Sub-navegação da área de gerência (marca o item ativo pela rota).
+// Nav horizontal da gerência (dentro da topbar escura). Item ativo em laranja
+// com filete embaixo. Ícones Tabler.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  IconLayoutDashboard,
+  IconFileInvoice,
+  IconUpload,
+  IconUsers,
+} from "@tabler/icons-react";
 
 const LINKS = [
-  { href: "/gerencia/dashboard", label: "Painel" },
-  { href: "/gerencia/romaneios", label: "Romaneios" },
-  { href: "/gerencia/importar", label: "Importar NFs" },
-  { href: "/gerencia/cadastros", label: "Cadastros" },
+  { href: "/gerencia/dashboard", label: "Painel", icon: IconLayoutDashboard },
+  { href: "/gerencia/romaneios", label: "Romaneios", icon: IconFileInvoice },
+  { href: "/gerencia/importar", label: "Importar NFs", icon: IconUpload },
+  { href: "/gerencia/cadastros", label: "Cadastros", icon: IconUsers },
 ];
 
 export function GerenciaNav() {
   const pathname = usePathname();
   return (
-    <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
+    <nav className="flex h-[52px] items-stretch overflow-x-auto">
       {LINKS.map((l) => {
         const active = pathname.startsWith(l.href);
+        const Icon = l.icon;
         return (
           <Link
             key={l.href}
             href={l.href}
-            className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3.5 text-[13px] font-medium transition-colors ${
               active
-                ? "border-brand text-brand"
-                : "border-transparent text-muted hover:text-ink"
+                ? "border-[#f37312] text-[#f37312]"
+                : "border-transparent text-gray-400 hover:text-gray-200"
             }`}
           >
+            <Icon size={16} stroke={2} />
             {l.label}
           </Link>
         );

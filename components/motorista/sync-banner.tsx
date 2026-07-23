@@ -3,6 +3,7 @@
 // Banner discreto do estado de sincronização. Tenta esvaziar a fila ao montar,
 // ao voltar a conexão, ao reabrir o app e periodicamente.
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { IconWifiOff, IconCloudUpload } from "@tabler/icons-react";
 import { contarPendentes } from "@/lib/offline/queue";
 import { EVENTO_FILA, flushFila } from "@/lib/offline/sync";
 
@@ -59,14 +60,16 @@ export function SyncBanner() {
 
   return (
     <div
-      className={`px-4 py-1.5 text-center text-xs font-medium ${
-        !online ? "bg-warning-50 text-warning" : "bg-info-50 text-info"
+      className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-white ${
+        !online ? "bg-[#856404]" : "bg-info"
       }`}
     >
-      {!online && "Sem conexão — registros salvos no aparelho. "}
-      {pendentes > 0
-        ? `${pendentes} registro(s) aguardando sincronização`
-        : "Sincronizado"}
+      {!online ? <IconWifiOff size={15} /> : <IconCloudUpload size={15} />}
+      {!online
+        ? pendentes > 0
+          ? `Sem conexão — ${pendentes} registro(s) salvo(s), enviando ao reconectar`
+          : "Sem conexão — dados salvos, enviando ao reconectar"
+        : `Enviando ${pendentes} registro(s)…`}
     </div>
   );
 }

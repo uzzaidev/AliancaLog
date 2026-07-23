@@ -7,12 +7,13 @@ import {
 
 type Tone = "neutral" | "info" | "success" | "danger" | "warning";
 
+// Padrão "pílula" do mockup: fundo claro + texto forte + borda 1px da mesma cor.
 const TONE_CLASSES: Record<Tone, string> = {
-  neutral: "bg-canvas text-muted ring-line",
-  info: "bg-info-50 text-info ring-info/20",
-  success: "bg-success-50 text-success ring-success/20",
-  danger: "bg-danger-50 text-danger ring-danger/20",
-  warning: "bg-warning-50 text-warning ring-warning/20",
+  neutral: "bg-gray-100 text-gray-600 ring-gray-300",
+  info: "bg-info-50 text-info ring-info-border",
+  success: "bg-success-50 text-success ring-success-border",
+  danger: "bg-danger-50 text-danger ring-danger-border",
+  warning: "bg-warning-50 text-warning ring-warning-border",
 };
 
 export function Badge({
@@ -70,7 +71,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
-    primary: "bg-brand text-white hover:bg-brand-700 disabled:opacity-60",
+    primary: "bg-[#f37312] text-white hover:bg-[#d4620a] disabled:opacity-60",
     secondary:
       "bg-surface text-ink ring-1 ring-inset ring-line hover:bg-canvas disabled:opacity-60",
     ghost: "text-muted hover:text-ink hover:bg-canvas",

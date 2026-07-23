@@ -274,7 +274,7 @@ export function ImportWizard({
             accept=".xlsx,.xls,.csv,.xml,.pdf"
             multiple
             onChange={onFile}
-            className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+            className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-[#f37312] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-[#d4620a]"
           />
         </Field>
         <p className="text-xs text-muted">

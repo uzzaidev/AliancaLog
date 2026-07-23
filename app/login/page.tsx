@@ -11,15 +11,15 @@ export default async function LoginPage() {
   if (user?.role) redirect(ROLE_HOME[user.role]);
 
   return (
-    <div className="flex flex-1 items-center justify-center px-4 py-12">
+    <div className="flex flex-1 items-center justify-center bg-canvas px-4 py-12">
       <div className="w-full max-w-sm">
-        <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <Logo className="text-2xl text-ink" />
+        <div className="mb-7 flex flex-col items-center gap-2.5 text-center">
+          <Logo variant="dark" size={40} className="text-3xl" />
           <p className="text-sm text-muted">
             Controle de canhotos em tempo real
           </p>
         </div>
-        <Card className="p-6">
+        <Card className="p-6 shadow">
           <LoginForm />
         </Card>
         <p className="mt-6 text-center text-xs text-muted">

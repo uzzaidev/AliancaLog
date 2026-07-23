@@ -1,0 +1,531 @@
+﻿# Aliança Log — Especificação de UI/UX para Implementação
+
+## Visão Geral
+
+Sistema web responsivo (PWA) de gestão de entregas com **três perfis de usuário**, todos conectados em tempo real via Supabase Realtime. O design segue o padrão visual do Track-POD (gerência) e Spoke Connect (cliente final), com as cores exatas da marca Aliança Log.
+
+---
+
+## Design Tokens — OBRIGATÓRIO usar estes valores
+
+```css
+:root {
+  /* MARCA ALIANÇA LOG — cores extraídas do logo oficial */
+  --brand-orange:       #F37312;   /* laranja principal */
+  --brand-orange-dark:  #D4620A;   /* hover/active */
+  --brand-orange-light: #FEF0E6;   /* background sutil */
+  --brand-orange-bg:    #FFF5ED;   /* background cards selecionados */
+  --brand-dark:         #1E1E1E;   /* navbar, header dark */
+  --brand-dark-2:       #2D2D2D;   /* bordas no dark */
+  --brand-dark-3:       #3D3D3D;   /* separadores no dark */
+
+  /* ESCALA DE CINZAS */
+  --gray-50:   #FAFAFA;
+  --gray-100:  #F5F5F5;
+  --gray-200:  #EEEEEE;
+  --gray-300:  #E0E0E0;
+  --gray-400:  #BDBDBD;
+  --gray-500:  #9E9E9E;
+  --gray-600:  #757575;
+  --gray-700:  #616161;
+  --gray-800:  #424242;
+  --gray-900:  #212121;
+
+  /* STATUS CORES */
+  --green:        #2E7D32;
+  --green-light:  #E8F5E9;
+  --green-border: #A5D6A7;
+  --red:          #C62828;
+  --red-light:    #FFEBEE;
+  --red-border:   #EF9A9A;
+  --amber:        #E65100;
+  --amber-light:  #FFF3E0;
+  --amber-border: #FFCC80;
+  --blue:         #1565C0;
+  --blue-light:   #E3F2FD;
+  --blue-border:  #90CAF9;
+
+  /* TIPOGRAFIA */
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  /* MISC */
+  --radius:    6px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --shadow:    0 2px 8px rgba(0,0,0,.10);
+}
+```
+
+---
+
+## Ícones
+
+Usar **Tabler Icons**: `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css`
+
+Referência: `<i class="ti ti-[nome]"></i>`
+
+---
+
+## Perfil 1 — GERÊNCIA
+
+**Referência visual:** Track-POD dashboard  
+**Acesso:** Web (desktop first, responsivo)
+
+### Layout geral
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TOPBAR DARK (#1E1E1E)  — logo + nav + live indicator      │
+├─────────────────────────────────────────────────────────────┤
+│  KPI STRIP (6 cards) — Total / Aceitas / Recusadas /       │
+│  Ocorrências / Em rota / Em aberto                         │
+├─────────────────────────────────────────────────────────────┤
+│  SUBTABS — Rotas / Não atribuídas / Paradas / Ordens       │
+├─────────────────────────────────────────────────────────────┤
+│  TOOLBAR — busca + filtros + botões (Colunas/Exportar)     │
+├──────────────────────────────────────────┬──────────────────┤
+│  TABELA DE ENTREGAS                      │  PAINEL LATERAL  │
+│  (colunas: NF / Destinatário / Motorista │  Motoristas      │
+│  / Status / Foto / Hora)                 │  Clientes hoje   │
+│                                          │                  │
+│  Row click → expande detail panel        │                  │
+│  com info completa + miniatura da foto   │                  │
+└──────────────────────────────────────────┴──────────────────┘
+```
+
+### Topbar
+
+- Background: `#1E1E1E`
+- Logo: ponto laranja `#F37312` + texto "Aliança Log" branco + badge "Gerência" em laranja
+- Nav items: cinza `#9E9E9E`, active = laranja `#F37312` com border-bottom laranja
+- Indicador ao vivo: ponto verde animado com texto "Ao vivo"
+- Avatar: círculo laranja com iniciais
+
+### KPI Strip
+
+- Background branco, border-bottom cinza claro
+- 6 cards iguais com: ícone colorido (38x38px) + número grande + label
+- Cores por card:
+  - Total: ícone cinza escuro
+  - Aceitas: ícone e número verde `#2E7D32`, bg `#E8F5E9`
+  - Recusadas: ícone e número vermelho `#C62828`, bg `#FFEBEE`
+  - Ocorrências: ícone e número âmbar `#E65100`, bg `#FFF3E0`
+  - Em rota: ícone e número azul `#1565C0`, bg `#E3F2FD`
+  - Em aberto: ícone e número **laranja marca** `#F37312`, bg `#FFF5ED`
+
+### Subtabs
+
+- Background branco, border-bottom cinza
+- Active: laranja `#F37312` com border-bottom laranja 2px
+- Badge de contagem: bg laranja claro quando ativo
+
+### Toolbar
+
+- Busca: input com ícone de lupa, foco fica com border laranja
+- Filtros: botões com borda cinza; quando ativo → border laranja, text laranja, bg `#FFF5ED`
+- Botão "Importar NFs": background laranja `#F37312`, texto branco
+
+### Tabela
+
+- Fundo branco
+- Header: bg `#FAFAFA`, texto uppercase cinza, cursor pointer, hover → laranja
+- Linhas: hover → `#FFF5ED`; selecionada → bg `#FEF0E6` + border-left 3px laranja
+- Ícone de foto: 30x30px, cinza por padrão; quando tem foto → laranja `#F37312` + bg laranja claro
+- **Clicar na linha expande painel de detalhe** com: info da entrega + miniatura da foto do canhoto
+- Painel de detalhe: border-top 2px laranja, título de seção em laranja maiúsculo
+
+### Status badges (usar em toda a app)
+
+```
+Aceita:     bg #E8F5E9  | text #2E7D32 | border #A5D6A7
+Recusada:   bg #FFEBEE  | text #C62828 | border #EF9A9A
+Ocorrência: bg #FFF3E0  | text #E65100 | border #FFCC80
+Pendente:   bg #F5F5F5  | text #757575 | border #E0E0E0
+Em rota:    bg #E3F2FD  | text #1565C0 | border #90CAF9
+```
+
+### Painel lateral (side panel)
+
+- Largura 240px, fundo branco, border-left cinza
+- Seção "Motoristas": dot colorido + nome + barra de progresso laranja + X/Y entregas
+- Seção "Clientes hoje": dot laranja + nome + contagem de NFs
+
+---
+
+## Perfil 2 — MOTORISTA
+
+**Referência visual:** Detrack (princípio dos "3 botões") + Track-POD driver app  
+**Acesso:** Mobile-first (PWA, funciona no browser do celular)
+
+### Princípio de design
+
+> O motorista está dirigindo, com sol na tela, possivelmente com luvas.  
+> **Menos é mais. Botões grandes. Fluxo rápido.**
+
+### Layout mobile (360px)
+
+```
+┌────────────────────────────────┐
+│  HEADER DARK                   │
+│  Logo + Nome do motorista      │
+│  Stats: Total | Feitas | Pend. │
+├────────────────────────────────┤
+│  BANNER OFFLINE (se sem 4G)    │
+├────────────────────────────────┤
+│  CARD ATIVO (expandido)        │
+│  ┌──────────────────────────┐  │
+│  │ NF + Destinatário        │  │
+│  │ Endereço                 │  │
+│  │ [📷 FOTO DO CANHOTO] [Status▼] │
+│  │ Pills: Aceita|Recusada|Retida|Item │
+│  │ [Área de foto — toque p/ câmera] │
+│  └──────────────────────────┘  │
+│                                │
+│  CARD NORMAL (recolhido)       │
+│  [+ 4 entregas pendentes]      │
+└────────────────────────────────┘
+```
+
+### Header
+
+- Background: `#1E1E1E`
+- Logo: ponto laranja + "Aliança Log" branco
+- Nome do motorista + empresa: cinza `#9E9E9E`
+- Stats grid 3 colunas: fundo rgba branco 7%, número branco grande, número de "Feitas" em laranja
+- Padding confortável para toque
+
+### Banner offline
+
+- Background: `#856404` (âmbar escuro)
+- Texto branco, ícone wifi-off
+- Mensagem: "Sem conexão — dados salvos, enviando ao reconectar"
+- Ocultar quando houver conexão
+
+### Cards de entrega
+
+- Background branco, border-radius 10px, sombra suave
+- Card **ativo** (a próxima entrega): border 2px laranja `#F37312`
+- Header do card: NF em cinza pequeno, destinatário em negrito escuro, endereço com ícone pin laranja
+
+### Botões de ação (dentro do card ativo)
+
+- **Botão "Foto do canhoto"**: fundo laranja `#F37312`, texto branco, ícone câmera
+  - Tamanho mínimo: 48px de altura (regra de acessibilidade mobile)
+  - Ao tocar → abre câmera nativa do celular (input[type=file] accept="image/*" capture="environment")
+- **Botão "Status ▼"**: fundo cinza claro, texto cinza escuro, border cinza
+
+### Pills de status
+
+Aparecem abaixo dos botões:
+```
+Aceita      → bg #E8F5E9  text #2E7D32  border #A5D6A7
+Recusada    → bg #FFEBEE  text #C62828  border #EF9A9A
+Retida      → bg #FFF3E0  text #E65100  border #FFCC80
+Item faltou → bg #F5F5F5  text #616161  border #E0E0E0
+```
+Altura mínima 40px para toque confortável.
+
+### Área de foto
+
+- Borda tracejada laranja `#F37312`
+- Background `#FFF5ED`
+- Ícone câmera + texto "Toque para abrir a câmera"
+- Após foto tirada: mostrar miniatura + botão "Tirar novamente"
+
+### Fluxo completo de uma entrega
+
+1. Motorista vê o card ativo
+2. Toca "Foto do canhoto" → câmera nativa abre
+3. Tira a foto → miniatura aparece na área
+4. Seleciona status (Aceita / Recusada / Retida / Item faltou)
+5. Toca "Confirmar" → upload da foto + atualização de status no Supabase
+6. Próximo card vira o ativo
+
+### Modo offline
+
+- Usar **IndexedDB** para salvar foto + status localmente
+- **Background Sync** para enviar ao reconectar
+- Banner sempre visível quando offline
+
+---
+
+## Perfil 3 — CLIENTE FINAL
+
+**Referência visual:** Spoke Connect (portal branded, mobile-first)  
+**Acesso:** Link compartilhável, sem precisar baixar app
+
+### Princípio de design
+
+> O cliente quer saber UMA coisa: meu pedido chegou?  
+> **Interface limpa, timeline clara, foto disponível para consulta.**
+
+### Layout mobile (400px max)
+
+```
+┌──────────────────────────────────┐
+│  HEADER                          │
+│  Logo Aliança Log + chip empresa │
+├──────────────────────────────────┤
+│  HERO DARK (#1E1E1E)             │
+│  Data + "9 entregas hoje"        │
+│  Barra de progresso laranja      │
+│  "2 de 9 finalizadas — 22%"      │
+│  Pills: Total|OK|Recusada|Pend.  │
+├──────────────────────────────────┤
+│  LISTA DE ENTREGAS               │
+│  ──── Finalizadas ────           │
+│  [Card expandido com timeline]   │
+│  [Card recusado com foto]        │
+│  ──── Pendentes (6) ────         │
+│  [Card recolhido]                │
+│  [+ 5 entregas pendentes]        │
+└──────────────────────────────────┘
+```
+
+### Header
+
+- Background branco
+- Logo com ícone da rota em laranja sobre fundo dark
+- Chip da empresa: bg cinza claro, dot verde animado, nome da empresa
+
+### Hero section
+
+- Background: `#1E1E1E`
+- Data: cinza `#9E9E9E`, uppercase, tracking
+- Título: branco, fonte grande
+- Barra de progresso: bg `#3D3D3D`, fill laranja `#F37312`
+- Label de progresso: "X de Y finalizadas" + percentual em laranja
+- Pills sobre dark:
+  ```
+  Total:     rgba(255,255,255,.10)  text branco
+  Entregue:  rgba(76,175,80,.20)    text #A5D6A7
+  Recusada:  rgba(244,67,54,.20)    text #EF9A9A
+  Ocorrência:rgba(243,115,18,.20)   text #FFCC80
+  Pendentes: rgba(255,255,255,.05)  text #9E9E9E
+  ```
+
+### Cards de entrega
+
+- Border radius 10px, border cinza
+- Hover: border laranja + sombra laranja suave
+- 3 variações de ícone (38x38px):
+  - Aceita: bg `#E8F5E9`, ícone `ti-circle-check` verde
+  - Recusada: bg `#FFEBEE`, ícone `ti-circle-x` vermelho
+  - Pendente: bg `#F5F5F5`, ícone `ti-clock` cinza
+
+### Timeline (dentro do card expandido)
+
+Cada passo tem:
+- Dot redondo (laranja quando concluído, cinza quando pendente)
+- Linha vertical conectando os dots
+- Label em negrito + hora em cinza
+
+Passos:
+1. "Saiu para entrega" + hora + nome do motorista
+2. "Chegou ao destino" + hora
+3. "Canhoto aceito" (verde, bold) ou "Entrega recusada" (vermelho, bold) + hora
+
+### Faixa de foto do canhoto
+
+- Aparece no final de cards finalizados
+- Ícone foto em caixa laranja `#FFF5ED` com border laranja
+- Texto "Foto do canhoto" bold + hora de registro
+- Botão "Ver" em laranja → abre foto em modal/lightbox
+- Para recusada: caixa vermelha `#FFEBEE` com border vermelho
+
+---
+
+## Stack Técnica Recomendada
+
+```
+Frontend:  Next.js 14+ com App Router
+Estilo:    Tailwind CSS (ou CSS modules com os tokens acima)
+Backend:   Supabase
+  - Auth:     autenticação por e-mail + role-based (gerencia/motorista/cliente)
+  - Database: PostgreSQL
+  - Realtime: Supabase Realtime (websockets) para sync entre perfis
+  - Storage:  Supabase Storage para fotos dos canhotos
+Ícones:    Tabler Icons (tabler-react ou webfont)
+Offline:   Service Worker + IndexedDB + Background Sync (para perfil motorista)
+```
+
+---
+
+## Modelo de Dados (Supabase)
+
+```sql
+-- Empresas clientes
+CREATE TABLE empresas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Usuários (gerencia/motorista/cliente)
+CREATE TABLE perfis (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  role TEXT CHECK (role IN ('gerencia','motorista','cliente')),
+  nome TEXT,
+  empresa_id UUID REFERENCES empresas(id),
+  ativo BOOLEAN DEFAULT true
+);
+
+-- Entregas (coração do sistema)
+CREATE TABLE entregas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nf TEXT NOT NULL,
+  empresa_id UUID REFERENCES empresas(id),
+  destinatario TEXT NOT NULL,
+  endereco TEXT NOT NULL,
+  motorista_id UUID REFERENCES perfis(id),
+  status TEXT DEFAULT 'pendente'
+    CHECK (status IN ('pendente','em_rota','aceita','recusada','retida','ocorrencia')),
+  ocorrencia TEXT,
+  foto_url TEXT,
+  data_entrega DATE DEFAULT CURRENT_DATE,
+  hora_registro TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices para performance
+CREATE INDEX ON entregas(data_entrega);
+CREATE INDEX ON entregas(empresa_id);
+CREATE INDEX ON entregas(motorista_id);
+CREATE INDEX ON entregas(status);
+```
+
+---
+
+## Realtime — Como Implementar
+
+```typescript
+// Supabase Realtime subscription (no perfil de gerência e cliente)
+const channel = supabase
+  .channel('entregas-hoje')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'entregas',
+      filter: `data_entrega=eq.${today}`
+    },
+    (payload) => {
+      // Atualizar estado local com o novo status/foto
+      updateEntrega(payload.new);
+    }
+  )
+  .subscribe();
+```
+
+---
+
+## Upload de Foto (Motorista)
+
+```typescript
+// 1. Input de câmera
+<input
+  type="file"
+  accept="image/*"
+  capture="environment"  // abre câmera traseira diretamente
+  onChange={handleFoto}
+/>
+
+// 2. Upload para Supabase Storage
+async function handleFoto(event) {
+  const file = event.target.files[0];
+  const path = `canhotos/${entregaId}/${Date.now()}.jpg`;
+
+  const { data, error } = await supabase.storage
+    .from('canhotos')
+    .upload(path, file, { contentType: 'image/jpeg' });
+
+  if (!error) {
+    const { data: urlData } = supabase.storage
+      .from('canhotos')
+      .getPublicUrl(path);
+
+    // Atualiza entrega com foto_url
+    await supabase
+      .from('entregas')
+      .update({ foto_url: urlData.publicUrl, hora_registro: new Date() })
+      .eq('id', entregaId);
+  }
+}
+```
+
+---
+
+## Offline — Motorista (IndexedDB + Background Sync)
+
+```typescript
+// Salvar localmente quando sem conexão
+async function registrarEntregaOffline(entregaId, status, fotoBlob) {
+  const db = await openDB('alianca-log', 1);
+  await db.add('pendentes', {
+    entregaId,
+    status,
+    fotoBlob,
+    timestamp: Date.now()
+  });
+  // Registrar para sync quando voltar a conexão
+  await navigator.serviceWorker.ready.then(sw =>
+    sw.sync.register('sync-entregas')
+  );
+}
+```
+
+---
+
+## Arquitetura de Rotas (Next.js)
+
+```
+app/
+├── (auth)/
+│   └── login/page.tsx
+├── gerencia/
+│   ├── layout.tsx         ← topbar + nav
+│   ├── page.tsx           ← dashboard (Plan & Track)
+│   ├── romaneios/page.tsx
+│   └── cadastros/page.tsx
+├── motorista/
+│   ├── layout.tsx         ← header dark mobile
+│   └── page.tsx           ← lista de entregas do dia
+└── cliente/
+    ├── layout.tsx         ← header + hero
+    └── page.tsx           ← lista de NFs com timeline
+```
+
+---
+
+## Arquivo de Referência Visual
+
+O arquivo `mockup.html` na mesma pasta contém a implementação HTML completa dos três perfis com:
+- Todos os tokens de cor corretos
+- Todos os componentes estilizados
+- Interação básica (toggle de detail panel, troca de abas)
+
+**Usar como referência visual exata** ao implementar os componentes React.
+
+---
+
+## Checklist de Implementação
+
+### MVP (prioridade máxima)
+- [ ] Auth com 3 roles (gerencia/motorista/cliente)
+- [ ] Perfil Motorista: lista de entregas + câmera + status
+- [ ] Perfil Gerência: tabela com filtros + KPIs + detail panel
+- [ ] Perfil Cliente: timeline de status + foto do canhoto
+- [ ] Realtime entre os 3 perfis
+- [ ] Upload de foto para Supabase Storage
+- [ ] Banner offline no app do motorista
+
+### Fase 2
+- [ ] Importação de Excel (NFs dos clientes)
+- [ ] Relatórios de desempenho por motorista
+- [ ] Análise de rentabilidade por entrega
+- [ ] Roteirização inteligente via GPS
+
+---
+
+*Cores extraídas diretamente do logo oficial Aliança Log: laranja `#F37312`, dark `#1E1E1E`*
+

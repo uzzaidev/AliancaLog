@@ -2,6 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  IconCamera,
+  IconCircleCheck,
+  IconCircleX,
+  IconAlertTriangle,
+  IconMapPin,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { Button, Card } from "@/components/ui";
 import { comprimirImagem } from "@/lib/offline/image";
 import { enfileirar, listarPendentes } from "@/lib/offline/queue";
@@ -16,11 +24,27 @@ import {
 const STATUS_BTNS: {
   key: CanhotoStatus;
   label: string;
+  icon: typeof IconCircleCheck;
   cls: string;
 }[] = [
-  { key: "aceita", label: "✅  Nota aceita", cls: "bg-success text-white" },
-  { key: "recusada", label: "❌  Nota recusada", cls: "bg-danger text-white" },
-  { key: "ocorrencia", label: "⚠️  Ocorrência", cls: "bg-warning text-white" },
+  {
+    key: "aceita",
+    label: "Nota aceita",
+    icon: IconCircleCheck,
+    cls: "bg-success text-white border-success",
+  },
+  {
+    key: "recusada",
+    label: "Nota recusada",
+    icon: IconCircleX,
+    cls: "bg-danger text-white border-danger",
+  },
+  {
+    key: "ocorrencia",
+    label: "Ocorrência",
+    icon: IconAlertTriangle,
+    cls: "bg-warning text-white border-warning",
+  },
 ];
 
 const TIPOS = Object.keys(OCORRENCIA_LABEL) as OcorrenciaTipo[];
@@ -122,6 +146,7 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   if (resultado) {
     return (
       <Card className="space-y-4 p-6 text-center">
+        <IconCircleCheck size={44} className="mx-auto text-success" />
         <p className="text-lg font-semibold text-success">{resultado}</p>
         <p className="text-sm text-muted">NF {nf.numero_nf}</p>
         <Button className="w-full" onClick={() => router.back()}>
@@ -134,12 +159,16 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   return (
     <div className="space-y-4">
       <Card className="p-4">
-        <div className="font-semibold text-ink">NF {nf.numero_nf}</div>
-        <div className="text-sm text-muted">
-          {nf.destinatario_nome}
-          <br />
-          {nf.destinatario_endereco}
-          {nf.cidade ? `, ${nf.cidade}` : ""}
+        <div className="text-[11px] font-medium text-gray-400">
+          NF {nf.numero_nf}
+        </div>
+        <div className="font-semibold text-dark">{nf.destinatario_nome}</div>
+        <div className="mt-1 flex items-start gap-1 text-sm text-muted">
+          <IconMapPin size={13} className="mt-0.5 shrink-0 text-brand" />
+          <span>
+            {nf.destinatario_endereco}
+            {nf.cidade ? `, ${nf.cidade}` : ""}
+          </span>
         </div>
       </Card>
 
@@ -166,12 +195,12 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
                   setPreview(null);
                 }}
               >
-                Refazer foto
+                <IconRefresh size={17} /> Refazer foto
               </Button>
             </div>
           ) : (
-            <span className="flex h-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-line text-sm text-muted">
-              📷 Toque para tirar a foto
+            <span className="flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-brand bg-brand-50 text-sm font-medium text-brand">
+              <IconCamera size={26} /> Toque para abrir a câmera
             </span>
           )}
           <input
@@ -185,19 +214,22 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
       </Card>
 
       <div className="grid grid-cols-1 gap-2">
-        {STATUS_BTNS.map((b) => (
-          <button
-            key={b.key}
-            onClick={() => setStatus(b.key)}
-            className={`touch-target rounded-xl px-4 text-base font-semibold transition ${
-              status === b.key
-                ? b.cls
-                : "bg-surface text-ink ring-1 ring-inset ring-line"
-            }`}
-          >
-            {b.label}
-          </button>
-        ))}
+        {STATUS_BTNS.map((b) => {
+          const Icon = b.icon;
+          return (
+            <button
+              key={b.key}
+              onClick={() => setStatus(b.key)}
+              className={`touch-target flex items-center justify-center gap-2 rounded-xl border px-4 text-base font-semibold transition ${
+                status === b.key
+                  ? b.cls
+                  : "border-line bg-surface text-ink"
+              }`}
+            >
+              <Icon size={20} /> {b.label}
+            </button>
+          );
+        })}
       </div>
 
       {(status === "aceita" || status === "recusada") && (

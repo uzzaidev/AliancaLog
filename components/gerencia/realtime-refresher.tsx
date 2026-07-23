@@ -6,7 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function RealtimeRefresher({ channel: channelName = "gerencia-dashboard" }: { channel?: string }) {
+export function RealtimeRefresher({
+  channel: channelName = "gerencia-dashboard",
+  dark = false,
+}: {
+  channel?: string;
+  dark?: boolean;
+}) {
   const router = useRouter();
   const [live, setLive] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,11 +47,21 @@ export function RealtimeRefresher({ channel: channelName = "gerencia-dashboard" 
   }, [router, channelName]);
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+        dark ? "text-[#4CAF50]" : "text-muted"
+      }`}
+    >
       <span
-        className={`h-2 w-2 rounded-full ${live ? "bg-success" : "bg-line"}`}
+        className={`h-2 w-2 rounded-full ${
+          live
+            ? `${dark ? "bg-[#4CAF50]" : "bg-success"} pulse-dot`
+            : dark
+              ? "bg-gray-500"
+              : "bg-line"
+        }`}
       />
-      {live ? "Tempo real" : "Conectando…"}
+      {live ? "Ao vivo" : "Conectando…"}
     </span>
   );
 }

@@ -23,13 +23,24 @@ export function Filtros({
     router.push(`/gerencia/dashboard?${next.toString()}`);
   }
 
-  const selectCls =
-    "rounded-lg border border-line bg-surface px-2.5 py-2 text-sm text-ink outline-none focus:border-brand";
+  // Chip de filtro: borda cinza; quando um valor está selecionado, fica laranja.
+  function selectCls(ativo: boolean) {
+    return `cursor-pointer rounded-md border bg-surface px-2.5 py-2 text-sm outline-none transition-colors focus:border-brand ${
+      ativo
+        ? "border-brand bg-brand-50 text-brand"
+        : "border-line text-gray-700"
+    }`;
+  }
+
+  const temFiltro =
+    !!params.get("status") ||
+    !!params.get("motorista") ||
+    !!params.get("empresa");
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <select
-        className={selectCls}
+        className={selectCls(!!params.get("status"))}
         value={params.get("status") ?? ""}
         onChange={(e) => setParam("status", e.target.value)}
       >
@@ -42,7 +53,7 @@ export function Filtros({
       </select>
 
       <select
-        className={selectCls}
+        className={selectCls(!!params.get("motorista"))}
         value={params.get("motorista") ?? ""}
         onChange={(e) => setParam("motorista", e.target.value)}
       >
@@ -55,7 +66,7 @@ export function Filtros({
       </select>
 
       <select
-        className={selectCls}
+        className={selectCls(!!params.get("empresa"))}
         value={params.get("empresa") ?? ""}
         onChange={(e) => setParam("empresa", e.target.value)}
       >
@@ -67,12 +78,10 @@ export function Filtros({
         ))}
       </select>
 
-      {(params.get("status") ||
-        params.get("motorista") ||
-        params.get("empresa")) && (
+      {temFiltro && (
         <button
           onClick={() => router.push("/gerencia/dashboard")}
-          className="text-sm text-brand hover:underline"
+          className="text-sm font-medium text-brand hover:underline"
         >
           Limpar
         </button>

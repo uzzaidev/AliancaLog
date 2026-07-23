@@ -2,6 +2,7 @@
 
 // Modal genérico: backdrop + painel centralizado, fecha no Escape ou clique fora.
 import { useEffect, type ReactNode } from "react";
+import { IconX } from "@tabler/icons-react";
 
 export function Modal({
   open,
@@ -36,14 +37,14 @@ export function Modal({
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between border-b border-line px-5 py-3">
-          <h2 className="font-semibold text-ink">{title}</h2>
+        <div className="flex items-center justify-between border-b-2 border-brand px-5 py-3">
+          <h2 className="font-bold text-dark">{title}</h2>
           <button
             onClick={onClose}
             className="rounded-full p-1 text-muted hover:bg-canvas hover:text-ink"
             aria-label="Fechar"
           >
-            ✕
+            <IconX size={18} />
           </button>
         </div>
         <div className="p-5">{children}</div>

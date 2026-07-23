@@ -7,7 +7,7 @@ import { Button } from "@/components/ui";
 import { logout } from "@/lib/auth/actions";
 import { limparDadosLocais } from "@/lib/offline/queue";
 
-export function LogoutButton() {
+export function LogoutButton({ className = "" }: { className?: string }) {
   async function sair() {
     try {
       await limparDadosLocais();
@@ -26,7 +26,7 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="ghost" onClick={sair} className="px-3">
+    <Button variant="ghost" onClick={sair} className={`px-3 ${className}`}>
       Sair
     </Button>
   );

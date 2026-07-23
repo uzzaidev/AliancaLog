@@ -1,5 +1,4 @@
-import { AppShell } from "@/components/app-shell";
-import { GerenciaNav } from "@/components/gerencia/nav";
+import { GerenciaTopbar } from "@/components/gerencia/topbar";
 import { requireRole } from "@/lib/auth/dal";
 
 export default async function GerenciaLayout({
@@ -9,9 +8,9 @@ export default async function GerenciaLayout({
 }) {
   const user = await requireRole("gerencia");
   return (
-    <AppShell role="gerencia" email={user.email}>
-      <GerenciaNav />
-      {children}
-    </AppShell>
+    <div className="min-h-full">
+      <GerenciaTopbar email={user.email} />
+      <main className="mx-auto max-w-[1400px] px-4 py-5">{children}</main>
+    </div>
   );
 }

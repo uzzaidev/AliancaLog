@@ -1,7 +1,7 @@
 import { EmpresasPainel } from "@/components/gerencia/empresas-painel";
 import { Filtros } from "@/components/gerencia/filtros";
 import { NotasList } from "@/components/gerencia/notas-list";
-import { RealtimeRefresher } from "@/components/gerencia/realtime-refresher";
+import { SidePanel } from "@/components/gerencia/side-panel";
 import { StatCards } from "@/components/gerencia/stat-cards";
 import {
   getNotasDoDia,
@@ -31,22 +31,29 @@ export default async function GerenciaDashboard({
     ]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Painel</h1>
-          <p className="text-sm text-muted">Entregas de hoje em tempo real.</p>
-        </div>
-        <RealtimeRefresher />
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-dark">
+          Plan &amp; Track
+        </h1>
+        <p className="text-sm text-muted">Entregas de hoje em tempo real.</p>
       </div>
 
       <StatCards resumo={resumo} />
+
       <EmpresasPainel
         empresas={painelClientes}
         motoristas={motoristas.filter((m) => m.ativo)}
       />
+
       <Filtros empresas={empresas} motoristas={motoristas} />
-      <NotasList notas={notas} />
+
+      <div className="flex flex-col gap-5 lg:flex-row">
+        <div className="min-w-0 flex-1 space-y-3">
+          <NotasList notas={notas} />
+        </div>
+        <SidePanel notas={notas} clientes={painelClientes} />
+      </div>
     </div>
   );
 }
