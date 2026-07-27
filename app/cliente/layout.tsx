@@ -11,7 +11,7 @@ export default async function ClienteLayout({
   return (
     <div className="min-h-full bg-canvas">
       <ClienteHeader empresa={user.nome ?? user.email} />
-      <main className="mx-auto max-w-md px-4 py-4">
+      <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
         <ClienteNav />
         {children}
       </main>

@@ -92,7 +92,7 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
 
   if (notas.length === 0) {
     return (
-      <Card className="flex flex-col items-center gap-3 p-10 text-center">
+      <Card className="mx-auto flex max-w-lg flex-col items-center gap-3 p-10 text-center">
         <IconPhoto size={30} className="text-gray-300" />
         <p className="text-sm text-muted">Nenhuma entrega para o filtro atual.</p>
         <Link
@@ -106,16 +106,17 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
   }
 
   return (
-    <div className="space-y-2">
-      {notas.map((nf) => {
-        const meta = ICONE[nf.status] ?? ICONE.pendente;
-        const Icon = meta.icon;
-        const aberto = expandida === nf.id;
-        const comp = cache[nf.id];
-        return (
+    <>
+      <div className="gap-4 lg:columns-2 xl:columns-3">
+        {notas.map((nf) => {
+          const meta = ICONE[nf.status] ?? ICONE.pendente;
+          const Icon = meta.icon;
+          const aberto = expandida === nf.id;
+          const comp = cache[nf.id];
+          return (
           <div
             key={nf.id}
-            className="overflow-hidden rounded-xl border border-line bg-surface transition hover:border-brand"
+            className="mb-4 break-inside-avoid overflow-hidden rounded-xl border border-line bg-surface transition hover:border-brand"
           >
             <button
               onClick={() => toggle(nf.id)}
@@ -184,8 +185,9 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
               </div>
             )}
           </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       <Modal
         open={lightbox !== null}
@@ -201,6 +203,6 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
           />
         )}
       </Modal>
-    </div>
+    </>
   );
 }

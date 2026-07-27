@@ -26,8 +26,14 @@ export function RealtimeRefresher({
       timer.current = setTimeout(() => router.refresh(), 400);
     };
 
+    // Nome único por montagem: em dev (React Strict Mode) o efeito monta →
+    // desmonta → monta, e o Supabase reaproveita canais pelo mesmo nome, o que
+    // dispara "cannot add postgres_changes callbacks after subscribe()". Um
+    // sufixo aleatório garante um canal novo a cada montagem.
+    const topic = `${channelName}-${Math.random().toString(36).slice(2)}`;
+
     const channel = supabase
-      .channel(channelName)
+      .channel(topic)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notas_fiscais" },

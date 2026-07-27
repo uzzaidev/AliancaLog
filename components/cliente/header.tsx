@@ -5,7 +5,7 @@ import { LogoutButton } from "@/components/logout-button";
 export function ClienteHeader({ empresa }: { empresa: string | null }) {
   return (
     <header className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-4 py-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-2.5">
           <Logo variant="dark" size={24} />
           <span className="hidden text-[11px] text-muted sm:inline">
