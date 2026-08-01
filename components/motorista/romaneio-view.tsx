@@ -7,9 +7,12 @@ import {
   IconMapPin,
   IconCamera,
   IconChevronRight,
+  IconNavigation,
 } from "@tabler/icons-react";
 import { Card, StatusBadge } from "@/components/ui";
 import { Progress } from "@/components/ui/progress";
+import { MapaRomaneio } from "./mapa-romaneio";
+import { enderecoMapsUrl } from "@/lib/maps";
 import type { NotaMotorista } from "@/lib/types";
 
 const FINAIS = ["aceita", "recusada", "ocorrencia"];
@@ -37,6 +40,8 @@ export function RomaneioView({ notas }: { notas: NotaMotorista[] }) {
         <Progress done={concluidas} total={notas.length} />
       </Card>
 
+      <MapaRomaneio notas={notas} />
+
       <div className="relative">
         <IconSearch
           size={16}
@@ -60,49 +65,64 @@ export function RomaneioView({ notas }: { notas: NotaMotorista[] }) {
         const feito = FINAIS.includes(n.status);
         const ativo = n.id === proximaId;
         return (
-          <Link
+          <div
             key={n.id}
-            href={`/motorista/canhoto/${n.id}`}
-            className={`block rounded-xl border bg-surface shadow-sm transition active:bg-canvas ${
+            className={`overflow-hidden rounded-xl border bg-surface shadow-sm ${
               ativo ? "border-2 border-brand" : "border-line"
             }`}
           >
-            <div className="flex items-start gap-3 p-4">
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-medium text-gray-400">
-                  NF {n.numero_nf}
+            <Link
+              href={`/motorista/canhoto/${n.id}`}
+              className="block transition active:bg-canvas"
+            >
+              <div className="flex items-start gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] font-medium text-gray-400">
+                    NF {n.numero_nf}
+                  </div>
+                  <div className="font-semibold text-dark">
+                    {n.destinatario_nome}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1 text-sm text-muted">
+                    <IconMapPin
+                      size={13}
+                      className={ativo ? "text-brand" : "text-gray-400"}
+                    />
+                    <span className="truncate">
+                      {n.destinatario_endereco}
+                      {n.cidade ? `, ${n.cidade}` : ""}
+                    </span>
+                  </div>
                 </div>
-                <div className="font-semibold text-dark">
-                  {n.destinatario_nome}
+                <div className="shrink-0 self-center">
+                  {feito ? (
+                    <StatusBadge status={n.status} />
+                  ) : (
+                    <IconChevronRight size={20} className="text-brand" />
+                  )}
                 </div>
-                <div className="mt-1 flex items-center gap-1 text-sm text-muted">
-                  <IconMapPin
-                    size={13}
-                    className={ativo ? "text-brand" : "text-gray-400"}
-                  />
-                  <span className="truncate">
-                    {n.destinatario_endereco}
-                    {n.cidade ? `, ${n.cidade}` : ""}
+              </div>
+
+              {ativo && (
+                <div className="border-t border-brand-100 px-4 py-2.5">
+                  <span className="flex touch-target items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-white">
+                    <IconCamera size={18} /> Registrar canhoto
                   </span>
                 </div>
-              </div>
-              <div className="shrink-0 self-center">
-                {feito ? (
-                  <StatusBadge status={n.status} />
-                ) : (
-                  <IconChevronRight size={20} className="text-brand" />
-                )}
-              </div>
-            </div>
+              )}
+            </Link>
 
-            {ativo && (
-              <div className="border-t border-brand-100 px-4 py-2.5">
-                <span className="flex touch-target items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-white">
-                  <IconCamera size={18} /> Registrar canhoto
-                </span>
-              </div>
+            {!feito && (
+              <a
+                href={enderecoMapsUrl(n)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex touch-target items-center justify-center gap-2 border-t border-line text-sm font-medium text-brand active:bg-canvas"
+              >
+                <IconNavigation size={16} /> Abrir no Maps
+              </a>
             )}
-          </Link>
+          </div>
         );
       })}
     </div>

@@ -42,7 +42,7 @@ export async function getRomaneiosDoDia(): Promise<RomaneioMotorista[]> {
 }
 
 const NF_COLS =
-  "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,status";
+  "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,status,lat,lng";
 
 export async function getNotasDoRomaneio(
   romaneioId: string,
@@ -51,7 +51,7 @@ export async function getNotasDoRomaneio(
   const { data } = await supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,status,ordem",
+      "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,status,ordem,lat,lng",
     )
     .eq("romaneio_id", romaneioId)
     .order("ordem", { ascending: true, nullsFirst: false });

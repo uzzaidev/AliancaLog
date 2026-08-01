@@ -8,10 +8,12 @@ import {
   IconCircleX,
   IconAlertTriangle,
   IconMapPin,
+  IconNavigation,
   IconRefresh,
 } from "@tabler/icons-react";
 import { Button, Card } from "@/components/ui";
 import { comprimirImagem } from "@/lib/offline/image";
+import { enderecoMapsUrl } from "@/lib/maps";
 import { enfileirar, listarPendentes } from "@/lib/offline/queue";
 import { flushFila, notificarFila } from "@/lib/offline/sync";
 import {

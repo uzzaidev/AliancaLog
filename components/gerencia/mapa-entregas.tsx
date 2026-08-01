@@ -11,10 +11,10 @@ import { IconMapPin, IconRefresh } from "@tabler/icons-react";
 import { Button, Card, Spinner } from "@/components/ui";
 import type { PontoDestino, PontoEntregue } from "@/lib/data/mapa";
 import { geocodificarPendentes } from "@/app/gerencia/dashboard/geocode-actions";
-import type { PontoMapa } from "./mapa-leaflet-inner";
+import type { PontoMapa } from "@/components/mapa/leaflet-map";
 
 const MapaLeafletInner = dynamic(
-  () => import("./mapa-leaflet-inner").then((m) => m.MapaLeafletInner),
+  () => import("@/components/mapa/leaflet-map").then((m) => m.MapaLeafletInner),
   { ssr: false, loading: () => <div className="flex h-full items-center justify-center text-sm text-muted">Carregando mapa…</div> },
 );
 
@@ -103,7 +103,7 @@ export function MapaEntregas({
         </div>
       </div>
 
-      <div className="h-[360px] w-full">
+      <div className="h-90 w-full">
         <MapaLeafletInner pontos={pontos} />
       </div>
 

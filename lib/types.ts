@@ -26,6 +26,9 @@ export type OcorrenciaTipo =
   | "outro";
 
 // NF na visão do motorista (compartilhada entre data layer e componentes client).
+// lat/lng: geocodificação do endereço (migration 0014) — null até a gerência
+// rodar "Geocodificar" no dashboard; o link "Abrir no Maps" funciona mesmo sem,
+// caindo para busca por texto do endereço (ver lib/maps.ts).
 export type NotaMotorista = {
   id: string;
   numero_nf: string;
@@ -33,6 +36,8 @@ export type NotaMotorista = {
   destinatario_endereco: string;
   cidade: string | null;
   status: NotaStatus;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 // Para onde cada perfil é levado após o login.
