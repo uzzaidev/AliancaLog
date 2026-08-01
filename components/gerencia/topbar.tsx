@@ -1,6 +1,7 @@
-// Topbar escura da gerência (padrão Track-POD): logo + nav horizontal +
-// indicador Realtime "Ao vivo" + avatar + sair. Server component compondo os
-// filhos client (nav, realtime, logout).
+// Topbar escura da gerência (padrão Track-POD). No desktop (>= sm): logo +
+// nav horizontal + indicador Realtime "Ao vivo" + avatar + sair. No mobile:
+// só logo + avatar + sair — a navegação vira barra de abas fixa embaixo
+// (GerenciaBottomNav, ver app/gerencia/layout.tsx), como um app nativo.
 import { Logo } from "@/components/brand/logo";
 import { LogoutButton } from "@/components/logout-button";
 import { GerenciaNav } from "@/components/gerencia/nav";
@@ -17,15 +18,15 @@ function iniciais(email: string | null) {
 export function GerenciaTopbar({ email }: { email: string | null }) {
   return (
     <header className="sticky top-0 z-20 border-b-[3px] border-brand bg-dark">
-      <div className="flex h-[52px] items-center gap-1 px-2 sm:gap-2 sm:px-4">
-        <div className="mr-1 flex h-full shrink-0 items-center gap-2 border-r border-dark-3 pr-2 sm:gap-3 sm:pr-4">
+      <div className="flex h-13 items-center gap-2 px-3 sm:px-4">
+        <div className="flex h-full shrink-0 items-center gap-2 sm:mr-1 sm:gap-3 sm:border-r sm:border-dark-3 sm:pr-4">
           <Logo variant="light" size={22} />
           <span className="hidden rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white sm:inline">
             Gerência
           </span>
         </div>
         <GerenciaNav />
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-4">
           <div className="hidden sm:block">
             <RealtimeRefresher dark />
           </div>

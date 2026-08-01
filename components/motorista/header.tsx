@@ -1,5 +1,7 @@
 // Header escuro do app do motorista (mobile-first): logo + identidade + stats
 // do dia (Total / Feitas / Pendentes). Server-safe.
+import Link from "next/link";
+import { IconHistory } from "@tabler/icons-react";
 import { Logo } from "@/components/brand/logo";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -44,6 +46,12 @@ export function MotoristaHeader({
             {nome}
             {empresa ? ` · ${empresa}` : ""}
           </span>
+          <Link
+            href="/motorista/historico"
+            className="flex touch-target min-h-0! items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:bg-dark-2 hover:text-white"
+          >
+            <IconHistory size={16} /> Histórico
+          </Link>
           <LogoutButton className="!min-h-0 px-2 py-1 text-xs text-gray-300 hover:bg-dark-2 hover:text-white" />
         </div>
       </div>

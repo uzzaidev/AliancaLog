@@ -7,6 +7,22 @@
 **Sprint atual:** Pré-aplicativo aprovado + ajustes pós-aprovação + **Sprint 3.5 (segurança/confiabilidade)** → próximo é deploy (Vercel/HTTPS) e piloto
 **Status geral:** 🟢 MVP A + ajustes + endurecimento de segurança rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
 
+**Mudanças de hoje (2026-08-01) — histórico do motorista:**
+1. **Migration `0015`**: relaxa `mot_nf_select` (RLS de `notas_fiscais`) — antes travava em
+   `data_entrega = hoje_sp()`, então o motorista literalmente não conseguia ler NF de dia anterior,
+   nem no banco direto. Agora só continua restrito a `motorista_id = auth.uid()` (sempre só o dele).
+   Escrita não muda: `mot_nf_update` já não tinha filtro de data, e o trigger `nf_guard_motorista`
+   (`0009`) já bloqueia edição de NF finalizada, de qualquer data. **Ainda não aplicada em produção**
+   — mudança de RLS, aplicar com atenção (`npm run db:migrate`).
+2. **`lib/data/motorista.ts`**: `getHistoricoRomaneios()` — todos os romaneios do motorista exceto o
+   de hoje (já coberto por "Minhas entregas"), limitado a 90 (~3 meses) por consulta.
+3. **`/motorista/historico`** (`historico-view.tsx`): lista read-only por data, reaproveitando
+   `/motorista/romaneio/[id]` pra ver o detalhe (a tela já vira "read-only" sozinha quando todas as
+   NFs estão finalizadas — não precisou de tela nova pro detalhe).
+4. Link "Histórico" adicionado no header do motorista (visível em todas as telas).
+5. **Não testado com dado real** — precisa da migration aplicada + romaneios antigos de fato existindo
+   pra validar visualmente.
+
 **Mudanças de hoje (2026-08-01) — mapa de entregas no dashboard (início da Fase B "Mapas"):**
 1. **Migration `0014`**: `lat`/`lng`/`geocode_status`/`geocoded_em` em `notas_fiscais` — coordenada do
    ENDEREÇO da NF (distinto de `canhotos.lat/lng`, que é o GPS do celular no momento do registro).
