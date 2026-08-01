@@ -67,6 +67,11 @@ A função **Arquitetura/QA** (code review, testes E2E, critérios de aceite, se
 
 **Nota Next.js 16:** o antigo `middleware.ts` agora se chama **Proxy** (`proxy.ts` na raiz) — mesma função, nome novo.
 
+**Nota de UI — cores:** a paleta é tokenizada via `@theme` do Tailwind v4 em `app/globals.css`
+(`brand`, `dark`, `ink`/`muted`/`surface`, `success`/`danger`/`warning`/`info`...). Cor hardcoded
+(`#hex` direto num componente) não é permitido — ver regra e lista completa de tokens no
+[CLAUDE.md § Convenções](../../CLAUDE.md).
+
 ---
 
 ## 4. Arquitetura essencial

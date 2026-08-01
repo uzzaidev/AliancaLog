@@ -61,7 +61,7 @@ export function SyncBanner() {
   return (
     <div
       className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-white ${
-        !online ? "bg-[#856404]" : "bg-info"
+        !online ? "bg-offline" : "bg-info"
       }`}
     >
       {!online ? <IconWifiOff size={15} /> : <IconCloudUpload size={15} />}

@@ -53,6 +53,19 @@ arquivo na raiz, export `proxy`). Não recrie um `middleware.ts` — não existe
   Mantenha consistência entre nomes de tabela/coluna, enums em `lib/types.ts` e o texto da UI.
 - UI do motorista: alvo de toque mínimo 48px (classe `.touch-target`), 1 ação principal por tela, sem
   mostrar itens/produtos da NF (o motorista já tem a NF física em mãos).
+- **Nunca usar cor hardcoded** (`#f37312`, `rgb(...)`, `bg-[#hex]`, `text-[#hex]`, `style={{ color: "#..." }}`
+  etc.) em componente novo. Todas as cores da marca/UI são tokens do Tailwind v4, definidos em
+  `@theme` em `app/globals.css`: `brand`/`brand-700`/`brand-100`/`brand-50`, `dark`/`dark-2`/`dark-3`,
+  `ink`/`muted`/`canvas`/`surface`/`line`, `success`/`danger`/`warning`/`info` (+ `-50`/`-border`), e as
+  variantes "brilhantes" para fundo escuro `success-bright`/`danger-bright`/`offline`. Use a classe do
+  token (`bg-brand`, `text-ink`, `border-dark-3`, `bg-success-bright/20`...). Se a cor que você precisa
+  não existir ainda, **adicione um token novo em `app/globals.css`** (com comentário do porquê) em vez
+  de escrever o hex direto no componente — assim trocar a paleta no futuro é uma mudança num lugar só.
+  Exceção: valores computados em runtime (ex.: `hsl(${hue}, ...)` para avatar colorido por nome) podem
+  ficar em `style={{}}`, já que não são constantes hardcoded.
+- Larguras/alturas: prefira classes fluidas (`flex`, `grid`, `w-full`, `max-w-*`, `min-w-*` combinado
+  com `flex-1`) a valores fixos. `h-[52px]` em barras de ferramentas e `max-w-[1400px]` como teto de
+  container são aceitáveis; não crie novos containers com largura/altura fixa em px sem necessidade.
 - Commits/PRs: `main` é produção. Sem branch `develop` formalizada ainda — confirmar com o time antes de
   assumir uma convenção de branches.
 - **Git commit e git push exigem confirmação explícita do Vítor a cada vez** — nunca assuma que uma

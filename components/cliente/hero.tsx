@@ -54,7 +54,7 @@ export function ClienteHero({
       : 0;
 
   return (
-    <div className="rounded-xl bg-[#1e1e1e] p-5 lg:p-7">
+    <div className="rounded-xl bg-dark p-5 lg:p-7">
       <div className="lg:grid lg:grid-cols-[1fr_380px] lg:items-center lg:gap-12">
         {/* Coluna esquerda: data + título */}
         <div>
@@ -73,9 +73,9 @@ export function ClienteHero({
         <div className="mt-5 lg:mt-0">
           <div className="mb-2 hidden justify-end lg:flex">{live}</div>
 
-          <div className="mb-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#3d3d3d]">
+          <div className="mb-1.5 h-1.5 w-full overflow-hidden rounded-full bg-dark-3">
             <div
-              className="h-full rounded-full bg-[#f37312] transition-all"
+              className="h-full rounded-full bg-brand transition-all"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -83,7 +83,7 @@ export function ClienteHero({
             <span>
               {resumo.finalizadas} de {resumo.total} finalizadas
             </span>
-            <span className="font-semibold text-[#f37312]">{pct}%</span>
+            <span className="font-semibold text-brand">{pct}%</span>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -92,19 +92,19 @@ export function ClienteHero({
             </Pill>
             <Pill
               icon={<IconCheck size={12} />}
-              cls="bg-[rgba(76,175,80,0.2)] text-[#A5D6A7]"
+              cls="bg-success-bright/20 text-success-border"
             >
               {resumo.entregue} entregue
             </Pill>
             <Pill
               icon={<IconX size={12} />}
-              cls="bg-[rgba(244,67,54,0.2)] text-[#EF9A9A]"
+              cls="bg-danger-bright/20 text-danger-border"
             >
               {resumo.recusada} recusada
             </Pill>
             <Pill
               icon={<IconAlertTriangle size={12} />}
-              cls="bg-[rgba(243,115,18,0.2)] text-[#FFCC80]"
+              cls="bg-brand/20 text-warning-border"
             >
               {resumo.ocorrencia} ocorrência
             </Pill>

@@ -16,7 +16,7 @@ function Stat({
     <div className="rounded-md bg-white/10 px-2.5 py-2 text-center">
       <div
         className={`text-xl font-bold tabular-nums ${
-          orange ? "text-[#f37312]" : "text-white"
+          orange ? "text-brand" : "text-white"
         }`}
       >
         {val}
@@ -36,7 +36,7 @@ export function MotoristaHeader({
   stats: { total: number; feitas: number; pendentes: number };
 }) {
   return (
-    <div className="bg-[#1e1e1e] px-4 pb-4 pt-3">
+    <div className="bg-dark px-4 pb-4 pt-3">
       <div className="mb-3.5 flex items-center justify-between gap-2">
         <Logo variant="light" size={22} />
         <div className="flex items-center gap-1.5">
@@ -44,7 +44,7 @@ export function MotoristaHeader({
             {nome}
             {empresa ? ` · ${empresa}` : ""}
           </span>
-          <LogoutButton className="!min-h-0 px-2 py-1 text-xs text-gray-300 hover:bg-[#2d2d2d] hover:text-white" />
+          <LogoutButton className="!min-h-0 px-2 py-1 text-xs text-gray-300 hover:bg-dark-2 hover:text-white" />
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2">

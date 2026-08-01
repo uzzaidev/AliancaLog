@@ -55,13 +55,13 @@ export function RealtimeRefresher({
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-        dark ? "text-[#4CAF50]" : "text-muted"
+        dark ? "text-success-bright" : "text-muted"
       }`}
     >
       <span
         className={`h-2 w-2 rounded-full ${
           live
-            ? `${dark ? "bg-[#4CAF50]" : "bg-success"} pulse-dot`
+            ? `${dark ? "bg-success-bright" : "bg-success"} pulse-dot`
             : dark
               ? "bg-gray-500"
               : "bg-line"

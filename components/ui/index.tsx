@@ -71,7 +71,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
-    primary: "bg-[#f37312] text-white hover:bg-[#d4620a] disabled:opacity-60",
+    primary: "bg-brand text-white hover:bg-brand-700 disabled:opacity-60",
     secondary:
       "bg-surface text-ink ring-1 ring-inset ring-line hover:bg-canvas disabled:opacity-60",
     ghost: "text-muted hover:text-ink hover:bg-canvas",

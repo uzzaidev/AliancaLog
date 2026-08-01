@@ -14,7 +14,7 @@ export function ClienteHeader({ empresa }: { empresa: string | null }) {
         </div>
         <div className="flex items-center gap-1.5">
           <span className="flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#4CAF50]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success-bright" />
             {empresa ?? "Minha empresa"}
           </span>
           <LogoutButton className="!min-h-0 px-2 py-1 text-xs" />

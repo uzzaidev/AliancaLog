@@ -12,8 +12,9 @@ export function Logo({
   variant?: "dark" | "light";
   size?: number;
 }) {
-  const solid = variant === "light" ? "#ffffff" : "#1e1e1e";
-  const orange = "#f37312";
+  const solid =
+    variant === "light" ? "var(--color-surface)" : "var(--color-dark)";
+  const orange = "var(--color-brand)";
 
   return (
     <span

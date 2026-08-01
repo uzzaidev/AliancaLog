@@ -31,7 +31,7 @@ export function GerenciaNav() {
             href={l.href}
             className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3.5 text-[13px] font-medium transition-colors ${
               active
-                ? "border-[#f37312] text-[#f37312]"
+                ? "border-brand text-brand"
                 : "border-transparent text-gray-400 hover:text-gray-200"
             }`}
           >
