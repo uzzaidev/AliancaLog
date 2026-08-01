@@ -7,52 +7,52 @@
 **Sprint atual:** Pré-aplicativo aprovado + ajustes pós-aprovação + **Sprint 3.5 (segurança/confiabilidade)** → próximo é deploy (Vercel/HTTPS) e piloto
 **Status geral:** 🟢 MVP A + ajustes + endurecimento de segurança rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
 
-**Mudanças de hoje (2026-08-01) — histórico do motorista:**
-1. **Migration `0015`**: relaxa `mot_nf_select` (RLS de `notas_fiscais`) — antes travava em
-   `data_entrega = hoje_sp()`, então o motorista literalmente não conseguia ler NF de dia anterior,
-   nem no banco direto. Agora só continua restrito a `motorista_id = auth.uid()` (sempre só o dele).
-   Escrita não muda: `mot_nf_update` já não tinha filtro de data, e o trigger `nf_guard_motorista`
-   (`0009`) já bloqueia edição de NF finalizada, de qualquer data. **Ainda não aplicada em produção**
-   — mudança de RLS, aplicar com atenção (`npm run db:migrate`).
-2. **`lib/data/motorista.ts`**: `getHistoricoRomaneios()` — todos os romaneios do motorista exceto o
-   de hoje (já coberto por "Minhas entregas"), limitado a 90 (~3 meses) por consulta.
-3. **`/motorista/historico`** (`historico-view.tsx`): lista read-only por data, reaproveitando
-   `/motorista/romaneio/[id]` pra ver o detalhe (a tela já vira "read-only" sozinha quando todas as
-   NFs estão finalizadas — não precisou de tela nova pro detalhe).
-4. Link "Histórico" adicionado no header do motorista (visível em todas as telas).
-5. **Não testado com dado real** — precisa da migration aplicada + romaneios antigos de fato existindo
-   pra validar visualmente.
+**Mudanças de hoje (2026-08-01) — organização de docs + design system (cores/ícones) + nav mobile da gerência:**
+1. **`docs/` reorganizado por assunto**, com índice novo:
+   - `docs/governanca/` — PLAN.md, CHECKLIST.md, CHECKPOINT.md
+   - `docs/db/` — MIGRATIONS.md
+   - `docs/comercial/` — propostas, contrato, escopo técnico R01, planilhas
+   - `docs/auxilio/` — material de apoio (diagrama de arquitetura)
+   - `docs/README.md` (novo) — índice das pastas + regra de "onde colocar documento novo"
+   - Todos os links cruzados (`CLAUDE.md`, `README.md`, `PLAN.md`, `CHECKPOINT.md`, `supabase/config.toml`) atualizados pros caminhos novos.
+2. **Auditoria de cor hardcoded**: ~15 ocorrências de hex cru (`bg-[#f37312]`, `bg-[#1e1e1e]` etc.) em
+   11 componentes, apesar de já existir um design token system completo via `@theme` do Tailwind v4 em
+   `app/globals.css`. Todas trocadas pelas classes de token (`bg-brand`, `bg-dark`, `border-dark-3`...).
+   Adicionados 3 tokens que faltavam: `success-bright`, `danger-bright`, `offline` (variantes pra uso
+   em fundo escuro/estado offline). Regra "nunca hardcode, sempre token" documentada no
+   [CLAUDE.md § Convenções](../../CLAUDE.md) e no [PLAN.md § Stack técnico](./PLAN.md).
+3. **Auditoria de emoji na UI**: 5 ocorrências (📍/✅/✕) em 4 componentes trocadas por ícones
+   `@tabler/icons-react` (`IconMapPin`, `IconX`) — consistente com o resto do app, que já usa Tabler em
+   todo lugar. Regra "sem emoji em UI, usar Tabler" documentada no CLAUDE.md (emoji em Markdown de
+   `docs/` como marcador de status continua normal, não é o mesmo problema).
+4. **Auditoria de largura/altura hardcoded**: nada de errado — padrões existentes (`h-[52px]` em
+   toolbar, `max-w-[1400px]` como teto de container, `min-w-[...] flex-1`) já são responsivos.
+5. **Nav mobile da gerência reformulada** (estava feia/apertada no celular — nav horizontal com 4
+   itens + logo + avatar disputando espaço numa única linha, texto cortando no meio por causa do
+   scroll interno):
+   - `components/gerencia/nav.tsx` ganhou um segundo export, `GerenciaBottomNav`: barra de abas fixa
+     embaixo (ícone + rótulo curto), só visível abaixo do breakpoint `sm`, com
+     `padding-bottom: env(safe-area-inset-bottom)` pro home indicator do iOS.
+   - `GerenciaNav` (a nav horizontal original, dentro da topbar) agora só aparece a partir do `sm:` —
+     no mobile ela desaparece, substituída pela bottom nav.
+   - `components/gerencia/topbar.tsx`: no mobile fica só logo + avatar + sair.
+   - `app/gerencia/layout.tsx`: renderiza `GerenciaBottomNav` e dá `pb-20` no `<main>` no mobile (só
+     `pb-5` no desktop) pra conteúdo não ficar escondido atrás da barra fixa.
+   - `components/brand/logo.tsx`: `whitespace-nowrap` no wordmark (parava de quebrar em "Aliança" /
+     "Log" quando o espaço apertava).
+   - **Ainda não confirmado visualmente** — `typecheck`/`lint`/`build` passam limpos, mas a verificação
+     no navegador real fica para quem rodar o `npm run dev` (a sessão que gerou este checkpoint não tem
+     acesso a browser).
+6. **Nada commitado nesta sessão** — mudanças só no working tree, aguardando confirmação pra commit
+   (regra do CLAUDE.md: commit/push sempre pede aprovação explícita do Vítor).
 
-**Mudanças de hoje (2026-08-01) — mapa de entregas no dashboard (início da Fase B "Mapas"):**
-1. **Migration `0014`**: `lat`/`lng`/`geocode_status`/`geocoded_em` em `notas_fiscais` — coordenada do
-   ENDEREÇO da NF (distinto de `canhotos.lat/lng`, que é o GPS do celular no momento do registro).
-   **Aplicada em produção.**
-2. **`lib/geocode.ts`**: geocodificação via Nominatim/OpenStreetMap (gratuito), 1 req/s (política de
-   uso do Nominatim), best-effort — endereço que falha fica `geocode_status='falhou'`, não trava nada.
-3. **`app/gerencia/dashboard/geocode-actions.ts`**: Server Action `geocodificarPendentes()`, lotes de
-   até 15 NFs do dia por chamada (evita estourar timeout de Server Action com o rate limit do
-   Nominatim).
-4. **`components/gerencia/mapa-entregas.tsx` + `mapa-leaflet-inner.tsx`**: mapa Leaflet no dashboard da
-   gerência, com toggle entre camada "Destino" (geocodificado) e "Entregue (GPS)" (canhoto), cores por
-   status usando os tokens existentes (`--color-success`/`danger`/`warning`/`info`/`gray-600`), e botão
-   para disparar a geocodificação dos pendentes do dia.
-5. **Motorista também ganhou navegação/mapa** (não só gerência): botão "Abrir no Maps"
-   (`lib/maps.ts`) na tela de registrar canhoto e em cada card do romaneio — abre o Google Maps do
-   celular com direções até o endereço (usa lat/lng se já geocodificado, senão o texto do endereço,
-   então funciona mesmo sem geocode). `components/motorista/mapa-romaneio.tsx` mostra um mapa
-   pequeno com as paradas do romaneio que já têm coordenada. `components/mapa/leaflet-map.tsx` é o
-   componente Leaflet compartilhado entre gerência e motorista (antes vivia só em `components/gerencia/`).
-6. **Ainda não testado visualmente com dado real** (precisa geocodificar NFs reais + abrir no browser
-   logado como gerência e como motorista) — `npm run build`/`typecheck`/`lint` passam e o dev server
-   sobe sem erro, mas a verificação visual completa não foi feita nesta sessão.
-7. **Rota/otimização (TSP/VRP) ainda não implementada** — decisão registrada no PLAN.md (Google Maps
-   pago vs. OSRM/VROOM self-hospedado), não é bloqueio de piloto.
+**Mudanças de hoje (2026-08-01) — resumo da sessão:**
 
-**Mudanças de hoje (2026-08-01) — resposta à revisão pré-piloto (achados P0/P1):**
+*Parte 1 — resposta à revisão pré-piloto externa (achados P0/P1):*
 1. **Sync do canhoto virou transacional** (migration `0011`, função `registrar_entrega_offline` +
    `app/api/sync/route.ts`): canhoto + update da NF + ocorrência agora são uma única transação de
    banco. Antes eram 3 chamadas separadas — se caísse entre o insert do canhoto e o update da NF, o
-   retry via 409 apagava o item da fila com a NF ainda pendente. **Aplicada em produção** (2026-08-01).
+   retry via 409 apagava o item da fila com a NF ainda pendente. **Aplicada em produção.**
 2. **Storage de canhotos endurecido** (migration `0012`): path mudou para
    `{motorista_id}/{nf_id}/{client_id}.jpg`; policy exige que a 1ª pasta seja `auth.uid()` para
    motorista; bucket ganhou limite de 5MB e MIME `image/jpeg`/`image/webp`. **Aplicada em produção.**
@@ -81,8 +81,44 @@
     `scripts/migrate-status.mjs` agora normalizam `\r\n`→`\n` antes de hashear. Senha do banco também
     foi resetada nesta sessão (a antiga não autenticava mais no pooler — `EAUTHQUERY`).
 
-**Pendente desta revisão, ainda não feito (ver contexto completo na conversa que gerou este
-checkpoint):**
+*Parte 2 — mapa de entregas no dashboard (início da Fase B "Mapas"):*
+11. **Migration `0014`**: `lat`/`lng`/`geocode_status`/`geocoded_em` em `notas_fiscais` — coordenada do
+    ENDEREÇO da NF (distinto de `canhotos.lat/lng`, que é o GPS do celular no momento do registro).
+    **Aplicada em produção.**
+12. **`lib/geocode.ts`**: geocodificação via Nominatim/OpenStreetMap (gratuito), 1 req/s (política de
+    uso do Nominatim), best-effort — endereço que falha fica `geocode_status='falhou'`, não trava nada.
+13. **`app/gerencia/dashboard/geocode-actions.ts`**: Server Action `geocodificarPendentes()`, lotes de
+    até 15 NFs do dia por chamada (evita estourar timeout de Server Action com o rate limit do
+    Nominatim).
+14. **`components/gerencia/mapa-entregas.tsx` + `components/mapa/leaflet-map.tsx`**: mapa Leaflet no
+    dashboard da gerência, toggle entre camada "Destino" (geocodificado) e "Entregue (GPS)" (canhoto),
+    cores por status usando os tokens existentes, botão para disparar geocodificação dos pendentes.
+15. **Motorista também ganhou navegação/mapa**: botão "Abrir no Maps" (`lib/maps.ts`) na tela de
+    registrar canhoto e em cada card do romaneio — abre o Google Maps do celular com direções até o
+    endereço (usa lat/lng se já geocodificado, senão o texto do endereço). `mapa-romaneio.tsx` mostra
+    um mapa pequeno com as paradas do romaneio que já têm coordenada.
+16. **Rota/otimização (TSP/VRP) ainda não implementada** — decisão registrada no PLAN.md (Google Maps
+    pago vs. OSRM/VROOM self-hospedado), não é bloqueio de piloto.
+
+*Parte 3 — histórico do motorista:*
+17. **Migration `0015`**: relaxa `mot_nf_select` (RLS de `notas_fiscais`) — antes travava em
+    `data_entrega = hoje_sp()`, então o motorista literalmente não conseguia ler NF de dia anterior,
+    nem no banco direto. Agora só continua restrito a `motorista_id = auth.uid()` (sempre só o dele).
+    Escrita não muda: `mot_nf_update` já não tinha filtro de data, e o trigger `nf_guard_motorista`
+    (`0009`) já bloqueia edição de NF finalizada, de qualquer data. **Aplicada em produção.**
+18. **`lib/data/motorista.ts`**: `getHistoricoRomaneios()` — todos os romaneios do motorista exceto o
+    de hoje (já coberto por "Minhas entregas"), limitado a 90 (~3 meses) por consulta.
+19. **`/motorista/historico`** (`historico-view.tsx`): lista read-only por data, reaproveitando
+    `/motorista/romaneio/[id]` pra ver o detalhe (a tela já vira "read-only" sozinha quando todas as
+    NFs estão finalizadas). Link "Histórico" no header do motorista, visível em todas as telas.
+
+**Verificação técnica desta sessão:** `npm run typecheck`/`lint`/`build` passam depois de cada bloco de
+mudanças; `scripts/smoke-seguranca.mjs` 8/8 depois das migrations 0011-0013; 15/15 migrations aplicadas
+em produção (`npm run db:status`). **Não feito:** verificação visual no browser logado (gerência e
+motorista) com dado real — mapa e histórico não foram vistos rodando de fato, só validados por
+build/typecheck.
+
+**Pendente, ainda não feito (contexto completo na conversa que gerou este checkpoint):**
 - Offline-first de verdade (abrir romaneio/NFs do IndexedDB sem rede desde o boot — hoje só funciona
   se a aba já estava aberta).
 - Fallback de deduplicação para NF sem `chave_acesso` (hoje só dedup por chave; import de legado
@@ -90,6 +126,7 @@ checkpoint):**
   falso positivo).
 - Pipeline de CI (GitHub Actions) e testes E2E (Playwright) — não existem ainda, só o `npm test` local.
 - Aprovação formal da A-008 reformulada com a Rotta/Matheus.
+- Rota/otimização de múltiplas paradas (TSP/VRP) — decisão de arquitetura registrada, não implementada.
 
 **Sprint 3.5 — segurança e confiabilidade (2026-07-13), a partir de revisão cruzada externa:**
 1. **Data operacional em São Paulo** (`lib/date.ts` + migration `0010`): `.slice(0,10)` (UTC) trocado
