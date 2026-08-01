@@ -39,8 +39,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "foto obrigatória" }, { status: 400 });
 
   // 0. Idempotência de ponta a ponta: se a NF já tem canhoto, o reenvio é no-op.
-  // Evita reescrever entregue_em, duplicar ocorrência ou registrar 2º canhoto.
-  // (A imutabilidade também é garantida no banco por índice único + trigger.)
+  // Evita reescrever entregue_em, duplicar ocorrência, registrar 2º canhoto ou
+  // subir a foto de novo à toa. (A checagem definitiva é repetida dentro da
+  // função transacional abaixo — esta aqui é só uma saída rápida.)
   const { data: jaRegistrada } = await supabase
     .from("canhotos")
     .select("client_id")
@@ -53,12 +54,12 @@ export async function POST(req: Request) {
 
   // 1. Sobe a foto (se houver) no bucket privado.
   // Sem upsert: o path é derivado do client_id, então re-sync cai no mesmo
-  // arquivo e "já existe" (409) é idempotência, não erro. (O upsert do Storage
+  // arquivo e "já existe" é idempotência, não erro. (O upsert do Storage
   // exigiria UPDATE em storage.objects, que o motorista não tem — e não deve,
   // já que o canhoto é imutável após confirmado.)
   let fotoPath: string | null = null;
   if (foto && foto.size > 0) {
-    fotoPath = `${nfId}/${clientId}.jpg`;
+    fotoPath = `${user.id}/${nfId}/${clientId}.jpg`;
     const { error: upErr } = await supabase.storage
       .from("canhotos")
       .upload(fotoPath, foto, { contentType: "image/jpeg" });
@@ -66,49 +67,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: upErr.message }, { status: 500 });
   }
 
-  // 2. Grava o canhoto (idempotente pelo client_id).
-  const { error: cErr } = await supabase
-    .from("canhotos")
-    .upsert(
-      {
-        client_id: clientId,
-        nota_fiscal_id: nfId,
-        motorista_id: user.id,
-        foto_url: fotoPath,
-        status,
-        lat,
-        lng,
-        gps_precisao: gpsPrecisao,
-        sincronizado: true,
-      },
-      { onConflict: "client_id", ignoreDuplicates: true },
-    );
-  if (cErr) return NextResponse.json({ error: cErr.message }, { status: 500 });
+  // 2-4. Canhoto + NF + ocorrência em UMA transação no banco (função
+  // registrar_entrega_offline, migration 0011). Se qualquer etapa falhar, o
+  // Postgres reverte tudo — nunca fica canhoto gravado com NF pendente.
+  const { data: rpcData, error: rpcErr } = await supabase.rpc(
+    "registrar_entrega_offline",
+    {
+      p_client_id: clientId,
+      p_nota_fiscal_id: nfId,
+      p_status: status,
+      p_foto_url: fotoPath,
+      p_lat: lat,
+      p_lng: lng,
+      p_gps_precisao: gpsPrecisao,
+      p_observacao: observacao,
+      p_ocorrencia_tipo: ocorrenciaTipo,
+      p_ocorrencia_desc: ocorrenciaDesc,
+    },
+  );
+  if (rpcErr) return NextResponse.json({ error: rpcErr.message }, { status: 500 });
 
-  // 3. Atualiza o status da NF.
-  const { error: nErr } = await supabase
-    .from("notas_fiscais")
-    .update({
-      status,
-      foto_url: fotoPath,
-      entregue_em: new Date().toISOString(),
-      ...(observacao ? { observacao } : {}),
-    })
-    .eq("id", nfId);
-  if (nErr) return NextResponse.json({ error: nErr.message }, { status: 500 });
-
-  // 4. Ocorrência (quando aplicável) — idempotente pelo client_id do canhoto.
-  if (status === "ocorrencia" && ocorrenciaTipo) {
-    await supabase.from("ocorrencias").upsert(
-      {
-        nota_fiscal_id: nfId,
-        tipo: ocorrenciaTipo,
-        descricao: ocorrenciaDesc,
-        client_id: clientId,
-      },
-      { onConflict: "client_id", ignoreDuplicates: true },
-    );
-  }
+  const jaExistia = Array.isArray(rpcData) ? rpcData[0]?.ja_existia : rpcData?.ja_existia;
+  if (jaExistia) return NextResponse.json({ ok: true, already: true }, { status: 409 });
 
   return NextResponse.json({ ok: true });
 }

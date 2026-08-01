@@ -83,7 +83,12 @@ export async function confirmarImportacao(input: {
   }));
 
   const { error } = await supabase.from("notas_fiscais").insert(payload);
-  if (error) return { error: traduzErroSupabase(error.message) };
+  if (error) {
+    // Compensação: se as NFs não entraram, o romaneio criado acima fica ativo
+    // e vazio — o motorista abriria uma rota sem nenhuma entrega. Desfaz.
+    if (romaneioId) await supabase.from("romaneios").delete().eq("id", romaneioId);
+    return { error: traduzErroSupabase(error.message) };
+  }
 
   revalidatePath("/gerencia/dashboard");
   return { ok: `${rows.length} NF(s) importada(s).`, count: rows.length };

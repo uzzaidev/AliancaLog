@@ -2,7 +2,7 @@
 
 > **Fonte de verdade do produto e do time.** Define O QUE construímos, COMO e QUEM faz o quê.
 > Progresso marcável: [CHECKLIST.md](./CHECKLIST.md) · Estado atual: [CHECKPOINT.md](./CHECKPOINT.md) ·
-> Detalhe bruto: [docs/](./docs/) (escopo técnico R01, documento mestre, planilha de percentuais).
+> Detalhe bruto: [docs/comercial/](../comercial/) (escopo técnico R01, documento mestre, planilha de percentuais).
 
 **Cliente:** Rotta Logística (Matheus Rotta) · **Dev:** UzzAI
 
@@ -18,7 +18,7 @@ O Aliança Log digitaliza o ciclo completo do canhoto — da montagem do romanei
 
 ## 2. Time e responsabilidades
 
-> Percentuais e valores em R$: [docs/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx](./docs/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx).
+> Percentuais e valores em R$: [docs/comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx](../comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx).
 
 ### Vítor Pirolli — Comercial/Account + Frontend/Produto/PO + Gestão/PM
 **É o Product Owner do projeto.** Responsável por:
@@ -49,7 +49,7 @@ Caixa, operação, marca, administração, equity do CEO. Inclui o que antes era
 - **Financeiro**: impostos, margem, DRE do projeto, custo de API, inadimplência
 
 ### ⚠️ Gap em aberto — QA/Testes
-A função **Arquitetura/QA** (code review, testes E2E, critérios de aceite, segurança) não está em uso no momento — Pedro Vitor, que a ocupava, migrou para App Store/Google Play. **Não há, hoje, um responsável formal por revisar código e testar antes do go-live.** Isso é um risco real para qualidade e segurança (ver `docs/` aba Riscos da planilha original, risco R-008: cliente final visualizar dados de outra empresa). Decidir: alguém acumula esse papel, ou ele fica sem dono mesmo (e os testes ficam só a cargo de quem implementa)?
+A função **Arquitetura/QA** (code review, testes E2E, critérios de aceite, segurança) não está em uso no momento — Pedro Vitor, que a ocupava, migrou para App Store/Google Play. **Não há, hoje, um responsável formal por revisar código e testar antes do go-live.** Isso é um risco real para qualidade e segurança (ver `docs/comercial/` aba Riscos da planilha original, risco R-008: cliente final visualizar dados de outra empresa). Decidir: alguém acumula esse papel, ou ele fica sem dono mesmo (e os testes ficam só a cargo de quem implementa)?
 
 ---
 
@@ -77,7 +77,7 @@ A função **Arquitetura/QA** (code review, testes E2E, critérios de aceite, se
 - **Offline-first**: fila no IndexedDB com `client_id` idempotente → sincroniza com `/api/sync` ao voltar a conexão.
 - **Ingestão dupla**: Excel (dados ricos da NF) + câmera (monta o romaneio bipando, casa com o que foi importado).
 
-Modelo de dados, RLS e regras de negócio completos em [docs/ALIANCA-LOG-ESCOPO-TECNICO-R01.pdf](./docs/) e nas migrations em `supabase/migrations/`.
+Modelo de dados, RLS e regras de negócio completos em [docs/comercial/ALIANCA-LOG-ESCOPO-TECNICO-R01.pdf](../comercial/ALIANCA-LOG-ESCOPO-TECNICO-R01.pdf) e nas migrations em `supabase/migrations/`.
 
 ---
 
@@ -98,7 +98,7 @@ Passo a passo detalhado, com status atual de cada item: [CHECKLIST.md](./CHECKLI
 
 **Matheus precisa fornecer:** 2–3 Excel reais das empresas, lista dos 16 motoristas (nome+e-mail), lista das ~20 empresas (nome+e-mail).
 
-**Riscos principais:** ver aba `Riscos` da planilha original em `docs/`. Os mais críticos: sync offline falhar em região de sinal fraco (mitigado pela fila idempotente já implementada), cliente final ver dado de outra empresa (mitigado por RLS, mas precisa de QA — ver gap acima), contrato sem prazo mínimo/IP definido (UzzAI Empresa/jurídico).
+**Riscos principais:** ver aba `Riscos` da planilha original em `docs/comercial/`. Os mais críticos: sync offline falhar em região de sinal fraco (mitigado pela fila idempotente já implementada), cliente final ver dado de outra empresa (mitigado por RLS, mas precisa de QA — ver gap acima), contrato sem prazo mínimo/IP definido (UzzAI Empresa/jurídico).
 
 ---
 

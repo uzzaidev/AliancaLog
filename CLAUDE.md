@@ -6,14 +6,16 @@ Orientação para o Claude Code (ou qualquer agente) trabalhando neste repositó
 
 Sprints 0, 1 e 2 estão **implementados e compilando** (`npm run build`/`typecheck`/`lint` verdes). Sprint 3
 em diante ainda não foi feito. Antes de assumir que algo "ainda não existe", **leia o código** —
-[CHECKLIST.md](./CHECKLIST.md) tem o status real, item a item.
+[docs/governanca/CHECKLIST.md](./docs/governanca/CHECKLIST.md) tem o status real, item a item.
 
-Documentos de referência, nesta ordem de leitura:
+Documentos de referência, nesta ordem de leitura (ver também [docs/README.md](./docs/README.md)):
 1. [README.md](./README.md) — visão geral e setup
-2. [PLAN.md](./PLAN.md) — produto, arquitetura e **quem no time é responsável por quê**
-3. [CHECKLIST.md](./CHECKLIST.md) — passo a passo marcável
-4. [CHECKPOINT.md](./CHECKPOINT.md) — snapshot do estado atual, atualizar a cada sessão
-5. `docs/` — documentos comerciais e o escopo técnico original (R01) em PDF
+2. [docs/governanca/PLAN.md](./docs/governanca/PLAN.md) — produto, arquitetura e **quem no time é responsável por quê**
+3. [docs/governanca/CHECKLIST.md](./docs/governanca/CHECKLIST.md) — passo a passo marcável
+4. [docs/governanca/CHECKPOINT.md](./docs/governanca/CHECKPOINT.md) — snapshot do estado atual, atualizar a cada sessão
+5. [docs/db/MIGRATIONS.md](./docs/db/MIGRATIONS.md) — fluxo de migrations do banco
+6. `docs/comercial/` — documentos comerciais e o escopo técnico original (R01) em PDF
+7. `docs/auxilio/` — material de apoio (diagramas de arquitetura etc.)
 
 `AGENTS.md` (gerado pelo `create-next-app`) avisa que este projeto usa **Next.js 16**, que tem breaking
 changes relevantes. O principal: **o antigo `middleware.ts` agora se chama `proxy.ts`** (mesma função,
@@ -58,12 +60,12 @@ arquivo na raiz, export `proxy`). Não recrie um `middleware.ts` — não existe
 
 ## Time — quem decide o quê
 
-Ver [PLAN.md § Time e responsabilidades](./PLAN.md#time-e-responsabilidades) para o detalhe completo.
+Ver [PLAN.md § Time e responsabilidades](./docs/governanca/PLAN.md#time-e-responsabilidades) para o detalhe completo.
 Resumo rápido para saber a quem perguntar/atribuir:
 - **Vítor Pirolli** — Product Owner, decide escopo/prioridade, dono do frontend
 - **Luis Fernando Boff** — dono do backend/infra/offline/DevOps e de toda a Fase B
 - **Pedro Vitor Pagliarin** — App Store/Google Play (não envolvido no dia a dia do código web)
-- Não há QA/revisor de código formal no momento — ver gap sinalizado no PLAN.md
+- Não há QA/revisor de código formal no momento — ver gap sinalizado no [docs/governanca/PLAN.md](./docs/governanca/PLAN.md)
 
 ## Comandos
 
@@ -82,6 +84,6 @@ npm run db:backup  # dump do schema public em backups/ (antes de algo arriscado)
 `supabase/migrations/` (`0005_...sql`) aplicado com `npm run db:migrate`. O runner
 (`scripts/migrate.mjs`, driver `pg`) roda cada uma em transação e registra em
 `public.schema_migrations`; não edite migrations já aplicadas. Fluxo completo em
-[docs/MIGRATIONS.md](./docs/MIGRATIONS.md). Requer `DATABASE_URL` no `.env.local`.
+[docs/db/MIGRATIONS.md](./docs/db/MIGRATIONS.md). Requer `DATABASE_URL` no `.env.local`.
 
 Não há suíte de testes automatizados ainda (Playwright está planejado no Sprint 4, não implementado).

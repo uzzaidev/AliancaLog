@@ -10,10 +10,12 @@ Desenvolvido pela **UzzAI**.
 | Documento | Para quê |
 |---|---|
 | **README.md** (este arquivo) | Visão geral, time e como rodar o projeto |
-| **[PLAN.md](./PLAN.md)** | Plano completo: produto, stack, arquitetura e **o que cada pessoa do time precisa fazer** |
-| **[CHECKLIST.md](./CHECKLIST.md)** | Passo a passo marcável, por sprint, com responsável em cada item |
-| **[CHECKPOINT.md](./CHECKPOINT.md)** | Onde estamos agora — atualizado a cada sessão de trabalho |
-| **[docs/](./docs/)** | Documentos comerciais e de negócio (propostas, escopo técnico R01, planilha de percentuais) |
+| **[docs/governanca/PLAN.md](./docs/governanca/PLAN.md)** | Plano completo: produto, stack, arquitetura e **o que cada pessoa do time precisa fazer** |
+| **[docs/governanca/CHECKLIST.md](./docs/governanca/CHECKLIST.md)** | Passo a passo marcável, por sprint, com responsável em cada item |
+| **[docs/governanca/CHECKPOINT.md](./docs/governanca/CHECKPOINT.md)** | Onde estamos agora — atualizado a cada sessão de trabalho |
+| **[docs/db/](./docs/db/)** | Documentação do banco de dados e fluxo de migrations |
+| **[docs/comercial/](./docs/comercial/)** | Documentos comerciais e de negócio (propostas, contrato, escopo técnico R01, planilha de percentuais) |
+| **[docs/README.md](./docs/README.md)** | Índice completo de `docs/` |
 
 ## Time
 
@@ -25,7 +27,7 @@ Desenvolvido pela **UzzAI**.
 | Operação | CS/Treinamento + Suporte técnico |
 | UzzAI Empresa | Jurídico, financeiro e institucional |
 
-Detalhe de cada papel em [PLAN.md § Time e responsabilidades](./PLAN.md#time-e-responsabilidades). Percentuais e valores em [docs/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx](./docs/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx).
+Detalhe de cada papel em [PLAN.md § Time e responsabilidades](./docs/governanca/PLAN.md#time-e-responsabilidades). Percentuais e valores em [docs/comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx](./docs/comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx).
 
 ## Stack
 
@@ -60,7 +62,7 @@ npm run db:migrate   # aplica todas as pendentes, em ordem, cada uma em transaç
 
 Cada migration roda uma vez e é registrada em `public.schema_migrations`. Nunca
 edite uma migration já aplicada — crie uma nova numerada. Detalhes em
-[docs/MIGRATIONS.md](./docs/MIGRATIONS.md).
+[docs/db/MIGRATIONS.md](./docs/db/MIGRATIONS.md).
 
 ### 4. Seed (dados fictícios para demonstração)
 ```bash
@@ -103,7 +105,11 @@ lib/
 proxy.ts                  Roteamento por perfil (Next 16: era middleware)
 supabase/migrations/      Schema + RLS + Storage + Realtime
 scripts/seed.mjs          Seed de demonstração
-docs/                     Documentos comerciais e de negócio
+docs/
+  governanca/             Plano, checklist e checkpoint do projeto
+  db/                     Documentação do banco (migrations)
+  comercial/              Propostas, contrato, escopo técnico, planilhas
+  auxilio/                Material de apoio (diagramas de arquitetura etc.)
 ```
 
 ## Comandos
