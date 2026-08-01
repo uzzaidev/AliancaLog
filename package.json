@@ -16,7 +16,8 @@
     "seed": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/seed.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate.mjs",
     "db:status": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-status.mjs",
-    "db:backup": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/backup.mjs"
+    "db:backup": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/backup.mjs",
+    "db:setup-sql": "node scripts/gen-setup-sql.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

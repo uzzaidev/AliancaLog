@@ -41,8 +41,9 @@ arquivo na raiz, export `proxy`). Não recrie um `middleware.ts` — não existe
   / ocorrencias`. Romaneio é montado por **Excel** (dados ricos da NF) e/ou **câmera** (bipagem, casa com
   a NF já importada). Ver `supabase/migrations/0001_schema.sql`.
 - **Offline**: `lib/offline/{db,queue,sync,image}.ts`. Fila no IndexedDB com `client_id` gerado no
-  cliente (idempotência) → `POST /api/sync` faz upload da foto + grava o canhoto + atualiza a NF, tudo
-  com upsert idempotente (`onConflict: "client_id"`).
+  cliente (idempotência) → `POST /api/sync` sobe a foto e chama a função de banco
+  `registrar_entrega_offline` (migration `0011`), que grava canhoto + atualiza a NF + lança
+  ocorrência em **uma única transação** — evita o gap onde um canhoto existia sem a NF atualizada.
 - **Dados por área**: `lib/data/{gerencia,motorista,romaneios}.ts` — consultas server-side, já respeitando
   RLS pela sessão do usuário.
 

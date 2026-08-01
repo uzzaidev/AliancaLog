@@ -3,9 +3,48 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-07-13
+**Última atualização:** 2026-08-01
 **Sprint atual:** Pré-aplicativo aprovado + ajustes pós-aprovação + **Sprint 3.5 (segurança/confiabilidade)** → próximo é deploy (Vercel/HTTPS) e piloto
 **Status geral:** 🟢 MVP A + ajustes + endurecimento de segurança rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
+
+**Mudanças de hoje (2026-08-01) — resposta à revisão pré-piloto (achados P0/P1):**
+1. **Sync do canhoto virou transacional** (migration `0011`, função `registrar_entrega_offline` +
+   `app/api/sync/route.ts`): canhoto + update da NF + ocorrência agora são uma única transação de
+   banco. Antes eram 3 chamadas separadas — se caísse entre o insert do canhoto e o update da NF, o
+   retry via 409 apagava o item da fila com a NF ainda pendente. **Migration ainda não aplicada em
+   produção** — rodar `npm run db:migrate` após revisão.
+2. **Storage de canhotos endurecido** (migration `0012`): path mudou para
+   `{motorista_id}/{nf_id}/{client_id}.jpg`; policy exige que a 1ª pasta seja `auth.uid()` para
+   motorista; bucket ganhou limite de 5MB e MIME `image/jpeg`/`image/webp`. **Pendente de aplicar.**
+3. **Rastreabilidade de migração do legado, esqueleto** (migration `0013`): tabela `import_batches` +
+   colunas `legacy_source`/`legacy_id`/`import_batch_id` em `empresas_clientes`, `usuarios`,
+   `motoristas`, `notas_fiscais`, `canhotos`, com `unique(legacy_source, legacy_id)`. Prepara a A-008
+   mas **nenhuma importação real rodou ainda** — só o esqueleto. **Pendente de aplicar.**
+4. **Romaneio vazio na importação Excel** (`app/gerencia/importar/actions.ts`): se o insert das NFs
+   falhar depois do romaneio já criado, o romaneio é removido (compensação) em vez de ficar ativo e
+   vazio.
+5. **Node 24 formalizado**: `engines` no `package.json` + `.nvmrc` (o `@zxing/library` já exige >=24).
+6. **`supabase/setup.sql` deixou de ficar defasado**: agora é gerado por
+   `npm run db:setup-sql` (`scripts/gen-setup-sql.mjs`), que concatena `supabase/migrations/*.sql` —
+   antes ainda tinha o schema de 0001 sozinho (com `'retida'` como status), incompatível com produção.
+7. **`npm test`** = typecheck + lint + `scripts/smoke-seguranca.mjs` (era só um script solto, sem
+   estar amarrado em nenhum comando).
+8. **Higiene do repo**: removidos arquivos vazios acidentais na raiz (`{,+`, `d.index`,
+   `n.motorista_id`, etc.) e `material_estudo/`/`material_estudo.zip` (material pessoal, não é do
+   produto) — ambos agora no `.gitignore`.
+9. **Doc drift corrigido**: CHECKLIST.md ainda listava "Retidas" como status do dashboard (removido
+   desde a `0008`); PLAN.md ainda descrevia import XML como Fase B, mas já está implementado
+   (`lib/import-nf.ts`) desde a sessão de 13/07.
+
+**Pendente desta revisão, ainda não feito (ver contexto completo na conversa que gerou este
+checkpoint):**
+- Offline-first de verdade (abrir romaneio/NFs do IndexedDB sem rede desde o boot — hoje só funciona
+  se a aba já estava aberta).
+- Fallback de deduplicação para NF sem `chave_acesso` (hoje só dedup por chave; import de legado
+  com número de NF repetido entre emitentes precisa de critério combinado, com cuidado para não gerar
+  falso positivo).
+- Pipeline de CI (GitHub Actions) e testes E2E (Playwright) — não existem ainda, só o `npm test` local.
+- Aprovação formal da A-008 reformulada com a Rotta/Matheus.
 
 **Sprint 3.5 — segurança e confiabilidade (2026-07-13), a partir de revisão cruzada externa:**
 1. **Data operacional em São Paulo** (`lib/date.ts` + migration `0010`): `.slice(0,10)` (UTC) trocado
@@ -138,7 +177,7 @@ Ver [CHECKLIST.md](./CHECKLIST.md) (seções "Pré-piloto" e "Sprint 4").
   empurrar pro GitHub via `git push`, sem depender da pasta sincronizada).
 - **Next.js 16:** o antigo `middleware` agora é **Proxy** (`proxy.ts` na raiz). Não criar `middleware.ts`. O `create-next-app` deixou um `AGENTS.md` orientando a ler `node_modules/next/dist/docs/` antes de codar — seguir para futuras mudanças do Next 16.
 - **Logins de demonstração** (senha `alianca123`): `gerencia@rotta.com.br`, `joao@rotta.com.br`, `acesso@leitetravizao.com.br`.
-- **Time e % de remuneração** consolidados em [PLAN.md](./PLAN.md) e [docs/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx](./docs/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx).
+- **Time e % de remuneração** consolidados em [PLAN.md](./PLAN.md) e [docs/comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx](../comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx).
 - **Gap aberto:** ninguém tem o papel de QA/testes formalmente (PV migrou para App Store/Google Play). Ver PLAN.md.
 
 ## Comandos úteis

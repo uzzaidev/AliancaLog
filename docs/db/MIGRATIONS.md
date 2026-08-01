@@ -68,5 +68,8 @@ npm run db:backup    # dump do schema public em backups/ (faça antes de algo ar
 - `supabase/setup.sql` é a versão **monolítica** (o mesmo schema num arquivo só),
   útil para colar no SQL Editor num banco zerado. A fonte de verdade para aplicar
   incrementalmente é `supabase/migrations/` + `npm run db:migrate`.
+  **É gerado automaticamente** — nunca edite à mão. Depois de criar uma migration
+  nova, rode `npm run db:setup-sql` para regenerá-lo (concatena
+  `supabase/migrations/*.sql` em ordem via `scripts/gen-setup-sql.mjs`).
 - Os backups em `backups/` **não** vão pro git (podem conter dados sensíveis) e
   precisam de `pg_dump` instalado (PostgreSQL client).

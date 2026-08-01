@@ -30,7 +30,8 @@
 **Responsável:** Vítor (telas e fluxo) + Luis (consultas/RLS por trás)
 > Implementado e compilando. Verificação em runtime contra Supabase real ainda pendente.
 - [x] Layout/navegação da área de gerência
-- [x] Dashboard: contadores do dia (Total/Aceitas/Recusadas/Retidas/Ocorrência/Em aberto)
+- [x] Dashboard: contadores do dia (Total/Aceitas/Recusadas/Ocorrência/Em aberto) — "Retida" não é
+      mais status próprio desde a migration `0008`; virou tipo de ocorrência `canhoto_retido`
 - [x] Dashboard: lista de NFs (NF · empresa · motorista · endereço · status · horário)
 - [x] Dashboard: filtros (status, motorista, empresa) + atualização em tempo real
 - [x] Importar Excel: upload `.xlsx`/`.csv`

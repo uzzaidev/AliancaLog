@@ -86,7 +86,7 @@ Modelo de dados, RLS e regras de negócio completos em [docs/comercial/ALIANCA-L
 | Fase | Conteúdo | Dono técnico principal |
 |---|---|---|
 | **MVP A** (Sprints 0–4) | Auth, dashboard gerência, import Excel, romaneio por câmera, app motorista offline, realtime, portal cliente, piloto e go-live | Vítor (frontend) + Luis (backend/offline) |
-| **Fase B** | Roteirização, KPIs de motoristas, financeiro/rentabilidade, dashboards avançados + import XML NF-e, fluxo de devolução, Web Push, e-mail p/ embarcadores | Luis |
+| **Fase B** | Roteirização, KPIs de motoristas, financeiro/rentabilidade, dashboards avançados, fluxo de devolução, Web Push, e-mail p/ embarcadores | Luis |
 | **Fase C** (visão) | Comprovante de Entrega Eletrônico oficial (CE-e/SEFAZ, Ajuste SINIEF 38/21): assinatura na tela + validade fiscal, elimina o papel | a definir |
 | **Lojas de app** | Publicação iOS/Android | Pedro Vitor |
 
@@ -113,7 +113,7 @@ foto + status + offline + realtime + portal é exatamente o núcleo dos líderes
 | Código de barras do DANFE é a **chave de acesso (44 díg.)**, não o nº da NF — a bipagem nunca casaria | Parser `lib/nfe.ts` (DV módulo 11 + extração do nNF) + coluna `chave_acesso` (migration 0005) + match por chave e número | ✅ corrigido |
 | Foto 800px pode deixar assinatura ilegível no zoom | Compressão 1280px @ 0.8 (~300–400KB); validar com canhotos reais no piloto | ✅ ajustado |
 | ePOD padrão de mercado inclui carimbo de GPS | Coleta pontual best-effort no registro + link no comprovante (não é rastreamento contínuo — escopo respeitado) | ✅ implementado |
-| Excel heterogêneo é frágil; **XML da NF-e é formato nacional único** e a transportadora já o recebe | "Importar XML" vira caminho preferido na Fase B; Excel permanece como fallback | 📋 Fase B |
+| Excel heterogêneo é frágil; **XML da NF-e é formato nacional único** e a transportadora já o recebe | "Importar XML" (`lib/import-nf.ts`) já implementado como caminho preferido; Excel permanece como fallback | ✅ implementado |
 | NF recusada fica "recusada" para sempre — falta o retorno/devolução | Fluxo de devolução/reentrega na Fase B | 📋 Fase B |
 | "Motorista recebe notificação" prometida no doc mestre, sem implementação | Web Push na Fase B (Android ok; iOS 16.4+ com PWA instalado) | 📋 Fase B |
 | Existe moldura legal p/ substituir o canhoto físico (CE-e, Ajuste SINIEF 38/21) | Fase C como visão/argumento de recorrência | 📋 Fase C |
