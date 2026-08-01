@@ -66,6 +66,13 @@ arquivo na raiz, export `proxy`). Não recrie um `middleware.ts` — não existe
 - Larguras/alturas: prefira classes fluidas (`flex`, `grid`, `w-full`, `max-w-*`, `min-w-*` combinado
   com `flex-1`) a valores fixos. `h-[52px]` em barras de ferramentas e `max-w-[1400px]` como teto de
   container são aceitáveis; não crie novos containers com largura/altura fixa em px sem necessidade.
+- **Nunca usar emoji como ícone na UI** (📍, ✅, ✕ etc. direto no JSX/texto). O projeto usa
+  `@tabler/icons-react` em todo lugar (`IconMapPin`, `IconCheck`, `IconX`, `IconCircleCheck`...) —
+  renderiza igual em qualquer SO/navegador e segue o mesmo tamanho/cor do design system. Se faltar um
+  ícone, procure em [tabler-icons.io](https://tabler-icons.io) antes de recorrer a emoji ou símbolo
+  Unicode solto. Exceção: emoji como marcador de status em Markdown de `docs/` (✅/⚠️/🟢 em
+  CHECKLIST.md, PLAN.md, CHECKPOINT.md) é prática normal — a regra é sobre UI renderizada pro usuário
+  final do app, não documentação interna.
 - Commits/PRs: `main` é produção. Sem branch `develop` formalizada ainda — confirmar com o time antes de
   assumir uma convenção de branches.
 - **Git commit e git push exigem confirmação explícita do Vítor a cada vez** — nunca assuma que uma

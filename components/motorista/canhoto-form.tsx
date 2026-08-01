@@ -125,7 +125,7 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
       setResultado(
         aindaNaFila
           ? "Salvo — pendente de sincronização. Envia sozinho quando tiver sinal."
-          : "Registrado! ✅",
+          : "Registrado!",
       );
     } catch {
       setErro("Não consegui salvar. Tente novamente.");

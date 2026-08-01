@@ -7,6 +7,25 @@
 **Sprint atual:** Pré-aplicativo aprovado + ajustes pós-aprovação + **Sprint 3.5 (segurança/confiabilidade)** → próximo é deploy (Vercel/HTTPS) e piloto
 **Status geral:** 🟢 MVP A + ajustes + endurecimento de segurança rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
 
+**Mudanças de hoje (2026-08-01) — mapa de entregas no dashboard (início da Fase B "Mapas"):**
+1. **Migration `0014`**: `lat`/`lng`/`geocode_status`/`geocoded_em` em `notas_fiscais` — coordenada do
+   ENDEREÇO da NF (distinto de `canhotos.lat/lng`, que é o GPS do celular no momento do registro).
+   **Ainda não aplicada em produção** — rodar `npm run db:migrate`.
+2. **`lib/geocode.ts`**: geocodificação via Nominatim/OpenStreetMap (gratuito), 1 req/s (política de
+   uso do Nominatim), best-effort — endereço que falha fica `geocode_status='falhou'`, não trava nada.
+3. **`app/gerencia/dashboard/geocode-actions.ts`**: Server Action `geocodificarPendentes()`, lotes de
+   até 15 NFs do dia por chamada (evita estourar timeout de Server Action com o rate limit do
+   Nominatim).
+4. **`components/gerencia/mapa-entregas.tsx` + `mapa-leaflet-inner.tsx`**: mapa Leaflet no dashboard da
+   gerência, com toggle entre camada "Destino" (geocodificado) e "Entregue (GPS)" (canhoto), cores por
+   status usando os tokens existentes (`--color-success`/`danger`/`warning`/`info`/`gray-600`), e botão
+   para disparar a geocodificação dos pendentes do dia.
+5. **Ainda não testado com dado real** (precisa rodar a migration + geocodificar NFs reais + abrir no
+   browser logado como gerência) — `npm run build`/`typecheck`/`lint` passam e o dev server sobe sem
+   erro, mas a verificação visual completa não foi feita nesta sessão.
+6. **Rota/otimização (TSP/VRP) ainda não implementada** — decisão registrada no PLAN.md (Google Maps
+   pago vs. OSRM/VROOM self-hospedado), não é bloqueio de piloto.
+
 **Mudanças de hoje (2026-08-01) — resposta à revisão pré-piloto (achados P0/P1):**
 1. **Sync do canhoto virou transacional** (migration `0011`, função `registrar_entrega_offline` +
    `app/api/sync/route.ts`): canhoto + update da NF + ocorrência agora são uma única transação de

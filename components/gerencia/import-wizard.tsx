@@ -9,6 +9,7 @@
 //   - PDF (DANFE) → best-effort: extrai a chave/número; resto é preenchido à mão.
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { IconX } from "@tabler/icons-react";
 import { Button, Card, Field, Input } from "@/components/ui";
 import {
   confirmarImportacao,
@@ -361,7 +362,7 @@ export function ImportWizard({
                 >
                   {motivo && (
                     <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-danger">
-                      <span aria-hidden>✕</span>
+                      <IconX size={13} aria-hidden />
                       <span>Duplicada — {MOTIVO_LABEL[motivo]}</span>
                     </div>
                   )}

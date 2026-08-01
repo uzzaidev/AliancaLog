@@ -9,6 +9,7 @@
 // gerência já sabe de antemão quem vai levar aquela cidade/lote.
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { IconMapPin } from "@tabler/icons-react";
 import { Button, Card, StatusBadge } from "@/components/ui";
 import { atribuirMotorista } from "@/app/gerencia/dashboard/actions";
 import type { EmpresaPainel, MotoristaItem } from "@/lib/data/gerencia";
@@ -154,10 +155,10 @@ export function EmpresasPainel({
                         onChange={() => toggleCidade(idsAguardando)}
                         className="h-3.5 w-3.5"
                       />
-                      <span aria-hidden>📍</span>
+                      <IconMapPin size={13} aria-hidden />
                     </label>
                   ) : (
-                    <span aria-hidden>📍</span>
+                    <IconMapPin size={13} aria-hidden />
                   )}
                   {c.cidade}
                   <span className="font-normal normal-case opacity-70">

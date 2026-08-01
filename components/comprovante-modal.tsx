@@ -4,6 +4,7 @@
 // Recebe a Server Action de busca como prop (cada área aplica seu próprio
 // requireRole antes de chamar lib/data/comprovante.ts).
 import { useEffect, useState } from "react";
+import { IconMapPin } from "@tabler/icons-react";
 import { Modal } from "@/components/ui/modal";
 import { Spinner, StatusBadge } from "@/components/ui";
 import { OCORRENCIA_LABEL, type ComprovanteDetalhe } from "@/lib/types";
@@ -110,9 +111,10 @@ export function ComprovanteModal({
                 href={`https://www.google.com/maps?q=${dados.gps.lat},${dados.gps.lng}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block text-brand hover:underline"
+                className="mt-1 inline-flex items-center gap-1 text-brand hover:underline"
               >
-                📍 Ver local do registro
+                <IconMapPin size={14} aria-hidden />
+                Ver local do registro
               </a>
             )}
           </div>
