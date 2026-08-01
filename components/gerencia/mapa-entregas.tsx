@@ -103,7 +103,7 @@ export function MapaEntregas({
         </div>
       </div>
 
-      <div className="h-90 w-full">
+      <div className="h-64 w-full sm:h-80 lg:h-90">
         <MapaLeafletInner pontos={pontos} />
       </div>
 

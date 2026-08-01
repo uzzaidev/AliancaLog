@@ -172,6 +172,14 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
             {nf.cidade ? `, ${nf.cidade}` : ""}
           </span>
         </div>
+        <a
+          href={enderecoMapsUrl(nf)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 flex touch-target w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-brand active:bg-canvas"
+        >
+          <IconNavigation size={16} /> Abrir no Maps
+        </a>
       </Card>
 
       <Card className="space-y-3 p-4">

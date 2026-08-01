@@ -37,7 +37,7 @@ export function Logo({
         <polygon points="12,20 26,20 24,25 14,25" fill={orange} opacity="0.92" />
       </svg>
       <span
-        className="text-[1.05em] font-bold leading-none tracking-tight"
+        className="whitespace-nowrap text-[1.05em] font-bold leading-none tracking-tight"
         style={{ color: solid }}
       >
         Aliança

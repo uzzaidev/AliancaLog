@@ -41,6 +41,35 @@ export async function getRomaneiosDoDia(): Promise<RomaneioMotorista[]> {
   });
 }
 
+export type RomaneioHistorico = RomaneioMotorista & { data: string };
+
+const HISTORICO_LIMITE = 90; // ~3 meses de romaneios diários — evita lista sem fim
+
+// Histórico do motorista: todos os romaneios dele, exceto o de hoje (que já
+// aparece em getRomaneiosDoDia / "Minhas entregas"). Depende da RLS de
+// notas_fiscais não estar mais presa ao dia (migration 0015).
+export async function getHistoricoRomaneios(): Promise<RomaneioHistorico[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("romaneios")
+    .select("id,status,confirmado_em,data,notas_fiscais(status)")
+    .neq("data", hoje())
+    .order("data", { ascending: false })
+    .limit(HISTORICO_LIMITE);
+
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => {
+    const nfs = (r.notas_fiscais ?? []) as { status: NotaStatus }[];
+    return {
+      id: r.id as string,
+      status: r.status as RomaneioStatus,
+      confirmado_em: (r.confirmado_em as string) ?? null,
+      data: r.data as string,
+      total: nfs.length,
+      concluidas: nfs.filter((n) => FINAIS.includes(n.status)).length,
+    };
+  });
+}
+
 const NF_COLS =
   "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,status,lat,lng";
 

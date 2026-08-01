@@ -31,12 +31,13 @@ const TONE_VAR: Record<NotaStatus, string> = {
   ocorrencia: "--color-warning",
 };
 
+// Componente só é montado no browser (dynamic import com ssr:false nos dois
+// pontos de uso), então document/getComputedStyle sempre existem aqui.
 function corDoStatus(status: NotaStatus): string {
-  if (typeof window === "undefined") return "#757575";
   const valor = getComputedStyle(document.documentElement)
     .getPropertyValue(TONE_VAR[status])
     .trim();
-  return valor || "#757575";
+  return valor || "currentColor";
 }
 
 export function MapaLeafletInner({ pontos }: { pontos: PontoMapa[] }) {

@@ -29,14 +29,15 @@ export function GerenciaNav() {
           <Link
             key={l.href}
             href={l.href}
-            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3.5 text-[13px] font-medium transition-colors ${
+            aria-label={l.label}
+            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 text-[13px] font-medium transition-colors sm:px-3.5 ${
               active
                 ? "border-brand text-brand"
                 : "border-transparent text-gray-400 hover:text-gray-200"
             }`}
           >
             <Icon size={16} stroke={2} />
-            {l.label}
+            <span className="hidden sm:inline">{l.label}</span>
           </Link>
         );
       })}

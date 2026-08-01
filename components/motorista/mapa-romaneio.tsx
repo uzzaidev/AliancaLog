@@ -35,7 +35,7 @@ export function MapaRomaneio({ notas }: { notas: NotaMotorista[] }) {
   if (pontos.length === 0) return null;
 
   return (
-    <div className="h-52 w-full overflow-hidden rounded-xl border border-line shadow-sm">
+    <div className="h-44 w-full overflow-hidden rounded-xl border border-line shadow-sm sm:h-56">
       <MapaLeafletInner pontos={pontos} />
     </div>
   );
