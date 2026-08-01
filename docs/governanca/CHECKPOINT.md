@@ -11,15 +11,14 @@
 1. **Sync do canhoto virou transacional** (migration `0011`, função `registrar_entrega_offline` +
    `app/api/sync/route.ts`): canhoto + update da NF + ocorrência agora são uma única transação de
    banco. Antes eram 3 chamadas separadas — se caísse entre o insert do canhoto e o update da NF, o
-   retry via 409 apagava o item da fila com a NF ainda pendente. **Migration ainda não aplicada em
-   produção** — rodar `npm run db:migrate` após revisão.
+   retry via 409 apagava o item da fila com a NF ainda pendente. **Aplicada em produção** (2026-08-01).
 2. **Storage de canhotos endurecido** (migration `0012`): path mudou para
    `{motorista_id}/{nf_id}/{client_id}.jpg`; policy exige que a 1ª pasta seja `auth.uid()` para
-   motorista; bucket ganhou limite de 5MB e MIME `image/jpeg`/`image/webp`. **Pendente de aplicar.**
+   motorista; bucket ganhou limite de 5MB e MIME `image/jpeg`/`image/webp`. **Aplicada em produção.**
 3. **Rastreabilidade de migração do legado, esqueleto** (migration `0013`): tabela `import_batches` +
    colunas `legacy_source`/`legacy_id`/`import_batch_id` em `empresas_clientes`, `usuarios`,
    `motoristas`, `notas_fiscais`, `canhotos`, com `unique(legacy_source, legacy_id)`. Prepara a A-008
-   mas **nenhuma importação real rodou ainda** — só o esqueleto. **Pendente de aplicar.**
+   mas **nenhuma importação real rodou ainda** — só o esqueleto. **Aplicada em produção.**
 4. **Romaneio vazio na importação Excel** (`app/gerencia/importar/actions.ts`): se o insert das NFs
    falhar depois do romaneio já criado, o romaneio é removido (compensação) em vez de ficar ativo e
    vazio.
@@ -35,6 +34,11 @@
 9. **Doc drift corrigido**: CHECKLIST.md ainda listava "Retidas" como status do dashboard (removido
    desde a `0008`); PLAN.md ainda descrevia import XML como Fase B, mas já está implementado
    (`lib/import-nf.ts`) desde a sessão de 13/07.
+10. **`db:status`/`db:migrate` travavam com falso "HASH DIVERGE"** em 0001-0010: o hash de
+    identidade da migration era calculado sobre o arquivo cru, e `core.autocrlf=true` no Windows
+    troca LF↔CRLF no checkout — mudando o hash sem mudar o SQL de verdade. `scripts/migrate.mjs` e
+    `scripts/migrate-status.mjs` agora normalizam `\r\n`→`\n` antes de hashear. Senha do banco também
+    foi resetada nesta sessão (a antiga não autenticava mais no pooler — `EAUTHQUERY`).
 
 **Pendente desta revisão, ainda não feito (ver contexto completo na conversa que gerou este
 checkpoint):**
