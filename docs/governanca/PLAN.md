@@ -62,10 +62,29 @@ A função **Arquitetura/QA** (code review, testes E2E, critérios de aceite, se
 | Banco / Auth / Realtime / Storage | Supabase (PostgreSQL + RLS + Auth JWT + Realtime + Storage), região `sa-east-1` |
 | Offline | Service Worker próprio + IndexedDB (fila idempotente) |
 | Scanner | `BarcodeDetector` nativo + fallback `@zxing/library` |
-| Mapas (Fase B) | Google Maps Directions + Distance Matrix API |
+| Mapas (Fase B) | Exibição: Leaflet + tiles (OSM/Mapbox) — sem custo, roda na Vercel. Rota/otimização: decisão em aberto, ver nota abaixo |
 | Hospedagem / CI | Vercel (auto-deploy via GitHub) |
 
 **Nota Next.js 16:** o antigo `middleware.ts` agora se chama **Proxy** (`proxy.ts` na raiz) — mesma função, nome novo.
+
+**Nota — roteirização (Fase B), decisão em aberto (2026-08-01):** dois problemas distintos.
+1. **Mostrar pontos no mapa** (sem rota) — ✅ implementado (dashboard da gerência,
+   `components/gerencia/mapa-entregas.tsx`): duas camadas, "Destino" (geocodificação do endereço via
+   Nominatim/OSM, gratuito, migration `0014`) e "Entregue (GPS)" (coordenada real capturada no
+   canhoto, já existia desde `0005`). Geocodificação roda sob demanda (botão na UI, lotes de 15,
+   respeitando o rate limit de 1 req/s do Nominatim) — não bloqueia a importação.
+2. **Traçar a rota real e/ou otimizar a ordem de N paradas** (TSP/VRP) — ainda não implementado, duas opções:
+   - **Google Maps Directions + Distance Matrix API** (opção original registrada aqui): a Distance
+     Matrix API é **legada** e o próprio Google recomenda migrar para a **Routes API** (Compute
+     Routes / Compute Route Matrix). É pay-per-uso (cobra por "elemento" = origens × destinos),
+     exige conta de billing com cartão mesmo dentro da franquia grátis mensal da Google Maps
+     Platform. Para o volume do piloto (16 motoristas, poucas rotas/dia) provavelmente fica dentro
+     do free tier, mas cresce com o volume e não tem teto previsível.
+   - **OSRM + VROOM self-hospedado** (ex.: Railway, container Docker): software livre, sem cobrança
+     por request; custo é só o servidor (~R$20–40/mês) — mas passa a ser um serviço de infra que o
+     time mantém (hoje o stack é só Vercel+Supabase, ambos gerenciados). Só entra em jogo quando
+     formos implementar rota/otimização de verdade — não é necessário para o item 1 acima.
+   Nenhuma das duas está implementada ainda; decidir junto com o dimensionamento da Fase B.
 
 **Nota de UI — cores:** a paleta é tokenizada via `@theme` do Tailwind v4 em `app/globals.css`
 (`brand`, `dark`, `ink`/`muted`/`surface`, `success`/`danger`/`warning`/`info`...). Cor hardcoded
