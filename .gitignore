@@ -43,3 +43,7 @@ next-env.d.ts
 
 # database backups (podem conter dados sensíveis — nunca versionar)
 /backups
+
+# material de estudo pessoal — não faz parte do produto
+/material_estudo
+/material_estudo.zip

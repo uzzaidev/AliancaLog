@@ -2,12 +2,17 @@
   "name": "alianca-log",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:security": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-seguranca.mjs",
+    "test": "npm run typecheck && npm run lint && npm run test:security",
     "seed": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/seed.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate.mjs",
     "db:status": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-status.mjs",

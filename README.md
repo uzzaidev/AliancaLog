@@ -37,7 +37,7 @@ Detalhe de cada papel em [PLAN.md § Time e responsabilidades](./PLAN.md#time-e-
 ## Setup
 
 ### 1. Pré-requisitos
-- Node 20+ (testado no 24)
+- Node 24+ (exigido pelo `@zxing/library`; ver `.nvmrc`)
 - Um projeto Supabase (crie em https://supabase.com, **região South America / São Paulo**)
 
 ### 2. Variáveis de ambiente
