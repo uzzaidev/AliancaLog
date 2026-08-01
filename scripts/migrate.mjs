@@ -24,10 +24,15 @@ function loadMigrations() {
     .sort()
     .map((file) => {
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), "utf8");
+      // Hash normalizado (LF): CRLF vs LF é diferença de checkout (Windows x
+      // Unix), não edição de conteúdo — não deve travar o guard de "migration
+      // aplicada mudou". A SQL executada continua sendo a original (com \r se
+      // houver); só o hash de identidade ignora a diferença.
+      const normalizado = sql.replace(/\r\n/g, "\n");
       return {
         file,
         version: file.replace(/\.sql$/, "").replace(/_.*$/, ""),
-        hash: crypto.createHash("sha256").update(sql).digest("hex"),
+        hash: crypto.createHash("sha256").update(normalizado).digest("hex"),
         sql,
       };
     });

@@ -22,10 +22,12 @@ async function main() {
     .sort()
     .map((file) => {
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), "utf8");
+      // Hash normalizado (LF) — ver comentário equivalente em migrate.mjs.
+      const normalizado = sql.replace(/\r\n/g, "\n");
       return {
         file,
         version: file.replace(/\.sql$/, "").replace(/_.*$/, ""),
-        hash: crypto.createHash("sha256").update(sql).digest("hex"),
+        hash: crypto.createHash("sha256").update(normalizado).digest("hex"),
       };
     });
 
