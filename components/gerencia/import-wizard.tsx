@@ -11,11 +11,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { IconX } from "@tabler/icons-react";
 import { Button, Card, Field, Input } from "@/components/ui";
-import {
-  confirmarImportacao,
-  type DuplicataInfo,
-  type ImportRow,
-} from "@/app/gerencia/importar/actions";
+import { confirmarImportacao } from "@/app/gerencia/importar/actions";
+import type {
+  DuplicataInfo,
+  ImportRow,
+} from "@/app/gerencia/importar/types";
 import { confirmarImportacaoCliente } from "@/app/cliente/importar/actions";
 import { parseNfeXml, parsePdfChaves, tipoDoArquivo } from "@/lib/import-nf";
 import type { EmpresaItem, MotoristaItem } from "@/lib/data/gerencia";

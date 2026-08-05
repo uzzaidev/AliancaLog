@@ -10,7 +10,7 @@ import "server-only";
 //   - "repetida_no_arquivo": a mesma chave aparece 2x no lote que está sendo importado.
 //   - "ja_importada": a chave já existe no banco (de uma importação anterior).
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ImportRow } from "@/app/gerencia/importar/actions";
+import type { ImportRow } from "@/app/gerencia/importar/types";
 
 export type DuplicataInfo = {
   index: number; // índice em `rows`, para a UI marcar a linha certa

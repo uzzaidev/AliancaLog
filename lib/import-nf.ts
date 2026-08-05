@@ -4,7 +4,7 @@
 //     o número dela; destinatário/endereço variam por emissor e ficam pro
 //     usuário completar. Por isso o XML é o caminho recomendado.
 import { extrairNumeroNf, validarChave } from "@/lib/nfe";
-import type { ImportRow } from "@/app/gerencia/importar/actions";
+import type { ImportRow } from "@/app/gerencia/importar/types";
 
 function txt(scope: Element | Document, tag: string): string {
   const n = scope.getElementsByTagName(tag)[0];

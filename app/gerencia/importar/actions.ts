@@ -9,27 +9,8 @@ import {
   encontrarDuplicatas,
   mensagemDuplicatas,
   traduzErroSupabase,
-  type DuplicataInfo,
 } from "@/lib/import-duplicatas";
-
-export type { DuplicataInfo };
-
-export type ImportRow = {
-  numero_nf: string;
-  destinatario_nome: string;
-  destinatario_endereco: string;
-  cidade?: string;
-  observacao?: string;
-  // Chave de acesso da NF-e (44 díg.) — vem do XML/PDF; Excel geralmente não tem.
-  chave_acesso?: string;
-};
-
-export type ImportResult = {
-  ok?: string;
-  error?: string;
-  count?: number;
-  duplicadas?: DuplicataInfo[];
-};
+import type { ImportResult, ImportRow } from "./types";
 
 export async function confirmarImportacao(input: {
   empresaId: string;

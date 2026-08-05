@@ -14,7 +14,7 @@ import {
   mensagemDuplicatas,
   traduzErroSupabase,
 } from "@/lib/import-duplicatas";
-import type { ImportResult, ImportRow } from "@/app/gerencia/importar/actions";
+import type { ImportResult, ImportRow } from "@/app/gerencia/importar/types";
 
 export async function confirmarImportacaoCliente(input: {
   rows: ImportRow[];
