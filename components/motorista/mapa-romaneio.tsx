@@ -35,7 +35,9 @@ export function MapaRomaneio({ notas }: { notas: NotaMotorista[] }) {
   if (pontos.length === 0) return null;
 
   return (
-    <div className="h-44 w-full overflow-hidden rounded-xl border border-line shadow-sm sm:h-56">
+    // isolate: contém os z-index internos do Leaflet (controles chegam a 1000),
+    // que sem isso vazam por cima do header sticky do app do motorista.
+    <div className="isolate relative h-44 w-full overflow-hidden rounded-xl border border-line shadow-sm sm:h-56">
       <MapaLeafletInner pontos={pontos} />
     </div>
   );

@@ -103,7 +103,10 @@ export function MapaEntregas({
         </div>
       </div>
 
-      <div className="h-64 w-full sm:h-80 lg:h-90">
+      {/* isolate: os panes/controles internos do Leaflet usam z-index até 1000;
+          sem isolar o contexto de empilhamento aqui, eles vazam por cima da
+          topbar sticky (z-20) mesmo estando bem mais abaixo no DOM. */}
+      <div className="isolate relative h-64 w-full sm:h-80 lg:h-90">
         <MapaLeafletInner pontos={pontos} />
       </div>
 

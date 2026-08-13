@@ -10,6 +10,13 @@ export function notificarFila() {
 }
 
 let rodando = false;
+// Motivo da última falha ao tentar sincronizar — sem isso o banner mostrava
+// "Enviando…" para sempre quando na real estava travado (erro de servidor,
+// rede bloqueada etc.), sem dar pista nenhuma do porquê.
+let ultimoErro: string | null = null;
+export function getUltimoErro(): string | null {
+  return ultimoErro;
+}
 
 export async function flushFila(): Promise<{ enviados: number; restantes: number }> {
   if (rodando) return { enviados: 0, restantes: (await listarPendentes()).length };
@@ -33,16 +40,26 @@ export async function flushFila(): Promise<{ enviados: number; restantes: number
       try {
         const res = await fetch("/api/sync", { method: "POST", body: fd });
         if (res.ok) {
+          ultimoErro = null;
           await removerDaFila(c.client_id);
           enviados++;
         } else if (res.status === 409) {
           // já existia no servidor (idempotência) — pode remover da fila.
+          ultimoErro = null;
           await removerDaFila(c.client_id);
           enviados++;
         } else {
+          let detalhe = "";
+          try {
+            detalhe = ((await res.json()) as { error?: string }).error ?? "";
+          } catch {
+            /* corpo não era JSON — segue sem detalhe */
+          }
+          ultimoErro = `NF ${c.numero_nf}: erro ${res.status}${detalhe ? ` — ${detalhe}` : ""}`;
           break; // erro de servidor — tenta de novo depois.
         }
       } catch {
+        ultimoErro = `NF ${c.numero_nf}: falha de rede ao enviar`;
         break; // sem rede — interrompe e tenta no próximo gatilho.
       }
     }
