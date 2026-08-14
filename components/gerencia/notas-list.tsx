@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   IconSearch,
   IconMapPin,
+  IconMapPinOff,
   IconPhoto,
   IconCamera,
   IconUser,
@@ -21,6 +22,10 @@ import {
   getComprovanteGerencia,
   trocarMotorista,
 } from "@/app/gerencia/dashboard/actions";
+import {
+  corrigirEnderecoEGeocodificar,
+  definirCoordenadaManual,
+} from "@/app/gerencia/dashboard/geocode-actions";
 import type { MotoristaItem, NotaRow } from "@/lib/data/gerencia";
 import { NF_STATUS_FINAIS } from "@/lib/types";
 
@@ -401,6 +406,8 @@ function DetailPanel({
             {msg && <span className="text-xs text-danger">{msg}</span>}
           </div>
         )}
+
+        <LocalizacaoBlock nf={nf} />
       </div>
 
       <div className="sm:w-52">
@@ -419,6 +426,130 @@ function DetailPanel({
           {nf.foto_url ? "Ver foto" : "Sem foto ainda"}
         </button>
       </div>
+    </div>
+  );
+}
+
+// Estado da geocodificação do endereço + jeito de recuperar quando falha —
+// sem isso, uma NF com endereço mal escrito ficava invisível no mapa pra
+// sempre, sem a gerência nem saber o motivo.
+function LocalizacaoBlock({ nf }: { nf: NotaRow }) {
+  const router = useRouter();
+  const [aberto, setAberto] = useState(false);
+  const [pending, start] = useTransition();
+  const [endereco, setEndereco] = useState(nf.destinatario_endereco);
+  const [cidade, setCidade] = useState(nf.cidade ?? "");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  function tentarEndereco() {
+    setMsg(null);
+    start(async () => {
+      const res = await corrigirEnderecoEGeocodificar({ nfId: nf.id, endereco, cidade });
+      setMsg(res.error ?? res.ok ?? null);
+      if (!res.error) {
+        setAberto(false);
+        router.refresh();
+      }
+    });
+  }
+
+  function salvarManual() {
+    setMsg(null);
+    const latNum = Number(lat.replace(",", "."));
+    const lngNum = Number(lng.replace(",", "."));
+    start(async () => {
+      const res = await definirCoordenadaManual({ nfId: nf.id, lat: latNum, lng: lngNum });
+      setMsg(res.error ?? res.ok ?? null);
+      if (!res.error) {
+        setAberto(false);
+        router.refresh();
+      }
+    });
+  }
+
+  return (
+    <div className="mt-3 border-t border-line pt-3 text-xs">
+      <div className="flex items-center justify-between gap-2">
+        {nf.geocode_status === "ok" ? (
+          <span className="flex items-center gap-1.5 text-muted">
+            <IconMapPin size={14} className="text-brand" /> Localização no mapa OK
+          </span>
+        ) : nf.geocode_status === "falhou" ? (
+          <span className="flex items-center gap-1.5 text-danger">
+            <IconMapPinOff size={14} />
+            {nf.geocode_erro ?? "Não foi possível localizar este endereço no mapa."}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-gray-400">
+            <IconMapPinOff size={14} /> Ainda não geocodificado
+          </span>
+        )}
+        <button
+          onClick={() => setAberto((v) => !v)}
+          className="shrink-0 font-medium text-brand hover:underline"
+        >
+          {aberto ? "fechar" : "corrigir"}
+        </button>
+      </div>
+
+      {aberto && (
+        <div className="mt-2.5 space-y-2.5 rounded-lg bg-canvas p-2.5">
+          <div className="space-y-1.5">
+            <input
+              value={endereco}
+              onChange={(e) => setEndereco(e.target.value)}
+              placeholder="Endereço"
+              className="w-full rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+            />
+            <div className="flex gap-1.5">
+              <input
+                value={cidade}
+                onChange={(e) => setCidade(e.target.value)}
+                placeholder="Cidade"
+                className="w-full rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+              />
+              <Button
+                onClick={tentarEndereco}
+                disabled={pending || !endereco.trim()}
+                className="shrink-0 px-2.5 py-1.5 text-xs"
+              >
+                Tentar geocodificar
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-t border-line pt-2.5">
+            <span className="shrink-0 text-[11px] text-gray-400">
+              ou coordenada manual:
+            </span>
+            <input
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+              placeholder="lat"
+              inputMode="decimal"
+              className="w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+            />
+            <input
+              value={lng}
+              onChange={(e) => setLng(e.target.value)}
+              placeholder="lng"
+              inputMode="decimal"
+              className="w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+            />
+            <Button
+              onClick={salvarManual}
+              disabled={pending || !lat.trim() || !lng.trim()}
+              className="shrink-0 px-2.5 py-1.5 text-xs"
+            >
+              Salvar
+            </Button>
+          </div>
+
+          {msg && <p className="text-[11px] text-danger">{msg}</p>}
+        </div>
+      )}
     </div>
   );
 }

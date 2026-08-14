@@ -1,0 +1,12 @@
+-- 0019 — Geocodificação falha vira recuperável, não um beco sem saída.
+--
+-- Problema reportado: gerência importa N NFs, só uma parte aparece no mapa.
+-- Causa: geocode_status='falhou' (endereço que o Nominatim não resolveu) nunca
+-- era tentado de novo — geocodificarPendentes() só buscava
+-- geocode_status IS NULL — e não havia como a gerência ver POR QUE falhou nem
+-- corrigir manualmente. NF ficava invisível no mapa pra sempre, em silêncio.
+--
+-- Esta migration só adiciona a coluna de motivo; a mudança de comportamento
+-- (retry de 'falhou', edição de endereço, coordenada manual) é em código
+-- (app/gerencia/dashboard/geocode-actions.ts, components/gerencia/notas-list.tsx).
+alter table public.notas_fiscais add column if not exists geocode_erro text;

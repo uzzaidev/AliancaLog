@@ -51,6 +51,10 @@ export type NotaRow = {
   motorista_nome: string | null;
   updated_at: string;
   foto_url: string | null;
+  lat: number | null;
+  lng: number | null;
+  geocode_status: "ok" | "falhou" | null;
+  geocode_erro: string | null;
 };
 
 export type NotaFiltro = {
@@ -69,7 +73,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
   let q = supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,updated_at,foto_url,motorista_id,empresas_clientes(nome),motoristas(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,updated_at,foto_url,motorista_id,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas(usuarios(nome))",
     )
     .order("updated_at", { ascending: false });
 
@@ -100,6 +104,10 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
       empresa_nome: empresa?.nome ?? null,
       motorista_id: (r.motorista_id as string) ?? null,
       motorista_nome: motorista?.usuarios?.nome ?? null,
+      lat: (r.lat as number) ?? null,
+      lng: (r.lng as number) ?? null,
+      geocode_status: (r.geocode_status as "ok" | "falhou") ?? null,
+      geocode_erro: (r.geocode_erro as string) ?? null,
     };
   });
 }
