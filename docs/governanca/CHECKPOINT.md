@@ -58,6 +58,23 @@
    tentativas (T4a/b/c).
 10. **Nada commitado nesta sessão** — mudanças só no working tree, aguardando confirmação pra commit
     (regra do CLAUDE.md: commit/push sempre pede aprovação explícita do Vítor a cada vez).
+11. **Bug reportado à parte (não estava na ata): "importei 5 NFs, só 2 apareceram no mapa"**.
+    Causa raiz, nada a ver com os itens acima: geocodificação é manual/em lote (botão
+    "Geocodificar") contra o Nominatim gratuito, e um endereço que falhasse
+    (`geocode_status='falhou'`) nunca era tentado de novo nem mostrava o motivo — ficava
+    invisível no mapa pra sempre, em silêncio. Corrigido (migration `0019`, coluna
+    `notas_fiscais.geocode_erro`, **aplicada em produção**):
+    - `geocodificarPendentes` (`app/gerencia/dashboard/geocode-actions.ts`) agora reprocessa
+      `'falhou'` também, não só nunca-tentados (nunca-tentados vão primeiro no lote).
+    - `lib/geocode.ts` devolve o motivo específico da falha (endereço não encontrado, erro de
+      rede, serviço indisponível...), guardado em `geocode_erro`.
+    - Novo bloco "Localização" no `DetailPanel` de `components/gerencia/notas-list.tsx`: mostra
+      o motivo da falha, deixa corrigir o endereço e tentar de novo, ou informar `lat`/`lng`
+      manualmente como último recurso (endereço rural/informal que o Nominatim nunca resolve).
+    - Também corrigido de passagem: o contador do botão "Geocodificar (N)" já usava o filtro
+      "hoje + em aberto" (do item A-001 acima), mas a ação que geocodificava de fato tinha
+      ficado presa em "só hoje" — uma NF pendente de dias anteriores contava no botão mas nunca
+      era processada ao clicar.
 
 **Pendente (parte do Vítor, ver [encaminhamentos/vitor-pirolli.md](../../encaminhamentos/vitor-pirolli.md)):**
 A-002 (seletor de período na UI, backend já pronto), A-003 (upload de `.zip`), A-008 (alerta de NF
