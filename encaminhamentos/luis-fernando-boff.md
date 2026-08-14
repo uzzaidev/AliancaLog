@@ -75,6 +75,15 @@ ser bipada** (ver A-009, provável sintoma disto).
 - `getResumoHoje` (KPIs do topo) **ficou intencionalmente só "hoje"**, como o
   critério de aceite pedia — ainda não alinhado formalmente com o Vítor/PO, é a
   única decisão de regra de negócio deste item que segue em aberto.
+  > **⚠️ Resolvido pelo Vítor em 14/08, e com um bug junto.** Ao decidir essa
+  > regra apareceu que `getResumoHoje` contava `notas_fiscais.status` — mas a
+  > migration `0016` (A-007, linha 128) fez a NF persistir só
+  > `pendente`/`em_rota`/`aceita`. Os cards **"Recusadas" e "Ocorrências"
+  > marcavam zero para sempre**; o desfecho real só existe em `canhotos.status`.
+  > Escapou do code review do A-007. Corrigido: os três desfechos passaram a vir
+  > de `canhotos` (ancorados em `registrado_em`) e "Em aberto" agora mostra o
+  > passivo acumulado, batendo com a tabela. Mexeu em `lib/data/gerencia.ts` —
+  > **vale sua revisão**, detalhe em [vitor-pirolli.md](./vitor-pirolli.md).
 - Mapa (`lib/data/mapa.ts`) alinhado ao mesmo filtro "aberto"; `getEntreguesComGps`
   passou a ancorar em `canhotos.registrado_em` (quando a entrega de fato
   aconteceu) em vez da `data_entrega` alvo da NF.

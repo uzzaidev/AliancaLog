@@ -15,6 +15,7 @@ import {
   contarDestinosPendentesDeGeocode,
   getDestinosGeocodificados,
   getEntreguesComGps,
+  getPosicoesMotoristas,
 } from "@/lib/data/mapa";
 
 export default async function GerenciaDashboard({
@@ -28,17 +29,27 @@ export default async function GerenciaDashboard({
   }>;
 }) {
   const sp = await searchParams;
-  const [resumo, notas, empresas, motoristas, painelClientes, destinos, entregues, pendentesDeGeocode] =
-    await Promise.all([
-      getResumoHoje(),
-      getNotasDoDia(sp),
-      listEmpresas(),
-      listMotoristas(),
-      getPainelClientes(),
-      getDestinosGeocodificados(),
-      getEntreguesComGps(),
-      contarDestinosPendentesDeGeocode(),
-    ]);
+  const [
+    resumo,
+    notas,
+    empresas,
+    motoristas,
+    painelClientes,
+    destinos,
+    entregues,
+    pendentesDeGeocode,
+    posicoesMotoristas,
+  ] = await Promise.all([
+    getResumoHoje(),
+    getNotasDoDia(sp),
+    listEmpresas(),
+    listMotoristas(),
+    getPainelClientes(),
+    getDestinosGeocodificados(),
+    getEntreguesComGps(),
+    contarDestinosPendentesDeGeocode(),
+    getPosicoesMotoristas(),
+  ]);
 
   return (
     <div className="space-y-5">
@@ -62,6 +73,7 @@ export default async function GerenciaDashboard({
         destinos={destinos}
         entregues={entregues}
         pendentesDeGeocode={pendentesDeGeocode}
+        motoristas={posicoesMotoristas}
       />
 
       <div className="flex flex-col gap-5 lg:flex-row">

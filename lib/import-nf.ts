@@ -94,12 +94,47 @@ export async function parsePdfChaves(file: File): Promise<ImportRow[]> {
   }));
 }
 
-export type TipoArquivo = "excel" | "xml" | "pdf" | "desconhecido";
+/**
+ * Extrai as NFs de um .zip de XMLs (A-003) — o cliente fecha a carga e manda um
+ * pacote só, em vez de nota a nota. Descompacta no browser (fflate), sem subir o
+ * zip pro servidor.
+ *
+ * Ignora silenciosamente o que não for XML: PDFs/planilhas soltos no pacote,
+ * diretórios, e o lixo que o macOS injeta ao compactar (`__MACOSX/`, `._arquivo`).
+ */
+export async function parseZipXmls(file: File): Promise<ImportRow[]> {
+  const { unzip } = await import("fflate");
+  const buf = new Uint8Array(await file.arrayBuffer());
+
+  const arquivos = await new Promise<Record<string, Uint8Array>>(
+    (resolve, reject) => {
+      unzip(
+        buf,
+        // Só desempacota o que interessa — evita gastar memória com PDF/imagem
+        // que porventura venha junto no mesmo pacote.
+        { filter: (f) => /\.xml$/i.test(f.name) && !f.name.endsWith("/") },
+        (err, data) => (err ? reject(err) : resolve(data)),
+      );
+    },
+  );
+
+  const decoder = new TextDecoder("utf-8");
+  const rows: ImportRow[] = [];
+  for (const [nome, bytes] of Object.entries(arquivos)) {
+    const base = nome.split("/").pop() ?? nome;
+    if (nome.startsWith("__MACOSX/") || base.startsWith("._")) continue;
+    rows.push(...parseNfeXml(decoder.decode(bytes)));
+  }
+  return rows;
+}
+
+export type TipoArquivo = "excel" | "xml" | "pdf" | "zip" | "desconhecido";
 
 export function tipoDoArquivo(file: File): TipoArquivo {
   const nome = file.name.toLowerCase();
   if (nome.endsWith(".xml")) return "xml";
   if (nome.endsWith(".pdf")) return "pdf";
+  if (nome.endsWith(".zip")) return "zip";
   if (/\.(xlsx?|csv)$/.test(nome)) return "excel";
   return "desconhecido";
 }

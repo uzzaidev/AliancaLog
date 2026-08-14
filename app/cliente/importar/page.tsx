@@ -8,8 +8,10 @@ export default function ClienteImportarPage() {
           Enviar notas fiscais
         </h1>
         <p className="text-sm text-muted">
-          Suba suas NFs (Excel, XML ou PDF). Elas entram automaticamente na fila
-          da transportadora para serem conferidas e roteirizadas.
+          Ao fechar a carga, mande o <strong>.zip com os XMLs</strong> de uma vez
+          — XML avulso, Excel ou PDF também funcionam. As notas entram
+          automaticamente na fila da transportadora para serem conferidas e
+          roteirizadas.
         </p>
       </div>
       <ImportWizard variant="cliente" />

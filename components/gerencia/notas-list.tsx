@@ -14,6 +14,7 @@ import {
   IconArrowsExchange,
   IconCopy,
   IconTrash,
+  IconClockExclamation,
 } from "@tabler/icons-react";
 import { Button, Card, StatusBadge } from "@/components/ui";
 import { ComprovanteModal } from "@/components/comprovante-modal";
@@ -28,6 +29,7 @@ import {
 } from "@/app/gerencia/dashboard/geocode-actions";
 import type { MotoristaItem, NotaRow } from "@/lib/data/gerencia";
 import { NF_STATUS_FINAIS } from "@/lib/types";
+import { DIAS_PARA_ALERTA, diasParada, isNotaParada } from "@/lib/alertas";
 
 function hora(iso: string) {
   return new Date(iso).toLocaleTimeString("pt-BR", {
@@ -53,11 +55,20 @@ export function NotasList({
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [msgExclusao, setMsgExclusao] = useState<string | null>(null);
   const [excluindo, startExclusao] = useTransition();
+  const [soParadas, setSoParadas] = useState(false);
+
+  // NFs em aberto e atrasadas (A-008) — regra em lib/alertas.ts.
+  const idsParadas = useMemo(() => {
+    const ids = new Set<string>();
+    for (const n of notas) if (isNotaParada(n)) ids.add(n.id);
+    return ids;
+  }, [notas]);
 
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
-    if (!t) return notas;
-    return notas.filter(
+    const base = soParadas ? notas.filter((n) => idsParadas.has(n.id)) : notas;
+    if (!t) return base;
+    return base.filter(
       (n) =>
         n.numero_nf.toLowerCase().includes(t) ||
         n.destinatario_nome.toLowerCase().includes(t) ||
@@ -65,7 +76,7 @@ export function NotasList({
         (n.destinatario_endereco ?? "").toLowerCase().includes(t) ||
         (n.cidade ?? "").toLowerCase().includes(t),
     );
-  }, [busca, notas]);
+  }, [busca, notas, soParadas, idsParadas]);
 
   // NFs cujo número aparece mais de uma vez — sinal de duplicidade (chave_acesso
   // é única no banco, então duplicata real só acontece por número repetido:
@@ -132,6 +143,22 @@ export function NotasList({
             className="w-full rounded-md border border-line bg-gray-50 py-2 pl-8 pr-3 text-sm text-ink outline-none focus:border-brand focus:bg-surface"
           />
         </div>
+
+        {idsParadas.size > 0 && (
+          <button
+            onClick={() => setSoParadas((v) => !v)}
+            aria-pressed={soParadas}
+            className={`flex items-center gap-1.5 rounded-md border px-2.5 py-2 text-xs font-medium transition-colors ${
+              soParadas
+                ? "border-danger bg-danger text-white"
+                : "border-danger-border bg-danger-50 text-danger hover:opacity-80"
+            }`}
+          >
+            <IconClockExclamation size={14} />
+            {idsParadas.size} parada(s) há +{DIAS_PARA_ALERTA} dias
+            {soParadas ? " — mostrando só estas" : ""}
+          </button>
+        )}
 
         {idsDuplicados.size > 0 && selecionadas.size === 0 && (
           <button
@@ -256,7 +283,18 @@ export function NotasList({
                         )}
                       </td>
                       <td className="px-3 py-2.5">
-                        <StatusBadge status={nf.status} />
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <StatusBadge status={nf.status} />
+                          {idsParadas.has(nf.id) && (
+                            <span
+                              className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-danger-50 px-2 py-0.5 text-[10px] font-semibold text-danger ring-1 ring-inset ring-danger-border"
+                              title={`Em aberto desde ${nf.data_entrega}`}
+                            >
+                              <IconClockExclamation size={11} />
+                              {diasParada(nf.data_entrega)}d parada
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-2.5">
                         <button
@@ -377,6 +415,18 @@ function DetailPanel({
           value={nf.motorista_nome ?? "Não atribuído"}
         />
         <Linha label="Status" value={<StatusBadge status={nf.status} />} />
+        <Linha label="Data de entrega" value={nf.data_entrega} />
+        {isNotaParada(nf) && (
+          <Linha
+            label="Atenção"
+            value={
+              <span className="flex items-center gap-1 font-semibold text-danger">
+                <IconClockExclamation size={13} />
+                Parada há {diasParada(nf.data_entrega)} dias sem desfecho
+              </span>
+            }
+          />
+        )}
         <Linha label="Última atualização" value={hora(nf.updated_at)} />
 
         {podeTrocar && motoristas.length > 0 && (

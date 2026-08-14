@@ -2,16 +2,40 @@ import "server-only";
 
 // Consultas server-side da área de gerência (RLS aplica: gerência vê tudo).
 import { createClient } from "@/lib/supabase/server";
-import { diasAtrasSP, hojeSP } from "@/lib/date";
-import { NF_STATUS_ABERTOS, type NotaStatus } from "@/lib/types";
+import { diaSeguinte, diasAtrasSP, hojeSP, inicioDiaSP } from "@/lib/date";
+import {
+  NF_STATUS_ABERTOS,
+  type CanhotoStatus,
+  type NotaStatus,
+} from "@/lib/types";
 
 // Dia operacional em São Paulo (não UTC — ver lib/date.ts).
 export const hojeISO = () => hojeSP();
 
+// KPIs do topo do dashboard. Duas naturezas diferentes de número convivem aqui,
+// e a distinção importa para ler a faixa corretamente:
+//
+//   ESTADO AGORA  (total, pendente, pendenteTotal, em_rota) — vem de
+//     notas_fiscais: quantas NFs existem e em que situação estão neste momento.
+//
+//   EVENTO DE HOJE (aceita, recusada, ocorrencia) — vem de canhotos: o que o
+//     motorista de fato registrou hoje.
+//
+// Por que os desfechos NÃO podem sair de notas_fiscais.status: desde o A-007
+// (migration 0016) a NF só persiste 'pendente' | 'em_rota' | 'aceita' — recusa e
+// ocorrência devolvem a nota ao painel como 'pendente', e o desfecho real fica
+// só em canhotos.status. Contar pela NF faria os cards "Recusadas" e
+// "Ocorrências" marcarem zero para sempre.
 export type ResumoDia = {
+  /** NFs programadas para hoje. */
   total: number;
+  /** Em aberto com data de hoje. */
   pendente: number;
+  /** Passivo real: toda NF em aberto, inclusive atrasada de dias anteriores. */
+  pendenteTotal: number;
+  /** Em rota neste momento. */
   em_rota: number;
+  /** Tentativas registradas HOJE, por desfecho. */
   aceita: number;
   recusada: number;
   ocorrencia: number;
@@ -19,23 +43,48 @@ export type ResumoDia = {
 
 export async function getResumoHoje(data?: string): Promise<ResumoDia> {
   const supabase = await createClient();
-  const { data: rows } = await supabase
-    .from("notas_fiscais")
-    .select("status")
-    .eq("data_entrega", data ?? hojeISO());
+  const dia = data ?? hojeISO();
+
+  const [doDia, abertas, tentativas] = await Promise.all([
+    // Estado das NFs programadas para o dia.
+    supabase.from("notas_fiscais").select("status").eq("data_entrega", dia),
+    // Passivo acumulado — todo o "em aberto", sem recorte de data. É o número
+    // que casa com a tabela abaixo da faixa (que também mostra o acumulado).
+    supabase
+      .from("notas_fiscais")
+      .select("id", { count: "exact", head: true })
+      .in("status", NF_STATUS_ABERTOS),
+    // Desfechos de hoje: ancorados em quando a tentativa aconteceu, então uma
+    // NF de ontem entregue hoje conta como entrega de hoje.
+    supabase
+      .from("canhotos")
+      .select("status")
+      .gte("registrado_em", inicioDiaSP(dia))
+      .lt("registrado_em", inicioDiaSP(diaSeguinte(dia))),
+  ]);
 
   const r: ResumoDia = {
     total: 0,
     pendente: 0,
+    pendenteTotal: abertas.count ?? 0,
     em_rota: 0,
     aceita: 0,
     recusada: 0,
     ocorrencia: 0,
   };
-  for (const row of (rows ?? []) as { status: NotaStatus }[]) {
+
+  for (const row of (doDia.data ?? []) as { status: NotaStatus }[]) {
     r.total++;
-    r[row.status]++;
+    if (row.status === "pendente") r.pendente++;
+    else if (row.status === "em_rota") r.em_rota++;
   }
+
+  for (const row of (tentativas.data ?? []) as { status: CanhotoStatus }[]) {
+    if (row.status === "aceita") r.aceita++;
+    else if (row.status === "recusada") r.recusada++;
+    else if (row.status === "ocorrencia") r.ocorrencia++;
+  }
+
   return r;
 }
 
@@ -49,6 +98,8 @@ export type NotaRow = {
   empresa_nome: string | null;
   motorista_id: string | null;
   motorista_nome: string | null;
+  // Data-alvo da entrega — base da regra de "NF parada" (lib/alertas.ts, A-008).
+  data_entrega: string;
   updated_at: string;
   foto_url: string | null;
   lat: number | null;
@@ -73,7 +124,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
   let q = supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,updated_at,foto_url,motorista_id,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,data_entrega,updated_at,foto_url,motorista_id,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas(usuarios(nome))",
     )
     .order("updated_at", { ascending: false });
 
@@ -99,6 +150,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
       destinatario_nome: r.destinatario_nome as string,
       destinatario_endereco: r.destinatario_endereco as string,
       cidade: (r.cidade as string) ?? null,
+      data_entrega: r.data_entrega as string,
       updated_at: r.updated_at as string,
       foto_url: (r.foto_url as string) ?? null,
       empresa_nome: empresa?.nome ?? null,

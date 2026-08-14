@@ -6,6 +6,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { NOTA_STATUS_META, type NotaStatus } from "@/lib/types";
 import type { EmpresaItem, MotoristaItem } from "@/lib/data/gerencia";
 
+// Períodos aceitos por getNotasDoDia (lib/data/gerencia.ts). O valor vazio é o
+// default do dashboard — "hoje + tudo que ainda está em aberto" — e não um
+// "sem filtro": é justamente o que impede uma NF de ontem ainda pendente de
+// sumir do painel (A-001). Por isso ele aparece nomeado na lista, não como
+// placeholder.
+const PERIODOS = [
+  { value: "", label: "Hoje + pendências" },
+  { value: "hoje", label: "Só hoje" },
+  { value: "semana", label: "Últimos 7 dias" },
+  { value: "mes", label: "Últimos 30 dias" },
+  { value: "todos", label: "Todo o período" },
+];
+
 export function Filtros({
   empresas,
   motoristas,
@@ -35,10 +48,24 @@ export function Filtros({
   const temFiltro =
     !!params.get("status") ||
     !!params.get("motorista") ||
-    !!params.get("empresa");
+    !!params.get("empresa") ||
+    !!params.get("periodo");
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <select
+        className={selectCls(!!params.get("periodo"))}
+        value={params.get("periodo") ?? ""}
+        onChange={(e) => setParam("periodo", e.target.value)}
+        aria-label="Período"
+      >
+        {PERIODOS.map((p) => (
+          <option key={p.value} value={p.value}>
+            {p.label}
+          </option>
+        ))}
+      </select>
+
       <select
         className={selectCls(!!params.get("status"))}
         value={params.get("status") ?? ""}

@@ -4,9 +4,24 @@ Divisão de tarefas dos 12 encaminhamentos da ata de 12/08/2026, já com as deci
 tomadas pelo Vítor (PO) aplicadas. Fonte original:
 [reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md](../reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md).
 
-**Arquivos desta pasta:**
+## Arquivos desta pasta
+
+### Reunião de 12/08 — ✅ código concluído em 14/08
 - [luis-fernando-boff.md](./luis-fernando-boff.md) — backend/infra/offline/GIS + QA (9 itens)
-- [vitor-pirolli.md](./vitor-pirolli.md) — frontend/produto/PO + comercial/treinamento (5 itens de dev + 3 de processo)
+- [vitor-pirolli.md](./vitor-pirolli.md) — frontend/produto/PO + comercial (5 de dev + 3 de processo)
+
+### Visão de fases — revisão de 14/08, conferida contra o código
+- [mvp-a-pendencias.md](./mvp-a-pendencias.md) — **o que falta para o go-live** (7 do Luis + 7 do Vítor)
+- [fase-b-pendencias.md](./fase-b-pendencias.md) — o que falta do MVP Completo (quase tudo do Luis)
+- [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md) — **roteiro priorizado do que precisa ser visto rodando**
+
+**Status geral:** todo o código do MVP A está escrito e passa em typecheck/lint/build/
+smoke de segurança. O que falta para o go-live é **infraestrutura de produção**
+(deploy, Sentry, backup — Luis) e **validação real** (celular, cliente, piloto —
+Vítor). Nenhuma feature nova bloqueia o piloto.
+
+⚠️ **Caminho crítico: o deploy na Vercel.** Câmera e Service Worker exigem HTTPS, então
+metade do roteiro de teste do Vítor só roda depois que o staging estiver no ar.
 
 ## Decisões tomadas nesta rodada (sobrescrevem a ata onde conflitam)
 

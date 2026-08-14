@@ -4,6 +4,15 @@
 > Origem: [reunião 12/08](../reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md) ·
 > Índice geral: [README.md](./README.md).
 
+**✅ Status: os 4 itens de dev implementados em 2026-08-14** — `typecheck`/`lint`/
+`build` verdes. Detalhe do que foi feito abaixo do critério de aceite de cada um.
+
+**Pendente:**
+- **Verificação ao vivo de tudo abaixo** (navegador/celular real) — é minha, sou eu
+  quem lida com o cliente. Nada aqui foi visto rodando ainda, só compila.
+- Itens de processo/comercial: A-012, A-013, A-015.
+- Uma decisão de produto em aberto: ver "KPIs do topo" no fim deste arquivo.
+
 5 itens de desenvolvimento (frontend) + 3 itens de processo/comercial.
 
 ---
@@ -42,6 +51,21 @@ final antes de alinhar com ele o formato que vai mandar.
 - Subir um `.zip` com N XMLs de NF-e mostra a mesma grade de conferência que hoje
   aparece para XMLs soltos, com todas as N notas.
 
+### ✅ Feito (2026-08-14)
+
+- Dependência `fflate` adicionada; `parseZipXmls()` em `lib/import-nf.ts`
+  descompacta no browser e roda o `parseNfeXml` já existente em cada XML de dentro.
+- `tipoDoArquivo()` reconhece `.zip`; `onFile` do `ImportWizard` aceita `.zip`
+  misturado com XML/PDF na mesma seleção.
+- Filtra o que não é XML **antes** de descompactar (`filter` do fflate) — um PDF ou
+  imagem que venha junto no pacote não gasta memória à toa. Ignora também lixo de
+  compactação do macOS (`__MACOSX/`, `._arquivo`).
+- Mensagens específicas para os casos reais: `.zip` sem nenhum XML dentro, `.zip`
+  protegido por senha, e pacotes vazios ignorados no meio de uma seleção múltipla.
+- Copy das duas telas de importação atualizado (gerência e cliente) para orientar o
+  `.zip` como caminho recomendado ao fechar a carga.
+- **Vale para os dois perfis** com uma mudança só, como previsto.
+
 ---
 
 ### A-002 — Filtros de período na gerência
@@ -65,6 +89,19 @@ está sempre travada em "hoje".
 **Critério de aceite:**
 - Selecionar "Últimos 7 dias" no dashboard da gerência mostra as NFs desse intervalo,
   igual já acontece no portal do cliente.
+
+### ✅ Feito (2026-08-14)
+
+- Seletor de período em `components/gerencia/filtros.tsx`, plugado no parâmetro
+  `periodo` que o Luis já tinha deixado pronto em `getNotasDoDia` — nenhuma mudança
+  de backend foi necessária.
+- **Detalhe que não era óbvio:** o default da gerência não é "hoje", é *"hoje +
+  tudo que ainda está em aberto"* (o comportamento do A-001 que impede NF de ontem
+  de sumir). Então ele aparece **nomeado na lista** como "Hoje + pendências", em vez
+  de virar um placeholder tipo "Todos os períodos" — que daria a impressão errada de
+  que não há filtro aplicado.
+- O chip fica laranja só quando um período **diferente do default** está escolhido, e
+  o botão "Limpar" passou a considerar o período também.
 
 ---
 
@@ -98,6 +135,28 @@ alertar.
 - Uma NF pendente há mais de 7 dias fica visualmente destacada no painel sem precisar
   filtrar manualmente.
 
+### ✅ Feito (2026-08-14) — com as duas decisões de regra tomadas
+
+Regra isolada em `lib/alertas.ts` (fonte única, não espalhada pela UI):
+
+- **Conta a partir de `data_entrega`**, não da importação: o que importa é o atraso
+  em relação ao que foi prometido ao cliente.
+- **Só NF em aberto** (`NF_STATUS_ABERTOS`). Uma NF `aceita` está resolvida, não
+  importa a idade. Isso já casa com o A-007: como `recusada`/`ocorrência` agora
+  voltam para `pendente`, "em aberto" cobre exatamente o conjunto que ainda precisa
+  de nova tentativa — não precisou de regra especial pra elas.
+- `DIAS_PARA_ALERTA = 7` exportado, então mudar o limite é um lugar só.
+- Comparação de datas feita em UTC puro (as duas já vêm em `YYYY-MM-DD` de SP), pra
+  o fuso do navegador não deslocar um dia na conta.
+
+Na UI (`components/gerencia/notas-list.tsx`):
+- Badge vermelho "Nd parada" ao lado do status, na linha.
+- Chip na toolbar com a contagem, que **também filtra** ("mostrando só estas") — mais
+  útil que um contador passivo: a gerência vê o número e já ataca a lista.
+- Linha "Parada há N dias sem desfecho" no painel de detalhe, junto da data de entrega.
+- `NotaRow` ganhou `data_entrega` (campo aditivo em `lib/data/gerencia.ts`) — o alerta
+  precisa dele para calcular e exibir os dias.
+
 ---
 
 ### A-006 — parte do frontend (camada "Motoristas" no mapa)
@@ -116,6 +175,34 @@ Sua parte, depois que a API estiver pronta:
 - Alinhar com o Luis: o que a gerência precisa enxergar além da posição (nome do
   motorista, quantas NFs faltam no romaneio dele, etc. — dado que já existe em outras
   partes do dashboard e pode ser combinado no popup).
+
+### ✅ Feito (2026-08-14) — respeitando a restrição que o Luis apontou
+
+- `MapaLeafletInner` ganhou a prop `motoristas`: marcador maior, com anel laranja da
+  marca, desenhado **por cima** dos pinos de NF (é o que a gerência quer olhar
+  primeiro). Consome `getPosicoesMotoristas()`, que o Luis deixou pronta.
+- **Camada sobreposta, não exclusiva** — decisão de UX: alternar entre "destinos" e
+  "motoristas" esconderia justamente a comparação útil ("ele está perto do que ainda
+  falta entregar?"). Destino/Entregue seguem exclusivas entre si; Motoristas é um
+  toggle independente por cima, ligado por padrão.
+- **"Visto há X min"** no popup, com relógio local recalculando a cada 30s — sem
+  isso, o texto congelaria em "há 2 min" para sempre enquanto nenhuma posição nova
+  chegasse, que é exatamente quando o dado envelhecendo é a informação importante.
+- Posição com **5 min ou mais** fica cinza e oca, e o popup avisa "pode estar sem
+  sinal" — um pino parado não pode passar a impressão de posição atual.
+- **Realtime próprio, como o Luis pediu:** assina `motorista_posicao` direto e
+  atualiza só o estado local, sem `router.refresh()`. Canal com sufixo aleatório
+  (mesmo padrão do `realtime-refresher.tsx`) pra não colidir no Strict Mode.
+- **Padrão de estado escolhido com cuidado:** o servidor continua sendo a fonte de
+  QUEM está ativo (com nome, que vem de join); o Realtime guarda só os *deltas* de
+  posição, mesclados na renderização e apenas quando mais recentes que o dado do
+  servidor — assim um evento atrasado não faz o marcador "voltar no tempo". A
+  alternativa (copiar a lista pra estado e sincronizar com `useEffect`) foi
+  descartada: além de antipadrão, entrava em **loop infinito de render** por causa
+  do array default criado a cada renderização.
+- Motorista que confirma romaneio no meio da sessão não aparece pelo evento de
+  posição (não temos o nome dele no payload) — mas entra sozinho no próximo refresh
+  do dashboard, que a própria atividade de entrega já dispara.
 
 ---
 
@@ -144,13 +231,90 @@ o fluxo operacional que será treinado).
 
 ---
 
+## ✅ KPIs do topo — decidido e corrigido (2026-08-14)
+
+Ao analisar a pendência que o Luis deixou ("KPIs continuam só de hoje, não alinhado
+com o PO"), apareceu um **bug mais grave que a dúvida original**.
+
+### O bug: dois KPIs zerados para sempre
+
+`getResumoHoje` contava `notas_fiscais.status`. Só que a migration `0016` (A-007)
+mudou isso — linha 128:
+
+```sql
+v_status_nf := case when p_status = 'aceita' then 'aceita' else 'pendente' end;
+```
+
+A NF passou a persistir **apenas** `pendente` | `em_rota` | `aceita`. Recusa e
+ocorrência devolvem a nota ao painel como `pendente`, e o desfecho real vive só em
+`canhotos.status`. Ou seja: os cards **"Recusadas" e "Ocorrências" marcariam zero
+permanentemente** — justamente os dois números que motivaram o A-007 na reunião.
+Não foi pego no code review do A-007.
+
+### O que foi feito
+
+`getResumoHoje` agora separa duas naturezas de número, e os rótulos deixam isso
+explícito na tela:
+
+| KPI | Origem | Natureza |
+|---|---|---|
+| Total hoje | `notas_fiscais` do dia | estado |
+| **Entregues hoje** | `canhotos` de hoje | evento |
+| **Recusadas hoje** | `canhotos` de hoje | evento |
+| **Ocorrências hoje** | `canhotos` de hoje | evento |
+| Em rota | `notas_fiscais` agora | estado |
+| **Em aberto** | todo o passivo | estado |
+
+- Os três desfechos passam a vir de `canhotos`, ancorados em `registrado_em` — o
+  que também corrige um efeito colateral: NF atrasada de ontem entregue hoje agora
+  conta como **entrega de hoje**, que é o que a operação entende por produtividade
+  do dia.
+- **"Em aberto" passou a mostrar o passivo real** (com dias anteriores), então bate
+  com a tabela logo abaixo — era exatamente a divergência que eu tinha levantado.
+  Quanto disso é atraso aparece como linha de apoio: *"N de dias anteriores"*.
+- `Kpi` (`components/ui/kpi.tsx`) ganhou a prop opcional `hint` para essa linha.
+
+**Para o Luis:** isso mexeu em `lib/data/gerencia.ts`, que é território dele — mas
+era a decisão de KPI que ficou explicitamente comigo, e o bug estava embutido nela.
+Vale ele revisar a consulta nova (3 queries em paralelo, uma delas `count` com
+`head: true`).
+
+---
+
+## Teste ao vivo (meu — lido direto com o cliente)
+
+Nada abaixo foi visto rodando ainda; o código compila e passa nas verificações.
+Roteiro do que precisa ser conferido em navegador/celular real.
+
+**Prioridade:** comece por **A-006 e A-007** — mexem em prova de entrega e em
+dinheiro, e falham de forma silenciosa. Os outros quebram de jeito óbvio se
+estiverem errados.
+
+- [ ] **A-002** — trocar o período no dashboard e confirmar que a lista muda; conferir
+      que o default "Hoje + pendências" realmente traz NF de ontem ainda pendente.
+- [ ] **KPIs** — conferir que "Recusadas hoje" e "Ocorrências hoje" saem do zero ao
+      registrar uma recusa/ocorrência (era o bug acima), e que "Em aberto" bate com
+      a contagem da tabela logo abaixo.
+- [ ] **A-003** — subir um `.zip` real de carga fechada (não um de teste) e conferir
+      se todas as NFs aparecem na grade; testar também `.zip` com PDF junto dentro.
+- [ ] **A-008** — confirmar que uma NF antiga em aberto ganha o badge e que o chip de
+      filtro isola só essas.
+- [ ] **A-006** — com um motorista real em rota: abrir o dashboard e ver o marcador
+      andando sem a página recarregar; deixar o celular sem sinal e confirmar que o
+      pino apaga e o popup passa a avisar "pode estar sem sinal".
+- [ ] **A-009** — bipar uma NF de dia anterior em duas abas e confirmar que o
+      dashboard atualiza sozinho (verificação que ficou pendente do lado do Luis).
+- [ ] Regressão do que o Luis entregou: registrar ocorrência e ver a NF voltar ao
+      painel; 2ª tentativa de entrega persistindo foto e status (A-007).
+
 ## Critérios de aceite consolidados (produto)
 
 Antes de considerar este pacote pronto para o cliente:
 
-- [ ] Painel da gerência mostra e permite filtrar NFs de qualquer período, não só hoje.
-- [ ] Upload de `.zip` funciona nos dois perfis (gerência e cliente).
-- [ ] Alerta visual de NF parada há +7 dias aparece no painel.
-- [ ] Mapa da gerência mostra a posição ao vivo de cada motorista com romaneio ativo,
+- [x] Painel da gerência mostra e permite filtrar NFs de qualquer período, não só hoje.
+- [x] Upload de `.zip` funciona nos dois perfis (gerência e cliente).
+- [x] Alerta visual de NF parada há +7 dias aparece no painel.
+- [x] Mapa da gerência mostra a posição ao vivo de cada motorista com romaneio ativo,
       com indicação de há quanto tempo foi a última atualização.
 - [ ] Reunião com o cliente sobre o formato `.zip` realizada antes do deploy do A-003.
+- [ ] Roteiro de teste ao vivo acima executado.

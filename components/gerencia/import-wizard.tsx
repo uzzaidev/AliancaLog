@@ -3,9 +3,11 @@
 // Assistente de importação de NFs. Compartilhado entre a gerência e o cliente
 // (prop `variant`): a gerência escolhe empresa/motorista; o cliente não vê esses
 // campos (empresa vem do JWT no servidor).
-// Aceita 3 formatos:
+// Aceita 4 formatos:
+//   - .zip de XMLs → RECOMENDADO p/ carga fechada: o cliente manda um pacote só
+//     em vez de nota a nota (A-003). Descompactado aqui no browser.
+//   - XML de NF-e → já traz todos os dados + chave de acesso.
 //   - Excel/CSV  → mapeamento de colunas (SheetJS, sob demanda).
-//   - XML de NF-e → RECOMENDADO: já traz todos os dados + chave de acesso.
 //   - PDF (DANFE) → best-effort: extrai a chave/número; resto é preenchido à mão.
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -17,7 +19,12 @@ import type {
   ImportRow,
 } from "@/app/gerencia/importar/types";
 import { confirmarImportacaoCliente } from "@/app/cliente/importar/actions";
-import { parseNfeXml, parsePdfChaves, tipoDoArquivo } from "@/lib/import-nf";
+import {
+  parseNfeXml,
+  parsePdfChaves,
+  parseZipXmls,
+  tipoDoArquivo,
+} from "@/lib/import-nf";
 import type { EmpresaItem, MotoristaItem } from "@/lib/data/gerencia";
 
 const MOTIVO_LABEL: Record<DuplicataInfo["motivo"], string> = {
@@ -123,32 +130,45 @@ export function ImportWizard({
         return;
       }
 
-      if (tipo === "xml" || tipo === "pdf") {
+      if (tipo === "xml" || tipo === "pdf" || tipo === "zip") {
         const extraidas: ImportRow[] = [];
         let temPdf = false;
+        let zipsVazios = 0;
         for (const f of files) {
           const t = tipoDoArquivo(f);
           if (t === "xml") extraidas.push(...parseNfeXml(await f.text()));
-          else if (t === "pdf") {
+          else if (t === "zip") {
+            const doZip = await parseZipXmls(f);
+            if (doZip.length === 0) zipsVazios++;
+            extraidas.push(...doZip);
+          } else if (t === "pdf") {
             temPdf = true;
             extraidas.push(...(await parsePdfChaves(f)));
           }
         }
         if (extraidas.length === 0)
           return setErro(
-            "Não consegui extrair NFs. Confira se é um XML de NF-e ou um DANFE em PDF.",
+            zipsVazios > 0
+              ? "O .zip não tinha nenhum XML de NF-e válido dentro. Confira se o pacote é o de XMLs da carga."
+              : "Não consegui extrair NFs. Confira se é um XML de NF-e, um .zip de XMLs ou um DANFE em PDF.",
           );
         setRows(extraidas);
         if (temPdf)
           setAviso(
             "PDF é best-effort: extraí a chave e o número da NF; complete destinatário e endereço abaixo. Para importação completa e automática, prefira o XML da NF-e.",
           );
+        else if (zipsVazios > 0)
+          setAviso(
+            `${zipsVazios} pacote(s) .zip não tinha(m) XML de NF-e dentro e foram ignorados.`,
+          );
         return;
       }
 
-      setErro("Formato não suportado. Use Excel (.xlsx/.csv), XML ou PDF.");
+      setErro("Formato não suportado. Use .zip de XMLs, XML, Excel (.xlsx/.csv) ou PDF.");
     } catch {
-      setErro("Falha ao ler o arquivo. Se for PDF, tente o XML da NF-e.");
+      setErro(
+        "Falha ao ler o arquivo. Se for .zip, confira se não está protegido por senha; se for PDF, tente o XML da NF-e.",
+      );
     } finally {
       setLendo(false);
     }
@@ -269,19 +289,20 @@ export function ImportWizard({
             </Field>
           </div>
         )}
-        <Field label="Arquivo — XML de NF-e (recomendado), Excel/CSV ou PDF">
+        <Field label="Arquivo — .zip de XMLs (recomendado), XML, Excel/CSV ou PDF">
           <input
             type="file"
-            accept=".xlsx,.xls,.csv,.xml,.pdf"
+            accept=".zip,.xlsx,.xls,.csv,.xml,.pdf"
             multiple
             onChange={onFile}
             className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-700"
           />
         </Field>
         <p className="text-xs text-muted">
-          Prefira o <strong>XML da NF-e</strong>: traz todos os dados e a chave de
-          acesso, então a nota casa exatamente na hora da bipagem. PDF e Excel
-          funcionam, mas podem exigir ajuste manual.
+          Ao fechar a carga, mande o <strong>.zip com os XMLs</strong> de uma vez —
+          o sistema abre o pacote e lê todas as notas. XML avulso funciona igual:
+          os dois trazem a chave de acesso, então a nota casa exatamente na hora da
+          bipagem. PDF e Excel funcionam, mas podem exigir ajuste manual.
         </p>
         {lendo && <p className="text-sm text-muted">Lendo arquivo(s)…</p>}
       </Card>

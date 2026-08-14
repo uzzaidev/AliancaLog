@@ -12,8 +12,8 @@ export default async function ImportarPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Importar NFs</h1>
         <p className="text-sm text-muted">
-          XML da NF-e (recomendado), Excel/CSV ou PDF. As notas entram na fila do
-          dia para montar os romaneios.
+          .zip com os XMLs da carga (recomendado), XML avulso, Excel/CSV ou PDF.
+          As notas entram na fila do dia para montar os romaneios.
         </p>
       </div>
       <ImportWizard

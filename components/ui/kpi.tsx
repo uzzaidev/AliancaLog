@@ -25,11 +25,15 @@ export function Kpi({
   value,
   label,
   tone = "neutral",
+  hint,
 }: {
   icon: ElementType;
   value: number | string;
   label: string;
   tone?: KpiTone;
+  /** Linha extra sob o rótulo, para o número que precisa de contexto (ex.: quanto
+   *  do "em aberto" é atraso de dias anteriores). Omitida quando não há o que dizer. */
+  hint?: string;
 }) {
   const t = TONES[tone];
   return (
@@ -46,6 +50,11 @@ export function Kpi({
           {value}
         </span>
         <span className="mt-1 block truncate text-xs text-muted">{label}</span>
+        {hint && (
+          <span className="mt-0.5 block truncate text-[10px] text-gray-400">
+            {hint}
+          </span>
+        )}
       </span>
     </div>
   );

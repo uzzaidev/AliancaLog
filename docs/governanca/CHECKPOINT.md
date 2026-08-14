@@ -4,8 +4,39 @@
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
 **Última atualização:** 2026-08-14
-**Sprint atual:** Encaminhamentos da reunião de 12/08 com a Rotta ([ata](../../reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md)) — parte do Luis (backend) concluída → falta a parte do Vítor (frontend: A-002, A-003, A-008, camada de mapa do A-006) e o piloto/deploy
-**Status geral:** 🟢 9 itens de backend (A-001, A-009, A-005, A-004, A-007, A-006, A-010 + QA) implementados, revisados e com as 4 migrations novas aplicadas em produção; falta a parte do Vítor e o deploy/piloto
+**Sprint atual:** Encaminhamentos da reunião de 12/08 ([ata](../../reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md)) **concluídos dos dois lados** → o MVP A entra em fase de deploy + validação real
+**Status geral:** 🟢 **Todo o código do MVP A está escrito** e passa em typecheck/lint/build + `test:security` 9/9. O que falta para o go-live não é feature: é **infra de produção** (deploy Vercel, Sentry, backup — Luis) e **validação real** (celular, cliente, piloto — Vítor). Levantamento completo em [encaminhamentos/mvp-a-pendencias.md](../../encaminhamentos/mvp-a-pendencias.md).
+
+**⚠️ Caminho crítico: deploy na Vercel.** Câmera e Service Worker exigem HTTPS — metade do roteiro de validação do Vítor ([testes-ao-vivo-vitor.md](../../encaminhamentos/testes-ao-vivo-vitor.md)) está bloqueada até o staging subir.
+
+**Revisão de fases (2026-08-14):** CHECKLIST conferido contra o código. Correções aplicadas:
+GitHub já estava feito (só a Vercel falta); "imutabilidade forte do canhoto" ficou **obsoleto**
+pelo A-007; o smoke test de RLS **já é script versionado**; a pergunta dos XMLs ao Matheus foi
+**respondida na reunião** (D-005). E **3 itens listados como Fase B já estão entregues**:
+importação de XML (+ `.zip`), fluxo de devolução/reentrega (via A-007) e metade das múltiplas
+fotos (via A-010) — ver [encaminhamentos/fase-b-pendencias.md](../../encaminhamentos/fase-b-pendencias.md).
+
+**Mudanças de hoje (2026-08-14) — parte do Vítor (frontend), [encaminhamentos/vitor-pirolli.md](../../encaminhamentos/vitor-pirolli.md):**
+1. **A-002** — seletor de período no dashboard, plugado no parâmetro que o backend já expunha.
+   O default aparece nomeado ("Hoje + pendências") em vez de placeholder, pra não parecer
+   ausência de filtro.
+2. **A-003** — upload de `.zip` de XMLs (`fflate`), reaproveitando o `parseNfeXml` que já lia
+   lote. Filtra não-XML antes de descompactar e ignora lixo do macOS. Vale para os 2 perfis.
+3. **A-008** — regra de "NF parada" isolada em `lib/alertas.ts` (conta da `data_entrega`, só
+   status em aberto); badge na linha + chip que também filtra + linha no detalhe.
+   `NotaRow` ganhou `data_entrega`.
+4. **A-006 (camada visual)** — marcador de motorista no mapa, sobreposto às camadas de NF,
+   com "visto há X min" e estado apagado após 5 min sem posição. **Realtime próprio**, sem
+   `router.refresh()`, como o Luis pediu: o servidor define quem está ativo, o Realtime só
+   sobrepõe posição mais recente.
+5. **🐛 Bug encontrado e corrigido nos KPIs**: `getResumoHoje` contava `notas_fiscais.status`,
+   mas desde a migration `0016` (A-007) a NF só persiste `pendente`/`em_rota`/`aceita` — os
+   cards **"Recusadas" e "Ocorrências" marcavam zero para sempre**. Escapou do code review do
+   A-007. Corrigido: os três desfechos passam a vir de `canhotos` (ancorados em
+   `registrado_em`, então NF atrasada entregue hoje conta como entrega de hoje) e "Em aberto"
+   passou a mostrar o passivo acumulado, batendo com a tabela. `Kpi` ganhou prop `hint`.
+6. **Higiene**: removidos arquivos vazios acidentais na raiz (`hojeSP()`, `s`, `├ìndice`).
+7. **Nada commitado** — working tree, aguardando aprovação do Vítor (regra do CLAUDE.md).
 
 **Mudanças de hoje (2026-08-14) — encaminhamentos da reunião 12/08 (parte do Luis, [encaminhamentos/luis-fernando-boff.md](../../encaminhamentos/luis-fernando-boff.md)):**
 1. **A-001 — filtro de data preso em "hoje" corrigido**: `getNotasDoDia`/`getPainelClientes`

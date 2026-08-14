@@ -24,7 +24,9 @@
 - [x] Migrations aplicadas no projeto real (`npm run db:migrate`, 0001→0007)
 - [x] Seed rodado e login testado de verdade — gerência e motorista confirmados em uso real;
       **cliente_final ainda não testado**
-- [ ] Push para o GitHub (`uzzaidev/AliancaLog`) + deploy na Vercel (URL de staging no ar) `→ Luis`
+- [~] Push para o GitHub (`uzzaidev/AliancaLog`) ✅ **feito** (remote conectado, commits no ar)
+      + **deploy na Vercel ainda pendente** `→ Luis` — ⚠️ é o **caminho crítico**: câmera e
+      Service Worker exigem HTTPS, então metade dos testes ao vivo depende disto
 
 ## Sprint 1 — Gerência + ingestão
 **Responsável:** Vítor (telas e fluxo) + Luis (consultas/RLS por trás)
@@ -60,7 +62,12 @@
 - [x] Offline: sincronização → `POST /api/sync` idempotente (`client_id`) ao voltar a conexão
 - [x] Offline: banner "N aguardando sincronização"
 - [ ] Cache offline da LISTA do dia (leitura offline cold-open) — refinamento `→ Luis`
-- [ ] Imutabilidade forte do canhoto (bloquear re-registro) — refinamento `→ Luis`
+      — confirmado como **não feito** em 14/08: `STORE_CACHE` existe mas nunca é
+      escrito nem lido; o motorista só vê a lista offline se a aba já estava aberta
+- [x] ~~Imutabilidade forte do canhoto (bloquear re-registro)~~ — **item obsoleto**:
+      o A-007 (migration `0016`) fez o oposto de propósito, removendo `uq_canhoto_nf`
+      para permitir múltiplas tentativas por NF. A imutabilidade que permanece é a da
+      NF já **aceita** (trigger `nf_guard_motorista`)
 - [ ] Teste em modo avião → aparece no dashboard ao voltar o sinal (runtime)
 - [ ] Deploy + teste no celular (câmera exige HTTPS)
 
@@ -91,18 +98,26 @@
       Corrigido: upload sem upsert (path já é idempotente pelo `client_id`, 409 tratado como
       sucesso) + índice `uq_canhoto_client_id` trocado de parcial para completo (migrations
       `0006`, `0007`). Validado ponta-a-ponta com sessão real do motorista (RLS aplicado).
-- [ ] Smoke test de RLS formal: script loga com os 3 perfis e verifica isolamento (risco R-008)
-      — testado manualmente para motorista nesta sessão, falta script versionado + cliente_final `→ Luis`
+- [~] Smoke test de RLS formal (risco R-008) — **script já existe e é versionado**:
+      `scripts/smoke-seguranca.mjs` via `npm run test:security`, 9/9 contra o banco real
+      (inclui T4a/b/c de múltiplas tentativas, do A-007). Falta confirmar cobertura do
+      perfil `cliente_final` e ter isso rodando em CI, não só quando alguém lembra `→ Luis`
 - [ ] Monitoramento de erros (Sentry ou similar) antes do piloto `→ Luis`
 - [ ] Backup automático do banco (hoje `db:backup` é manual) `→ Luis`
 - [ ] Critérios de sucesso do piloto escritos (ex.: 2–3 motoristas × 5 dias, ≥95% das entregas
       pelo app, zero perda no sync, Matheus abrindo o dashboard sem ser lembrado) `→ Vítor`
 - [ ] Testar foto 1280px com canhotos reais em luz ruim (validar legibilidade) `→ Vítor` (piloto)
-- [ ] Perguntar ao Matheus se as empresas conseguem encaminhar os **XMLs das NF-e** (destrava
-      a importação por XML da Fase B) `→ Vítor` (comercial)
+- [x] Perguntar ao Matheus se as empresas conseguem encaminhar os **XMLs das NF-e** —
+      ✅ **respondido na reunião de 12/08** (decisão D-005): o cliente manda `.zip` de XMLs
+      ao fechar cada carga. Continua o A-012 (alinhar o fluxo operacional com ele) `→ Vítor`
 
 ## Sprint 4 — Piloto & Go-Live (MVP A)
-- [ ] Testes E2E (Playwright) do caminho crítico — **sem responsável definido** ⚠️ (ver gap de QA no PLAN.md)
+> Pendências detalhadas e priorizadas em
+> [encaminhamentos/mvp-a-pendencias.md](../../encaminhamentos/mvp-a-pendencias.md);
+> roteiro de validação em
+> [encaminhamentos/testes-ao-vivo-vitor.md](../../encaminhamentos/testes-ao-vivo-vitor.md).
+- [ ] Testes E2E (Playwright) do caminho crítico `→ Luis` — **gap de QA resolvido em 14/08**:
+      o papel passou a ser dele. Adiado por decisão explícita, não é bloqueio de piloto
 - [ ] Importar Excel reais das empresas `→ Vítor` (comercial, junto com Matheus)
 - [ ] Criar logins reais (16 motoristas + ~20 empresas) `→ Luis`
 - [ ] Piloto com 2–3 motoristas (primeira entrega real registrada) `→ Vítor` (CS/treinamento)
@@ -113,22 +128,32 @@
 
 ## Fase B — MVP Completo
 **Responsável:** Luis (Dados/BI + GIS/Maps é papel dele na divisão de %)
-- [ ] Roteirização (Directions API): ordem otimizada, "Abrir no Maps", reordenar, janela de entrega, aba "Por Empresa"
+> Revisão de 14/08 contra o código: **3 itens desta seção já foram entregues** pelos
+> encaminhamentos da reunião de 12/08. Detalhe e escopo restante em
+> [encaminhamentos/fase-b-pendencias.md](../../encaminhamentos/fase-b-pendencias.md).
+- [ ] Roteirização (Directions API): ordem otimizada, reordenar, janela de entrega, aba "Por Empresa"
+      — "Abrir no Maps" ✅ feito (`lib/maps.ts`); mapa de pontos ✅ feito; posição do
+      motorista ao vivo ✅ feita (A-006). Falta a **otimização de ordem** (TSP/VRP),
+      que depende da decisão Google Routes × OSRM/VROOM registrada no PLAN.md
 - [ ] KPIs de motorista (total, taxa sucesso/problema, tempo médio, ranking, histórico, gráficos)
 - [ ] Financeiro (custo/km, custo/hora, tarifa por empresa, rentabilidade, indicador 🟢🟡🔴, Distance Matrix)
 - [ ] Dashboards/relatórios (gráficos, mapa de calor, top empresas, filtros avançados, exportação Excel/CSV)
 
 ### Adições da revisão de produto (jul/2026)
-- [ ] **Importar XML da NF-e** (formato nacional único — mata o mapeamento de colunas do Excel;
+- [x] **Importar XML da NF-e** (formato nacional único — mata o mapeamento de colunas do Excel;
       parse nativo via `DOMParser`, preenche chave de acesso + destinatário + endereço completos)
-- [ ] **Fluxo de devolução/reentrega**: lista "pendências de devolução" na gerência + ações
-      "reagendar" (nova NF vinculada) e "devolvida ao embarcador" (status terminal) — hoje a NF
-      recusada fica "recusada" para sempre depois do fechamento
+      — ✅ `lib/import-nf.ts`; desde 14/08 aceita também **`.zip` de XMLs** (A-003), nos 2 perfis
+- [x] **Fluxo de devolução/reentrega** — ✅ **entregue pelo A-007** (migration `0016`): toda NF não
+      aceita volta ao painel como `pendente`, desatribuída, pronta para nova tentativa; o histórico
+      de tentativas fica em `canhotos` e aparece na timeline do comprovante. Decisão do PO
+      sobrescreveu a D-006 da ata (recusada também volta). Não existe mais "recusada para sempre"
 - [ ] **Web Push para o motorista** ("romaneio novo chegou") — Android ok; iOS exige PWA instalado
       (iOS 16.4+). É também a resposta à pressão por "app nas lojas"
 - [ ] **E-mail resumo para embarcadores** (diário/semanal, ou alerta de ocorrência) — portal hoje é
       só consulta passiva
-- [ ] Múltiplas fotos por canhoto (frente/verso, avaria)
+- [~] Múltiplas fotos por canhoto (frente/verso, avaria) — **metade feita**: o A-010
+      trouxe 2 fotos por tentativa (chegada + canhoto, migration `0018`). Falta
+      generalizar para N fotos; atenção ao peso no IndexedDB da fila offline
 
 ## Fase C — Visão de longo prazo (argumento de recorrência)
 - [ ] **Comprovante de Entrega Eletrônico (CE-e) oficial na SEFAZ** (Ajuste SINIEF 38/21):
