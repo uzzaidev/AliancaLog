@@ -3,9 +3,68 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-08-01
-**Sprint atual:** Pré-aplicativo aprovado + ajustes pós-aprovação + **Sprint 3.5 (segurança/confiabilidade)** → próximo é deploy (Vercel/HTTPS) e piloto
-**Status geral:** 🟢 MVP A + ajustes + endurecimento de segurança rodando em ambiente real; falta deploy (Vercel/HTTPS) e o piloto em si
+**Última atualização:** 2026-08-14
+**Sprint atual:** Encaminhamentos da reunião de 12/08 com a Rotta ([ata](../../reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md)) — parte do Luis (backend) concluída → falta a parte do Vítor (frontend: A-002, A-003, A-008, camada de mapa do A-006) e o piloto/deploy
+**Status geral:** 🟢 9 itens de backend (A-001, A-009, A-005, A-004, A-007, A-006, A-010 + QA) implementados, revisados e com as 4 migrations novas aplicadas em produção; falta a parte do Vítor e o deploy/piloto
+
+**Mudanças de hoje (2026-08-14) — encaminhamentos da reunião 12/08 (parte do Luis, [encaminhamentos/luis-fernando-boff.md](../../encaminhamentos/luis-fernando-boff.md)):**
+1. **A-001 — filtro de data preso em "hoje" corrigido**: `getNotasDoDia`/`getPainelClientes`
+   (`lib/data/gerencia.ts`) trocam `.eq("data_entrega", hoje)` por "hoje + tudo que está em aberto"
+   (`NF_STATUS_ABERTOS`); `getNotasDoDia` ganhou `periodo` (`hoje`/`semana`/`mes`/`todos`, mesmo padrão
+   de `lib/data/cliente.ts`) para o Vítor plugar o seletor do A-002. `buscarNf` (bipagem) não filtra
+   mais por data — NF solta de qualquer dia é "em aberto" por definição. `getRomaneiosDoDia` (motorista)
+   passa a filtrar por `status='ativo'` em vez de data. Mapa (`lib/data/mapa.ts`) alinhado ao mesmo
+   filtro "aberto".
+2. **A-009 — BIPE não atualizava em tempo real**: era sintoma do A-001 (bipar NF de romaneio antigo
+   retornava "não encontrada", nunca chegava a gravar nada, logo nunca disparava Realtime). Realtime em
+   si já estava correto (canal com sufixo aleatório, publicação já incluía as 3 tabelas).
+3. **A-005 — troca de motorista de entrega já atribuída**: nova server action `trocarMotorista`
+   (`app/gerencia/dashboard/actions.ts`) — remove a NF do romaneio de origem, encaixa no romaneio ativo
+   do motorista destino (reaproveita um existente hoje, senão cria), apaga o romaneio de origem se
+   ficar vazio. UI no `DetailPanel` de `components/gerencia/notas-list.tsx`.
+4. **A-004 — exclusão em lote de notas duplicadas**: `excluirNotas` (mesmo arquivo) bloqueia exclusão de
+   NF com canhoto (evita apagar prova de entrega via cascade). UI: seleção múltipla + "marcar
+   duplicadas" (mesmo `numero_nf`) em `notas-list.tsx`.
+5. **A-007 — nota não aceita volta ao painel (o item mais delicado)**: decisão do PO, sobrescreve D-006
+   da ata — `recusada`/qualquer `ocorrencia` devolvem a NF pro painel como `pendente`, disponível para
+   nova tentativa; só `aceita` é final. Migration `0016`: idempotência de `registrar_entrega_offline`
+   passa a ser por `client_id` (tentativa), não mais por NF — permite múltiplos canhotos por NF
+   (`uq_canhoto_nf` removido); trigger `nf_guard_motorista` e RLS `mot_nf_update` ajustados pra permitir
+   o motorista zerar `romaneio_id`/`motorista_id` numa tentativa não aceita; `fecharRomaneio` simplifica
+   `STATUS_FINAIS` pra `["aceita"]` (consolidado em `NF_STATUS_FINAIS`, `lib/types.ts`, usado em todo
+   lugar que antes tinha essa lista duplicada). **Backfill incluído na migration** pra NFs que já
+   estavam presas em `recusada`/`ocorrencia` de antes. Comprovante (`lib/data/comprovante.ts` +
+   `ComprovanteModal`) agora lista todas as tentativas na timeline, com foto por tentativa.
+6. **A-006 — rastreamento ao vivo dos motoristas**: migration `0017`, tabela `motorista_posicao` (1
+   linha por motorista, upsert, `atualizado_em` sempre via trigger no servidor — não confia no relógio
+   do celular), RLS (motorista só escreve a própria linha, gerência lê todas), Realtime habilitado.
+   `components/motorista/posicao-tracker.tsx`: `watchPosition` ligado só com romaneio ativo E
+   confirmado, throttle de 30s/50m. `getPosicoesMotoristas()` (`lib/data/mapa.ts`) pronta pro Vítor
+   plugar a camada visual no mapa (fora do escopo do Luis).
+7. **A-010 — foto obrigatória de chegada**: migration `0018`, `canhotos.foto_chegada_url` (mesma linha
+   da tentativa, não tabela própria — decisão registrada no comentário da migration). Fluxo do motorista
+   (`canhoto-form.tsx`) vira 2 passos: 1) foto de chegada (obrigatória, antes de tudo) → 2) foto do
+   canhoto + status. Fila offline/`/api/sync` sobem as duas fotos em paralelo. Comprovante (gerência e
+   cliente) mostra as duas fotos lado a lado.
+8. **QA — code review completo** (skill `/code-review` em nível alto, 6 agentes em paralelo) encontrou e
+   corrigiu 11 problemas reais introduzidos pelos itens acima, os dois mais sérios: **portal do cliente
+   mostrava "Canhoto registrado" (sucesso) numa entrega recusada** (`components/cliente/notas-list.tsx`
+   não tinha sido atualizado pro novo modelo de tentativas) e **fila offline travava para sempre** num
+   item antigo sem foto de chegada (400 fazia `break` e bloqueava todos os itens seguintes). Lista
+   completa dos 11 no relatório de findings da sessão.
+9. **Migrations `0015`–`0018` aplicadas em produção** via `npm run db:migrate` (0015 — histórico do
+   motorista — também estava pendente, nunca tinha sido aplicada apesar do código já assumir que
+   estava). `npm run test:security` 9/9 contra o banco real, incluindo os 3 testes novos de múltiplas
+   tentativas (T4a/b/c).
+10. **Nada commitado nesta sessão** — mudanças só no working tree, aguardando confirmação pra commit
+    (regra do CLAUDE.md: commit/push sempre pede aprovação explícita do Vítor a cada vez).
+
+**Pendente (parte do Vítor, ver [encaminhamentos/vitor-pirolli.md](../../encaminhamentos/vitor-pirolli.md)):**
+A-002 (seletor de período na UI, backend já pronto), A-003 (upload de `.zip`), A-008 (alerta de NF
+parada +7 dias), camada visual "Motoristas" no mapa (API do A-006 já pronta). Também pendente: Playwright
+E2E (adiado nesta sessão — combinado explicitamente, não é esquecimento) e verificação visual no
+navegador real dos fluxos novos (foto de chegada em 2 passos, troca de motorista, exclusão em lote) —
+esta sessão não teve acesso a browser/celular.
 
 **Mudanças de hoje (2026-08-01) — organização de docs + design system (cores/ícones) + nav mobile da gerência:**
 1. **`docs/` reorganizado por assunto**, com índice novo:

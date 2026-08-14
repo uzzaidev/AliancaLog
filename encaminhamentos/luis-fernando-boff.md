@@ -4,9 +4,21 @@
 > Origem: [reunião 12/08](../reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md) ·
 > Índice geral: [README.md](./README.md).
 
-9 itens, do bug mais simples ao redesenho mais delicado do produto (A-007). Ordem
-sugerida: A-001 → A-009 → A-005 → A-004 → A-007 → A-006 → A-010, com QA rodando em
-paralelo desde já.
+**✅ Status: os 9 itens implementados e concluídos em 2026-08-14** — código revisado
+(code review dedicado encontrou e corrigiu 11 problemas reais introduzidos pelas
+mudanças), `typecheck`/`lint`/`build` verdes, migrations `0015`–`0018` aplicadas em
+produção e `npm run test:security` 9/9 contra o banco real. Detalhe do que foi feito
+em cada item logo abaixo do critério de aceite dele; resumo completo também no bloco
+"Mudanças de hoje (2026-08-14)" do [CHECKPOINT.md](../docs/governanca/CHECKPOINT.md).
+
+Ordem sugerida original: A-001 → A-009 → A-005 → A-004 → A-007 → A-006 → A-010, com QA
+rodando em paralelo desde já — seguida à risca.
+
+**Pendente (fora do escopo deste arquivo, não é meu):** parte do Vítor (A-002, A-003,
+A-008, camada visual do mapa no A-006 — ver
+[vitor-pirolli.md](./vitor-pirolli.md)), testes E2E Playwright (adiado por decisão
+explícita nesta sessão) e verificação visual em navegador/celular real dos fluxos
+novos.
 
 ---
 
@@ -49,6 +61,24 @@ ser bipada** (ver A-009, provável sintoma disto).
 - KPIs do topo do dashboard continuam corretos (não passam a somar histórico
   indevidamente, se a intenção for métrica diária).
 
+### ✅ Feito (2026-08-14)
+
+- `buscarNf` sem filtro de data (`.is("romaneio_id", null)` já define "em aberto");
+  `getRomaneiosDoDia` (motorista) trocou `data = hoje` por `status = 'ativo'`.
+- `getNotasDoDia`/`getPainelClientes` (`lib/data/gerencia.ts`): default agora é
+  "hoje (qualquer status) + tudo que ainda está pendente/em_rota" — não é um `.lte`
+  cru (que acumularia histórico infinito), é um filtro consciente de status
+  (`NF_STATUS_ABERTOS`, centralizado em `lib/types.ts`).
+- `getNotasDoDia` ganhou parâmetro `periodo` (`hoje`/`semana`/`mes`/`todos`, mesmo
+  formato de `lib/data/cliente.ts`) — pronto pra o Vítor plugar o seletor do A-002
+  sem mexer no backend de novo.
+- `getResumoHoje` (KPIs do topo) **ficou intencionalmente só "hoje"**, como o
+  critério de aceite pedia — ainda não alinhado formalmente com o Vítor/PO, é a
+  única decisão de regra de negócio deste item que segue em aberto.
+- Mapa (`lib/data/mapa.ts`) alinhado ao mesmo filtro "aberto"; `getEntreguesComGps`
+  passou a ancorar em `canhotos.registrado_em` (quando a entrega de fato
+  aconteceu) em vez da `data_entrega` alvo da NF.
+
 ---
 
 ## A-009 — BIPE não atualiza em tempo real
@@ -86,6 +116,16 @@ opera-cionalmente indistinguível de "o bipe parou de funcionar".
 - Bipar uma NF em uma aba e ver o dashboard (aberto em outra aba/dispositivo)
   atualizar sozinho em até ~3s, sem refresh manual — inclusive para NF de dia anterior.
 
+### ✅ Feito (2026-08-14)
+
+- Confirmado por leitura de código: era mesmo sintoma do A-001, não bug isolado —
+  `buscarNf` retornava "não encontrada" pra NF de dia anterior, então nunca havia
+  write nenhum pra disparar o evento Realtime. Corrigido junto com o A-001.
+- `realtime-refresher.tsx` e a publicação (`0004_realtime.sql`) já estavam corretos,
+  nenhuma mudança foi necessária ali.
+- **Não verificado ao vivo** (duas abas, bipagem real) — esta sessão não teve acesso
+  a browser; validação manual fica pendente antes do go-live.
+
 ---
 
 ## A-005 — Trocar motorista de uma entrega já atribuída
@@ -115,6 +155,18 @@ caminho para reatribuir uma NF que já está em um romaneio.
 - Trocar o motorista de uma NF que já está `em_rota` não deixa a NF "presa" em dois
   romaneios nem deixa romaneio fantasma sem nenhuma NF.
 
+### ✅ Feito (2026-08-14)
+
+- Nova server action `trocarMotorista` (`app/gerencia/dashboard/actions.ts`) — UX
+  escolhida (não havia decisão do Vítor registrada): reaproveita um romaneio ativo
+  do motorista destino já criado hoje, se existir, em vez de sempre criar um novo —
+  evita fragmentar a rota dele em vários romaneios de 1 NF cada.
+- Concorrência: relê `romaneio_id` no `update` (mesmo padrão do `atribuirMotorista`
+  já existente); romaneio de origem que ficar vazio depois da troca é apagado.
+- Bloqueia troca em NF já `aceita` (`NF_STATUS_FINAIS`).
+- UI: seletor + botão "Confirmar troca" no `DetailPanel` de
+  `components/gerencia/notas-list.tsx`, escondido quando a NF já está finalizada.
+
 ---
 
 ## A-004 — Excluir notas duplicadas em lote
@@ -140,6 +192,19 @@ do que já foi importado e já está no banco.
 
 - Selecionar N NFs duplicadas e excluir de uma vez, sem conseguir excluir uma que já
   tem canhoto.
+
+### ✅ Feito (2026-08-14)
+
+- Nova server action `excluirNotas` (`app/gerencia/dashboard/actions.ts`) —
+  trava real no servidor: consulta `canhotos` pelas NFs selecionadas e recusa
+  excluir qualquer uma que já tenha canhoto (protege a prova de entrega do
+  `on delete cascade`), mesmo que a seleção na tela tenha sido feita antes.
+- RLS de delete em `notas_fiscais` confirmada: já coberta por `ger_all` (migration
+  `0002`), não precisou de policy nova.
+- UI em `components/gerencia/notas-list.tsx`: checkbox por linha, detector de
+  `numero_nf` repetido com botão "marcar duplicadas", barra de seleção com
+  contagem + "Excluir selecionadas" (confirmação via `confirm()`, mesmo padrão já
+  usado em `cadastro-item-actions.tsx`).
 
 ---
 
@@ -256,6 +321,42 @@ entregar tudo.
 - Comprovante mostra as duas tentativas na timeline.
 - Fechar o romaneio original não trava esperando a NF que já saiu dele.
 
+### ✅ Feito (2026-08-14) — implementado como proposto, com 2 achados extras corrigidos
+
+Migration `0016_reentrega_multiplas_tentativas.sql` (aplicada em produção):
+
+- Idempotência de `registrar_entrega_offline` trocada de "existe canhoto pra esta
+  NF" para "existe canhoto pra este `client_id`" — exatamente como proposto.
+  `uq_canhoto_nf` (índice que travava 1 canhoto por NF) removido.
+- `recusada`/`ocorrencia` não persistem mais como status da NF — a função sempre
+  grava `'aceita'` ou `'pendente'`; o resultado real da tentativa fica só em
+  `canhotos.status`. Quando não é `'aceita'`, `romaneio_id` e `motorista_id` da NF
+  são zerados na mesma transação.
+- **Achado 1, não estava no plano original:** o `WITH CHECK` da RLS `mot_nf_update`
+  exigia `motorista_id = auth.uid()` na linha nova — zerar `motorista_id` seria
+  bloqueado pela própria RLS sem ajustar a policy. Corrigido.
+- **Achado 2:** a ordem de escrita foi ajustada (ocorrência inserida *antes* do
+  update da NF) porque `mot_ocorrencia_insert` valida contra o `motorista_id` da
+  NF — se a NF já tivesse sido desatribuída antes, a ocorrência seria rejeitada.
+- **Backfill incluído na migration**: NFs que já estavam paradas em
+  `recusada`/`ocorrencia` de antes desta mudança foram normalizadas (senão
+  ficariam presas pra sempre, já que nada mais as tocaria).
+- `fecharRomaneio`: `STATUS_FINAIS` virou só `["aceita"]`, consolidado como
+  `NF_STATUS_FINAIS` em `lib/types.ts` e reutilizado em todo lugar que antes tinha
+  essa lista duplicada (6 arquivos — um deles ficou dessincronizado durante o
+  desenvolvimento e foi pego no code review).
+- Comprovante (`lib/data/comprovante.ts`, `ComprovanteModal`) lista todas as
+  tentativas na timeline (status + hora + motorista + observação de cada uma).
+  **Achado do code review**: o portal do cliente (`components/cliente/notas-list.tsx`)
+  não tinha sido atualizado e mostrava "Canhoto registrado" (sucesso) numa recusa —
+  corrigido para usar o mesmo histórico de tentativas.
+- `canhotos.observacao` (coluna nova) guarda a observação livre de cada tentativa —
+  antes só existia em `notas_fiscais.observacao` (um valor só, que a 2ª tentativa
+  sobrescrevia).
+- Validado contra o banco real: `npm run test:security` — T4a/b/c (novos) confirmam
+  2ª tentativa permitida na mesma NF e reenvio do mesmo `client_id` continua
+  bloqueado.
+
 ---
 
 ## A-006 — Rastreamento ao vivo dos motoristas no mapa
@@ -313,6 +414,31 @@ Isso era Fase B no [PLAN.md](../docs/governanca/PLAN.md); a ata trouxe para agor
 - Motorista sem romaneio ativo não aparece / não está sendo rastreado.
 - Fechar a última entrega do dia para de enviar posição.
 
+### ✅ Feito (2026-08-14) — pipeline completo; camada visual é do Vítor
+
+Migration `0017_posicao_motorista.sql` (aplicada em produção): tabela
+`motorista_posicao` (1 linha por motorista, upsert), RLS (motorista só escreve a
+própria linha, gerência lê todas), publicação Realtime.
+
+- **Ajuste sobre o proposto**: `atualizado_em` não é mais o relógio do celular —
+  um trigger no banco (`motorista_posicao_touch`) sempre grava `now()` do
+  servidor, pra um celular com hora errada/sem NTP não bagunçar o "visto há X min"
+  no mapa.
+- `components/motorista/posicao-tracker.tsx`: `watchPosition` ligado só quando
+  existe romaneio `status='ativo'` **e** `confirmado_em` setado (reaproveita o
+  `getRomaneiosDoDia` que o layout do motorista já busca — sem query extra);
+  throttle de 30s ou 50m de deslocamento, o que vier primeiro. Posição é
+  descartável: sem rede, só não envia, sem fila no IndexedDB.
+- `getPosicoesMotoristas()` (`lib/data/mapa.ts`) pronta e filtrando só motoristas
+  com romaneio ativo+confirmado hoje — é a API que o Vítor consome.
+- **Não incluído (é do Vítor):** o marcador visual no mapa (`leaflet-map.tsx`/
+  `mapa-entregas.tsx`) e a assinatura ao canal Realtime pro marcador se mover sem
+  refresh de página inteira — decidi não plugar isso na `RealtimeRefresher`
+  genérica porque ela dispara `router.refresh()` (recarrega o dashboard inteiro);
+  com posição chegando a cada ~30s por motorista ativo, isso recarregaria a
+  página inteira continuamente. A camada de marcador deve assinar o canal e
+  atualizar só o próprio estado local.
+
 ---
 
 ## A-010 — Foto obrigatória da chegada no cliente
@@ -340,6 +466,27 @@ Mitiga o **R-002** da ata (motorista alegar porta fechada sem comprovação). É
   chegada.
 - As duas fotos aparecem no comprovante da gerência e do cliente.
 
+### ✅ Feito (2026-08-14) — decisão tomada sobre os dois pontos em aberto
+
+Migration `0018_foto_chegada.sql` (aplicada em produção): `canhotos.foto_chegada_url`.
+
+- **Decisão de armazenamento**: guardada na mesma linha do canhoto (não em tabela
+  própria) — o app continua enviando as duas fotos + status numa única
+  tentativa/transação, então não existe hoje um "registro de chegada" que
+  sobrevive independente de uma tentativa de entrega. Registrado no comentário da
+  migration como redesenho maior, se algum dia for necessário.
+- **Decisão de fluxo**: foto de chegada é o **primeiro passo** da tela de canhoto
+  (`components/motorista/canhoto-form.tsx`) — o resto do formulário (foto do
+  canhoto, status, observação/ocorrência) só aparece depois dela ser tirada.
+- `/api/sync` exige as duas fotos (400 se faltar qualquer uma) e sobe as duas em
+  paralelo no Storage (`{motorista_id}/{nf_id}/{client_id}-chegada.jpg`).
+- **Achado do code review, corrigido**: item já salvo na fila offline de antes
+  desse deploy (sem `foto_chegada`) receberia 400 pra sempre e, pelo tratamento de
+  erro original, travaria TODOS os itens seguintes da fila atrás dele.
+  `lib/offline/sync.ts` agora descarta só o item inválido em caso de 400 e segue
+  com os demais.
+- Comprovante (gerência e cliente) mostra as duas fotos lado a lado.
+
 ---
 
 ## QA — code review, testes, segurança
@@ -365,3 +512,22 @@ agora.
 - Nenhum PR que toque RLS ou migration vai para produção sem revisão.
 - Pelo menos um teste automatizado cobrindo "cliente A não consegue ver NF da empresa
   B" antes do go-live com o cliente real.
+
+### ✅ Feito (2026-08-14) — parcial, Playwright fica pra próxima sessão
+
+- **Code review** rodado sobre todo o diff desta sessão (skill dedicada, nível
+  alto, 6 agentes em paralelo cobrindo linha-a-linha, comportamento removido,
+  rastreamento entre arquivos, reuso/simplificação, eficiência e convenções do
+  CLAUDE.md) — 12 achados reais, 11 corrigidos (o 12º é a divergência conhecida e
+  intencional do `getResumoHoje` já registrada no A-001, pendente de confirmação
+  do PO/Vítor, não um bug de código).
+- **RLS validada** para tudo que foi tocado: `mot_nf_update`, `mot_ocorrencia_insert`,
+  RLS nova de `motorista_posicao`, `ger_all` (delete de NF). `npm run test:security`
+  9/9 contra o banco real, incluindo os 3 testes novos do A-007.
+- **Testes E2E (Playwright): não feito** — decisão explícita desta sessão de
+  adiar (configurar do zero é trabalho novo e separado; instalar dependência,
+  criar config, escrever os testes). Continua sem responsável formal de QA além
+  desta revisão pontual.
+- **Critério "cliente A não vê NF da empresa B"**: coberto pelo smoke test
+  existente (`cli_nf_select`, RLS por `empresa_cliente_id`), não por um teste E2E
+  dedicado — ainda não é o teste automatizado formal que o critério pede.
