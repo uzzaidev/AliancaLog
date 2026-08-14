@@ -17,6 +17,19 @@ export type NotaStatus =
 // Status final possível registrado pelo motorista no canhoto.
 export type CanhotoStatus = "aceita" | "recusada" | "ocorrencia";
 
+// 'aceita' é o ÚNICO status final da NF desde A-007 (migration 0016):
+// recusada/ocorrência devolvem a NF pro painel como 'pendente' para nova
+// tentativa, então nunca ficam persistidas como status da NF — só como
+// canhotos.status daquela tentativa específica. Fonte única para todo lugar
+// que precisa saber "essa NF está resolvida?" (fechar romaneio, trocar
+// motorista, excluir, contar concluídas...).
+export const NF_STATUS_FINAIS: NotaStatus[] = ["aceita"];
+
+// Status em que uma NF ainda não chegou a um desfecho — usado pra não deixar
+// pendência antiga invisível quando nenhum período específico é escolhido
+// (dashboard, painel de clientes, mapa).
+export const NF_STATUS_ABERTOS: NotaStatus[] = ["pendente", "em_rota"];
+
 export type OcorrenciaTipo =
   | "item_faltando"
   | "endereco_nao_encontrado"
@@ -95,6 +108,8 @@ export type ComprovanteDetalhe = {
   criado_em: string;
   entregue_em: string | null;
   foto_url: string | null;
+  // Foto de chegada (A-010) da tentativa mais recente — separada do canhoto.
+  foto_chegada_url: string | null;
   // Observação livre que o motorista deixou no registro (aceita/recusada).
   observacao: string | null;
   // Local do registro do canhoto (best-effort; null se o GPS não estava disponível).
@@ -103,5 +118,15 @@ export type ComprovanteDetalhe = {
     tipo: OcorrenciaTipo;
     descricao: string | null;
     criado_em: string;
+  }[];
+  // Uma NF pode ter mais de uma tentativa de entrega (A-007: recusada/ocorrência
+  // volta pro painel para nova tentativa) — histórico completo, em ordem.
+  tentativas: {
+    status: CanhotoStatus;
+    registrado_em: string;
+    foto_url: string | null;
+    foto_chegada_url: string | null;
+    observacao: string | null;
+    motorista_nome: string | null;
   }[];
 };

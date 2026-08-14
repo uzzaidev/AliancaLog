@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth/dal";
 import { interpretarCodigoBipado } from "@/lib/nfe";
 import { createClient } from "@/lib/supabase/server";
 import { hojeSP } from "@/lib/date";
+import { NF_STATUS_FINAIS } from "@/lib/types";
 
 const hoje = () => hojeSP();
 
@@ -27,14 +28,20 @@ export async function buscarNf(codigo: string): Promise<NfEncontrada | null> {
   if (!numero) return null;
 
   const supabase = await createClient();
+  // Sem filtro de data: uma NF sem romaneio já é "em aberto" por definição,
+  // não importa há quantos dias foi importada — travar em `data_entrega = hoje`
+  // fazia o bipe de uma NF de romaneio antigo "não encontrar" nada (ver A-001/A-009).
   const query = () =>
     supabase
       .from("notas_fiscais")
       .select(
         "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,empresas_clientes(nome)",
       )
-      .eq("data_entrega", hoje())
       .is("romaneio_id", null)
+      // Sem filtro de data, numero_nf pode colidir entre lotes de dias
+      // diferentes (ver A-004 sobre duplicidade) — desempate determinístico
+      // pelo mais recente, em vez de deixar a ordem a critério do Postgres.
+      .order("data_entrega", { ascending: false })
       .limit(1);
 
   // 1) Match exato pela chave (NF importada por XML ou já bipada antes).
@@ -138,10 +145,9 @@ export async function criarRomaneio(input: {
   return { ok: "Romaneio criado.", id: rom.id };
 }
 
-const STATUS_FINAIS = ["aceita", "recusada", "ocorrencia"];
-
-// Fecha o romaneio — só permite quando todas as NFs têm status final.
-// "Recusada" não bloqueia o fechamento (é um status final como outro qualquer).
+// Fecha o romaneio — só permite quando todas as NFs têm status final
+// (NF_STATUS_FINAIS: recusada/ocorrência devolvem a NF pro painel com
+// romaneio_id null — ela sai daqui, nunca fica "presa" contando abaixo).
 export async function fecharRomaneio(
   romaneioId: string,
 ): Promise<{ ok?: string; error?: string }> {
@@ -154,7 +160,7 @@ export async function fecharRomaneio(
     .eq("romaneio_id", romaneioId);
 
   const pendentes = (nfs ?? []).filter(
-    (n) => !STATUS_FINAIS.includes(n.status),
+    (n) => !NF_STATUS_FINAIS.includes(n.status),
   ).length;
   if (pendentes > 0)
     return {

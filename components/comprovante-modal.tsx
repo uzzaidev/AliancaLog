@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { IconMapPin } from "@tabler/icons-react";
 import { Modal } from "@/components/ui/modal";
 import { Spinner, StatusBadge } from "@/components/ui";
-import { OCORRENCIA_LABEL, type ComprovanteDetalhe } from "@/lib/types";
+import { NOTA_STATUS_META, OCORRENCIA_LABEL, type ComprovanteDetalhe } from "@/lib/types";
 
 function dataHora(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -59,7 +59,10 @@ export function ComprovanteModal({
     };
   }, [nfId, fetcher]);
 
-  // Timeline: criação, ocorrências (em ordem) e entrega, intercaladas por horário.
+  // Timeline: criação, ocorrências e cada tentativa de entrega, intercaladas por
+  // horário. Desde A-007 uma NF pode ter mais de uma tentativa (recusada/
+  // ocorrência volta pro painel), então cada canhoto vira uma linha própria em
+  // vez de assumir só um "Canhoto registrado" no fim.
   const eventos = dados
     ? [
         { quando: dados.criado_em, texto: "NF criada" },
@@ -67,9 +70,12 @@ export function ComprovanteModal({
           quando: o.criado_em,
           texto: `${OCORRENCIA_LABEL[o.tipo]}${o.descricao ? ` — ${o.descricao}` : ""}`,
         })),
-        ...(dados.entregue_em
-          ? [{ quando: dados.entregue_em, texto: "Canhoto registrado" }]
-          : []),
+        ...dados.tentativas.map((t, i) => ({
+          quando: t.registrado_em,
+          texto:
+            `Tentativa ${i + 1}${t.motorista_nome ? ` (${t.motorista_nome})` : ""} — ${NOTA_STATUS_META[t.status].label}` +
+            (t.observacao ? ` — ${t.observacao}` : ""),
+        })),
       ].sort((a, b) => a.quando.localeCompare(b.quando))
     : [];
 
@@ -119,18 +125,38 @@ export function ComprovanteModal({
             )}
           </div>
 
-          {dados.foto_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={dados.foto_url}
-              alt={`Canhoto da NF ${dados.numero_nf}`}
-              className="max-h-80 w-full rounded-lg bg-black object-contain"
-            />
-          ) : (
-            <div className="flex h-32 items-center justify-center rounded-lg bg-canvas text-sm text-muted">
-              Sem foto registrada ainda
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="mb-1 text-[11px] font-medium text-muted">Chegada</div>
+              {dados.foto_chegada_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={dados.foto_chegada_url}
+                  alt={`Chegada na NF ${dados.numero_nf}`}
+                  className="h-40 w-full rounded-lg bg-black object-cover"
+                />
+              ) : (
+                <div className="flex h-40 items-center justify-center rounded-lg bg-canvas text-xs text-muted">
+                  Sem foto ainda
+                </div>
+              )}
             </div>
-          )}
+            <div>
+              <div className="mb-1 text-[11px] font-medium text-muted">Canhoto</div>
+              {dados.foto_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={dados.foto_url}
+                  alt={`Canhoto da NF ${dados.numero_nf}`}
+                  className="h-40 w-full rounded-lg bg-black object-cover"
+                />
+              ) : (
+                <div className="flex h-40 items-center justify-center rounded-lg bg-canvas text-xs text-muted">
+                  Sem foto ainda
+                </div>
+              )}
+            </div>
+          </div>
 
           {dados.observacao && (
             <div className="rounded-lg bg-canvas p-3 text-sm">

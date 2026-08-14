@@ -1,7 +1,9 @@
-// Smoke test de segurança/confiabilidade (Sprint 3.5 — migrations 0008/0009).
+// Smoke test de segurança/confiabilidade (Sprint 3.5 — migrations 0008/0009;
+// atualizado na migration 0016/A-007).
 // Valida, contra o banco REAL e com a sessão real do motorista (RLS aplicado):
-//   - imutabilidade da NF finalizada + whitelist de colunas do motorista;
-//   - no máximo 1 canhoto por NF;
+//   - imutabilidade da NF só depois de 'aceita' + whitelist de colunas do motorista;
+//   - múltiplas tentativas (canhotos) são permitidas na MESMA NF (A-007), mas o
+//     reenvio do MESMO client_id continua bloqueado (idempotência de retry);
 //   - canhoto só na própria NF (RLS);
 //   - romaneio fechado não reabre;
 //   - ocorrência idempotente por client_id.
@@ -97,19 +99,23 @@ async function main() {
     const s = await statusDe(nfImut);
     ok(s.status === "aceita", "T2 motorista finaliza NF (em_rota→aceita, ficou " + s.status + ")");
   }
-  // T3 — imutável após final: aceita→recusada não pode mudar o valor
+  // T3 — imutável só depois de 'aceita' (A-007: recusada/ocorrência não são mais finais)
   {
     await cli.from("notas_fiscais").update({ status: "recusada" }).eq("id", nfImut);
     const s = await statusDe(nfImut);
-    ok(s.status === "aceita", "T3 NF finalizada é imutável (segue " + s.status + ")");
+    ok(s.status === "aceita", "T3 NF já aceita é imutável (segue " + s.status + ")");
   }
-  // T4 — 1 canhoto por NF
+  // T4 — múltiplas tentativas na MESMA NF são permitidas (A-007); reenvio do
+  // MESMO client_id continua bloqueado (idempotência de retry de rede).
   {
-    const c1 = await cli.from("canhotos").insert({ client_id: tag + "-c1", nota_fiscal_id: nfCanhoto, motorista_id: joaoId, status: "aceita", sincronizado: true });
+    const c1 = await cli.from("canhotos").insert({ client_id: tag + "-c1", nota_fiscal_id: nfCanhoto, motorista_id: joaoId, status: "recusada", sincronizado: true });
     criados.canhotos.push(tag + "-c1");
-    ok(!c1.error, "T4a 1º canhoto na própria NF em romaneio ativo" + (c1.error ? " — ERRO: " + c1.error.message : ""));
-    const c2 = await cli.from("canhotos").insert({ client_id: tag + "-c2", nota_fiscal_id: nfCanhoto, motorista_id: joaoId, status: "recusada", sincronizado: true });
-    ok(!!c2.error, "T4b 2º canhoto na MESMA NF é bloqueado" + (c2.error ? "" : " — FALHA: duplicou"));
+    ok(!c1.error, "T4a 1ª tentativa na própria NF em romaneio ativo" + (c1.error ? " — ERRO: " + c1.error.message : ""));
+    const c2 = await cli.from("canhotos").insert({ client_id: tag + "-c2", nota_fiscal_id: nfCanhoto, motorista_id: joaoId, status: "aceita", sincronizado: true });
+    criados.canhotos.push(tag + "-c2");
+    ok(!c2.error, "T4b 2ª tentativa (client_id novo) na MESMA NF é permitida" + (c2.error ? " — ERRO: " + c2.error.message : ""));
+    const c1Retry = await cli.from("canhotos").insert({ client_id: tag + "-c1", nota_fiscal_id: nfCanhoto, motorista_id: joaoId, status: "aceita", sincronizado: true });
+    ok(!!c1Retry.error, "T4c reenvio do MESMO client_id continua bloqueado" + (c1Retry.error ? "" : " — FALHA: duplicou"));
   }
   // T5 — canhoto só na própria NF
   {

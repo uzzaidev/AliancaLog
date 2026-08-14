@@ -7,7 +7,7 @@ import "server-only";
 //    foto via service role — a foto nunca é servida sem essa checagem prévia.
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { ComprovanteDetalhe, OcorrenciaTipo } from "@/lib/types";
+import type { CanhotoStatus, ComprovanteDetalhe, OcorrenciaTipo } from "@/lib/types";
 
 const SIGNED_URL_TTL = 60 * 60; // 1h
 
@@ -36,27 +36,51 @@ export async function getComprovante(
   // que este usuário pode ver esta NF — mesmo padrão para foto e GPS.
   const admin = createAdminClient();
 
-  let fotoUrl: string | null = null;
-  const fotoPath = (nf as { foto_url?: string }).foto_url;
-  if (fotoPath) {
+  async function assinar(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
     const { data: signed } = await admin.storage
       .from("canhotos")
-      .createSignedUrl(fotoPath, SIGNED_URL_TTL);
-    fotoUrl = signed?.signedUrl ?? null;
+      .createSignedUrl(path, SIGNED_URL_TTL);
+    return signed?.signedUrl ?? null;
   }
 
-  // Local do registro do canhoto (quando o motorista permitiu o GPS).
-  let gps: { lat: number; lng: number } | null = null;
-  const { data: canhoto } = await admin
+  const fotoUrl = await assinar((nf as { foto_url?: string }).foto_url);
+
+  // Todas as tentativas de entrega desta NF, em ordem — desde A-007 uma NF pode
+  // ter mais de uma (recusada/ocorrência volta pro painel para nova tentativa).
+  const { data: canhotos } = await admin
     .from("canhotos")
-    .select("lat,lng")
+    .select(
+      "status,registrado_em,foto_url,foto_chegada_url,observacao,lat,lng,motoristas(usuarios(nome))",
+    )
     .eq("nota_fiscal_id", nfId)
-    .not("lat", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (canhoto?.lat != null && canhoto?.lng != null)
-    gps = { lat: canhoto.lat, lng: canhoto.lng };
+    .order("registrado_em", { ascending: true });
+
+  const tentativas = await Promise.all(
+    ((canhotos ?? []) as Record<string, unknown>[]).map(async (c) => {
+      const [url, urlChegada] = await Promise.all([
+        assinar(c.foto_url as string | null),
+        assinar(c.foto_chegada_url as string | null),
+      ]);
+      const mot = c.motoristas as { usuarios?: { nome?: string } } | null;
+      return {
+        status: c.status as CanhotoStatus,
+        registrado_em: c.registrado_em as string,
+        foto_url: url,
+        foto_chegada_url: urlChegada,
+        observacao: (c.observacao as string) ?? null,
+        motorista_nome: mot?.usuarios?.nome ?? null,
+      };
+    }),
+  );
+
+  // Local da tentativa mais recente com GPS completo (best-effort; nem toda
+  // tentativa tem — e lat/lng são lidos como dois campos independentes no
+  // formulário, então exigir os dois juntos evita pegar um par incompleto).
+  const comGps = [...((canhotos ?? []) as { lat?: number | null; lng?: number | null }[])]
+    .reverse()
+    .find((c) => c.lat != null && c.lng != null);
+  const gps = comGps ? { lat: comGps.lat as number, lng: comGps.lng as number } : null;
 
   const r = nf as Record<string, unknown>;
   const empresa = r.empresas_clientes as { nome?: string } | null;
@@ -74,6 +98,7 @@ export async function getComprovante(
     criado_em: r.created_at as string,
     entregue_em: (r.entregue_em as string) ?? null,
     foto_url: fotoUrl,
+    foto_chegada_url: tentativas[tentativas.length - 1]?.foto_chegada_url ?? null,
     observacao: (r.observacao as string) ?? null,
     gps,
     ocorrencias: ((ocorrencias ?? []) as Record<string, unknown>[]).map((o) => ({
@@ -81,5 +106,6 @@ export async function getComprovante(
       descricao: (o.descricao as string) ?? null,
       criado_em: o.created_at as string,
     })),
+    tentativas,
   };
 }

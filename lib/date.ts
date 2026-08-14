@@ -32,3 +32,16 @@ export function diasAtrasSP(diasAtras: number): string {
   d.setUTCDate(d.getUTCDate() - diasAtras);
   return ymdSP(d);
 }
+
+/** Início do dia operacional (00:00 em SP) como instante ISO/UTC — para filtrar
+ *  colunas timestamptz (ex.: canhotos.registrado_em) por dia-calendário de SP. */
+export function inicioDiaSP(dataYMD: string): string {
+  return `${dataYMD}T03:00:00.000Z`; // 00:00 em SP = 03:00 UTC (SP é UTC-3 fixo)
+}
+
+/** Dia seguinte (YYYY-MM-DD) a partir de uma data já em formato YMD — puramente
+ *  aritmético no calendário, não depende do fuso (só soma 1 ao dia). */
+export function diaSeguinte(dataYMD: string): string {
+  const [ano, mes, dia] = dataYMD.split("-").map(Number);
+  return new Date(Date.UTC(ano, mes - 1, dia + 1)).toISOString().slice(0, 10);
+}

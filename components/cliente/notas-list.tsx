@@ -50,28 +50,37 @@ function dataHora(iso: string) {
   });
 }
 
-// Constrói os passos da timeline a partir do comprovante + status atual.
+const TENTATIVA_META: Record<string, { label: string; tone: TimelineStep["tone"] }> = {
+  aceita: { label: "Canhoto aceito", tone: "done" },
+  recusada: { label: "Entrega recusada pelo destinatário", tone: "danger" },
+  ocorrencia: { label: "Entrega com ocorrência", tone: "danger" },
+};
+
+// Constrói os passos da timeline a partir do comprovante. Usa c.tentativas (uma
+// por tentativa de entrega) em vez de c.status/c.entregue_em: desde A-007 uma NF
+// recusada/com ocorrência volta pro painel como "pendente" para nova tentativa,
+// então o status/entregue_em da NF sozinhos não dizem mais o que aconteceu em
+// cada tentativa — só o histórico em canhotos tem essa informação.
 function montarTimeline(c: ComprovanteDetalhe): TimelineStep[] {
-  const steps: TimelineStep[] = [
-    { label: "NF registrada", time: dataHora(c.criado_em), tone: "done" },
+  const eventos = [
+    { quando: c.criado_em, label: "NF registrada", tone: "done" as const },
     ...c.ocorrencias.map((o) => ({
+      quando: o.criado_em,
       label: `${OCORRENCIA_LABEL[o.tipo]}${o.descricao ? ` — ${o.descricao}` : ""}`,
-      time: dataHora(o.criado_em),
       tone: "danger" as const,
     })),
-  ];
-  if (c.entregue_em) {
-    const finais: Record<string, { label: string; tone: TimelineStep["tone"] }> =
-      {
-        aceita: { label: "Canhoto aceito", tone: "done" },
-        recusada: { label: "Entrega recusada pelo destinatário", tone: "danger" },
-        ocorrencia: { label: "Entrega com ocorrência", tone: "danger" },
-      };
-    const f = finais[c.status] ?? { label: "Canhoto registrado", tone: "done" };
-    steps.push({ label: f.label, time: dataHora(c.entregue_em), tone: f.tone });
-  } else {
-    steps.push({ label: "Aguardando entrega", tone: "pending" });
-  }
+    ...c.tentativas.map((t) => {
+      const meta = TENTATIVA_META[t.status] ?? { label: "Canhoto registrado", tone: "done" as const };
+      return { quando: t.registrado_em, label: meta.label, tone: meta.tone };
+    }),
+  ].sort((a, b) => a.quando.localeCompare(b.quando));
+
+  const steps: TimelineStep[] = eventos.map((e) => ({
+    label: e.label,
+    time: dataHora(e.quando),
+    tone: e.tone,
+  }));
+  if (c.tentativas.length === 0) steps.push({ label: "Aguardando entrega", tone: "pending" });
   return steps;
 }
 
@@ -157,6 +166,24 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
                     <div className="px-4 py-3.5">
                       <Timeline steps={montarTimeline(comp)} />
                     </div>
+                    {comp.foto_chegada_url && (
+                      <div className="flex items-center gap-3 border-t border-gray-100 bg-surface px-4 py-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand bg-brand-50">
+                          <IconPhoto size={19} className="text-brand" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-dark">
+                            Foto de chegada
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setLightbox(comp.foto_chegada_url)}
+                          className="flex items-center gap-1 text-sm font-bold text-brand"
+                        >
+                          <IconEye size={15} /> Ver
+                        </button>
+                      </div>
+                    )}
                     {comp.foto_url && (
                       <div className="flex items-center gap-3 border-t border-gray-100 bg-surface px-4 py-3">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand bg-brand-50">

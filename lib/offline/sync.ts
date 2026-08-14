@@ -36,6 +36,7 @@ export async function flushFila(): Promise<{ enviados: number; restantes: number
       if (c.lng != null) fd.set("lng", String(c.lng));
       if (c.gps_precisao != null) fd.set("gps_precisao", String(c.gps_precisao));
       if (c.foto) fd.set("foto", c.foto, "canhoto.jpg");
+      if (c.foto_chegada) fd.set("foto_chegada", c.foto_chegada, "chegada.jpg");
 
       try {
         const res = await fetch("/api/sync", { method: "POST", body: fd });
@@ -48,6 +49,20 @@ export async function flushFila(): Promise<{ enviados: number; restantes: number
           ultimoErro = null;
           await removerDaFila(c.client_id);
           enviados++;
+        } else if (res.status === 400) {
+          // Erro do CLIENTE (dados inválidos/incompletos) — reenviar o mesmo
+          // payload nunca vai passar a funcionar (ex.: item salvo antes do
+          // A-010 exigir foto de chegada, sem essa foto). Reter esse item
+          // travaria a fila inteira atrás dele para sempre; melhor descartar
+          // só este e seguir com os demais.
+          let detalhe = "";
+          try {
+            detalhe = ((await res.json()) as { error?: string }).error ?? "";
+          } catch {
+            /* corpo não era JSON — segue sem detalhe */
+          }
+          ultimoErro = `NF ${c.numero_nf}: não foi possível enviar${detalhe ? ` (${detalhe})` : ""} — registre a entrega novamente.`;
+          await removerDaFila(c.client_id);
         } else {
           let detalhe = "";
           try {

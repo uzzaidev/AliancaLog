@@ -13,6 +13,8 @@ export type CanhotoPendente = {
   // Observação livre do motorista (aceita/recusada) → notas_fiscais.observacao.
   observacao?: string;
   foto?: Blob;
+  // Foto de chegada (A-010) — separada da foto do canhoto, mesma tentativa.
+  foto_chegada?: Blob;
   // Carimbo de localização no momento do registro (best-effort).
   lat?: number;
   lng?: number;

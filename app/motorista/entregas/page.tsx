@@ -11,13 +11,13 @@ export default async function MotoristaEntregas() {
   return (
     <div className="space-y-3">
       <h1 className="text-lg font-bold tracking-tight text-dark">
-        Minhas entregas · hoje
+        Minhas entregas
       </h1>
 
       {romaneios.length === 0 && (
         <Card className="flex flex-col items-center gap-2 p-8 text-center text-sm text-muted">
           <IconRoute size={28} className="text-gray-300" />
-          Nenhum romaneio para hoje.
+          Nenhum romaneio em aberto.
         </Card>
       )}
 

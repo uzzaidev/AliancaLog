@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { NotaStatus, RomaneioStatus } from "@/lib/types";
+import { NF_STATUS_FINAIS, type NotaStatus, type RomaneioStatus } from "@/lib/types";
 
 export type RomaneioRow = {
   id: string;
@@ -31,8 +31,6 @@ export async function listRomaneios(): Promise<RomaneioRow[]> {
     };
   });
 }
-
-const FINAIS: NotaStatus[] = ["aceita", "recusada", "ocorrencia"];
 
 export type RomaneioDetalhe = {
   id: string;
@@ -84,5 +82,5 @@ export async function getRomaneio(id: string): Promise<RomaneioDetalhe | null> {
 }
 
 export function contarPendentes(notas: { status: NotaStatus }[]): number {
-  return notas.filter((n) => !FINAIS.includes(n.status)).length;
+  return notas.filter((n) => !NF_STATUS_FINAIS.includes(n.status)).length;
 }

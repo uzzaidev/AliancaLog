@@ -6,8 +6,8 @@ import "server-only";
 //  - "entregue": GPS real capturado no momento do canhoto (migration 0005) —
 //    mostra onde a entrega de fato aconteceu.
 import { createClient } from "@/lib/supabase/server";
-import { hojeSP } from "@/lib/date";
-import type { NotaStatus } from "@/lib/types";
+import { diaSeguinte, hojeSP, inicioDiaSP } from "@/lib/date";
+import { NF_STATUS_ABERTOS, type NotaStatus } from "@/lib/types";
 
 export type PontoDestino = {
   id: string;
@@ -21,12 +21,19 @@ export type PontoDestino = {
 
 export async function getDestinosGeocodificados(data?: string): Promise<PontoDestino[]> {
   const supabase = await createClient();
-  const { data: rows } = await supabase
+  const dia = data ?? hojeSP();
+  let q = supabase
     .from("notas_fiscais")
     .select("id,numero_nf,destinatario_nome,cidade,status,lat,lng")
-    .eq("data_entrega", data ?? hojeSP())
     .not("lat", "is", null)
     .not("lng", "is", null);
+  // Hoje (qualquer status) + pendências antigas em aberto — mesmo padrão de
+  // lib/data/gerencia.ts (ver A-001). Sem isso, um pino de entrega já feita há
+  // meses nunca sairia do mapa "de hoje".
+  q = data
+    ? q.eq("data_entrega", data)
+    : q.or(`data_entrega.eq.${dia},status.in.(${NF_STATUS_ABERTOS.join(",")})`);
+  const { data: rows } = await q;
 
   return ((rows ?? []) as Record<string, unknown>[]).map((r) => ({
     id: r.id as string,
@@ -41,12 +48,16 @@ export async function getDestinosGeocodificados(data?: string): Promise<PontoDes
 
 export async function contarDestinosPendentesDeGeocode(data?: string): Promise<number> {
   const supabase = await createClient();
-  const { count } = await supabase
+  const dia = data ?? hojeSP();
+  let q = supabase
     .from("notas_fiscais")
     .select("id", { count: "exact", head: true })
-    .eq("data_entrega", data ?? hojeSP())
     .is("lat", null)
     .is("geocode_status", null);
+  q = data
+    ? q.eq("data_entrega", data)
+    : q.or(`data_entrega.eq.${dia},status.in.(${NF_STATUS_ABERTOS.join(",")})`);
+  const { count } = await q;
   return count ?? 0;
 }
 
@@ -62,12 +73,18 @@ export type PontoEntregue = {
 
 export async function getEntreguesComGps(data?: string): Promise<PontoEntregue[]> {
   const supabase = await createClient();
+  const dia = data ?? hojeSP();
+  // Ancorado em QUANDO a entrega aconteceu (canhotos.registrado_em), não na
+  // data_entrega alvo da NF: desde A-007 uma NF pode ser entregue dias depois
+  // do previsto (nova tentativa após recusa/ocorrência), e o mapa "de hoje"
+  // precisa mostrar a ação de hoje, não o planejamento antigo.
   const { data: rows } = await supabase
     .from("canhotos")
     .select(
-      "registrado_em,status,lat,lng,notas_fiscais!inner(id,numero_nf,destinatario_nome,data_entrega)",
+      "registrado_em,status,lat,lng,notas_fiscais!inner(id,numero_nf,destinatario_nome)",
     )
-    .eq("notas_fiscais.data_entrega", data ?? hojeSP())
+    .gte("registrado_em", inicioDiaSP(dia))
+    .lt("registrado_em", inicioDiaSP(diaSeguinte(dia)))
     .not("lat", "is", null)
     .not("lng", "is", null);
 
@@ -85,6 +102,50 @@ export async function getEntreguesComGps(data?: string): Promise<PontoEntregue[]
       registrado_em: r.registrado_em as string,
       lat: r.lat as number,
       lng: r.lng as number,
+    };
+  });
+}
+
+export type PosicaoMotorista = {
+  motorista_id: string;
+  nome: string | null;
+  lat: number;
+  lng: number;
+  atualizado_em: string;
+};
+
+// Camada "Motoristas" do mapa (A-006) — só quem tem romaneio ativo E confirmado
+// agora aparece; sem trilha, só a última posição (migration 0017).
+export async function getPosicoesMotoristas(): Promise<PosicaoMotorista[]> {
+  const supabase = await createClient();
+
+  const { data: ativos } = await supabase
+    .from("romaneios")
+    .select("motorista_id")
+    .eq("status", "ativo")
+    .not("confirmado_em", "is", null);
+  const motoristaIds = Array.from(
+    new Set(
+      (ativos ?? [])
+        .map((r) => r.motorista_id as string | null)
+        .filter((id): id is string => id !== null),
+    ),
+  );
+  if (motoristaIds.length === 0) return [];
+
+  const { data: rows } = await supabase
+    .from("motorista_posicao")
+    .select("motorista_id,lat,lng,atualizado_em,motoristas(usuarios(nome))")
+    .in("motorista_id", motoristaIds);
+
+  return ((rows ?? []) as Record<string, unknown>[]).map((r) => {
+    const motorista = r.motoristas as { usuarios?: { nome?: string } } | null;
+    return {
+      motorista_id: r.motorista_id as string,
+      nome: motorista?.usuarios?.nome ?? null,
+      lat: r.lat as number,
+      lng: r.lng as number,
+      atualizado_em: r.atualizado_em as string,
     };
   });
 }

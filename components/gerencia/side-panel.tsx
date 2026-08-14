@@ -2,8 +2,7 @@
 // os clientes (empresas) com NFs hoje. Derivado dos dados já carregados.
 import { IconSteeringWheel, IconBuildingStore } from "@tabler/icons-react";
 import type { NotaRow, EmpresaPainel } from "@/lib/data/gerencia";
-
-const FINAIS = ["aceita", "recusada", "ocorrencia"];
+import { NF_STATUS_FINAIS } from "@/lib/types";
 
 export function SidePanel({
   notas,
@@ -18,7 +17,7 @@ export function SidePanel({
     if (!n.motorista_nome) continue;
     const m = porMotorista.get(n.motorista_nome) ?? { total: 0, feitas: 0 };
     m.total++;
-    if (FINAIS.includes(n.status)) m.feitas++;
+    if (NF_STATUS_FINAIS.includes(n.status)) m.feitas++;
     porMotorista.set(n.motorista_nome, m);
   }
   const motoristas = Array.from(porMotorista.entries()).sort(

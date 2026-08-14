@@ -2,16 +2,16 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { hojeSP } from "@/lib/date";
-import type {
-  NotaMotorista,
-  NotaStatus,
-  RomaneioStatus,
+import {
+  NF_STATUS_FINAIS,
+  type NotaMotorista,
+  type NotaStatus,
+  type RomaneioStatus,
 } from "@/lib/types";
 
 export type { NotaMotorista };
 
 const hoje = () => hojeSP();
-const FINAIS: NotaStatus[] = ["aceita", "recusada", "ocorrencia"];
 
 export type RomaneioMotorista = {
   id: string;
@@ -21,12 +21,16 @@ export type RomaneioMotorista = {
   concluidas: number;
 };
 
+// "Do dia" aqui é "trabalho em aberto do motorista", não literalmente a data de
+// criação — um romaneio de ontem que ficou sem fechar (ex.: NF ainda pendente)
+// continua aparecendo em "Minhas entregas" até ser fechado, em vez de sumir
+// silenciosamente quando o dia vira (ver A-001).
 export async function getRomaneiosDoDia(): Promise<RomaneioMotorista[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("romaneios")
     .select("id,status,confirmado_em,created_at,notas_fiscais(status)")
-    .eq("data", hoje())
+    .eq("status", "ativo")
     .order("created_at", { ascending: true });
 
   return ((data ?? []) as Record<string, unknown>[]).map((r) => {
@@ -36,7 +40,7 @@ export async function getRomaneiosDoDia(): Promise<RomaneioMotorista[]> {
       status: r.status as RomaneioStatus,
       confirmado_em: (r.confirmado_em as string) ?? null,
       total: nfs.length,
-      concluidas: nfs.filter((n) => FINAIS.includes(n.status)).length,
+      concluidas: nfs.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length,
     };
   });
 }
@@ -65,7 +69,7 @@ export async function getHistoricoRomaneios(): Promise<RomaneioHistorico[]> {
       confirmado_em: (r.confirmado_em as string) ?? null,
       data: r.data as string,
       total: nfs.length,
-      concluidas: nfs.filter((n) => FINAIS.includes(n.status)).length,
+      concluidas: nfs.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length,
     };
   });
 }

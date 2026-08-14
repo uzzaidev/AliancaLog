@@ -53,6 +53,10 @@ const TIPOS = Object.keys(OCORRENCIA_LABEL) as OcorrenciaTipo[];
 
 export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   const router = useRouter();
+  // Foto de chegada (A-010): separada da foto do canhoto, prova que o motorista
+  // esteve no local mesmo quando a entrega não se conclui (ex.: cliente ausente).
+  const [fotoChegada, setFotoChegada] = useState<Blob | null>(null);
+  const [previewChegada, setPreviewChegada] = useState<string | null>(null);
   const [foto, setFoto] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [status, setStatus] = useState<CanhotoStatus | null>(null);
@@ -82,6 +86,15 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
     );
   }, []);
 
+  async function onFotoChegada(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setErro(null);
+    const blob = await comprimirImagem(file);
+    setFotoChegada(blob);
+    setPreviewChegada(URL.createObjectURL(blob));
+  }
+
   async function onFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -93,9 +106,11 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
 
   async function confirmar() {
     setErro(null);
+    if (!fotoChegada)
+      return setErro("Foto de chegada é obrigatória para registrar.");
     if (!status) return setErro("Selecione o status da entrega.");
     // Foto obrigatória em TODOS os status — é a prova da entrega/ocorrência.
-    if (!foto) return setErro("Foto é obrigatória para registrar.");
+    if (!foto) return setErro("Foto do canhoto é obrigatória para registrar.");
     if (status === "ocorrencia" && !desc.trim())
       return setErro("Descreva a ocorrência.");
 
@@ -112,6 +127,7 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
         observacao:
           status !== "ocorrencia" && obs.trim() ? obs.trim() : undefined,
         foto: foto ?? undefined,
+        foto_chegada: fotoChegada ?? undefined,
         lat: gpsRef.current?.lat,
         lng: gpsRef.current?.lng,
         gps_precisao: gpsRef.current?.prec,
@@ -136,14 +152,16 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
     }
   }
 
-  // Mensagem do que ainda falta para poder enviar (foto é sempre obrigatória).
-  const faltando = !status
-    ? "Selecione o status da entrega."
-    : !foto
-      ? "Tire a foto para confirmar."
-      : status === "ocorrencia" && !desc.trim()
-        ? "Descreva a ocorrência."
-        : null;
+  // Mensagem do que ainda falta para poder enviar (as duas fotos são sempre obrigatórias).
+  const faltando = !fotoChegada
+    ? "Tire a foto de chegada para continuar."
+    : !status
+      ? "Selecione o status da entrega."
+      : !foto
+        ? "Tire a foto do canhoto para confirmar."
+        : status === "ocorrencia" && !desc.trim()
+          ? "Descreva a ocorrência."
+          : null;
 
   if (resultado) {
     return (
@@ -185,24 +203,27 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
       <Card className="space-y-3 p-4">
         <label className="block">
           <span className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-            Foto do canhoto
+            1. Foto de chegada
             <span className="rounded-full bg-danger-50 px-1.5 py-0.5 text-xs font-semibold text-danger">
               obrigatória
             </span>
           </span>
-          {preview ? (
+          <span className="mb-2 block text-xs text-muted">
+            Comprova que você esteve no local — tire antes de bater na porta.
+          </span>
+          {previewChegada ? (
             <div className="space-y-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={preview}
-                alt="Canhoto"
+                src={previewChegada}
+                alt="Chegada no local"
                 className="max-h-64 w-full rounded-lg object-contain bg-black"
               />
               <Button
                 variant="secondary"
                 onClick={() => {
-                  setFoto(null);
-                  setPreview(null);
+                  setFotoChegada(null);
+                  setPreviewChegada(null);
                 }}
               >
                 <IconRefresh size={17} /> Refazer foto
@@ -218,78 +239,123 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
             accept="image/*"
             capture="environment"
             className="hidden"
-            onChange={onFoto}
+            onChange={onFotoChegada}
           />
         </label>
       </Card>
 
-      <div className="grid grid-cols-1 gap-2">
-        {STATUS_BTNS.map((b) => {
-          const Icon = b.icon;
-          return (
-            <button
-              key={b.key}
-              onClick={() => setStatus(b.key)}
-              className={`touch-target flex items-center justify-center gap-2 rounded-xl border px-4 text-base font-semibold transition ${
-                status === b.key
-                  ? b.cls
-                  : "border-line bg-surface text-ink"
-              }`}
-            >
-              <Icon size={20} /> {b.label}
-            </button>
-          );
-        })}
-      </div>
+      {fotoChegada && (
+        <>
+          <Card className="space-y-3 p-4">
+            <label className="block">
+              <span className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                2. Foto do canhoto
+                <span className="rounded-full bg-danger-50 px-1.5 py-0.5 text-xs font-semibold text-danger">
+                  obrigatória
+                </span>
+              </span>
+              {preview ? (
+                <div className="space-y-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preview}
+                    alt="Canhoto"
+                    className="max-h-64 w-full rounded-lg object-contain bg-black"
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setFoto(null);
+                      setPreview(null);
+                    }}
+                  >
+                    <IconRefresh size={17} /> Refazer foto
+                  </Button>
+                </div>
+              ) : (
+                <span className="flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-brand bg-brand-50 text-sm font-medium text-brand">
+                  <IconCamera size={26} /> Toque para abrir a câmera
+                </span>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={onFoto}
+              />
+            </label>
+          </Card>
 
-      {(status === "aceita" || status === "recusada") && (
-        <Card className="p-4">
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">
-              Observação (opcional)
-            </span>
-            <textarea
-              value={obs}
-              onChange={(e) => setObs(e.target.value)}
-              rows={2}
-              placeholder="Ex.: entregue ao porteiro; recebedor João"
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-brand"
-            />
-          </label>
-        </Card>
-      )}
+          <div className="grid grid-cols-1 gap-2">
+            {STATUS_BTNS.map((b) => {
+              const Icon = b.icon;
+              return (
+                <button
+                  key={b.key}
+                  onClick={() => setStatus(b.key)}
+                  className={`touch-target flex items-center justify-center gap-2 rounded-xl border px-4 text-base font-semibold transition ${
+                    status === b.key
+                      ? b.cls
+                      : "border-line bg-surface text-ink"
+                  }`}
+                >
+                  <Icon size={20} /> {b.label}
+                </button>
+              );
+            })}
+          </div>
 
-      {status === "ocorrencia" && (
-        <Card className="space-y-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">
-              Tipo de ocorrência
-            </span>
-            <select
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value as OcorrenciaTipo)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-brand"
-            >
-              {TIPOS.map((t) => (
-                <option key={t} value={t}>
-                  {OCORRENCIA_LABEL[t]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">
-              Descrição (obrigatória)
-            </span>
-            <textarea
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              rows={3}
-              placeholder="Ex.: faltou 2 caixas do produto X"
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-brand"
-            />
-          </label>
-        </Card>
+          {(status === "aceita" || status === "recusada") && (
+            <Card className="p-4">
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium">
+                  Observação (opcional)
+                </span>
+                <textarea
+                  value={obs}
+                  onChange={(e) => setObs(e.target.value)}
+                  rows={2}
+                  placeholder="Ex.: entregue ao porteiro; recebedor João"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-brand"
+                />
+              </label>
+            </Card>
+          )}
+
+          {status === "ocorrencia" && (
+            <Card className="space-y-3 p-4">
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium">
+                  Tipo de ocorrência
+                </span>
+                <select
+                  value={tipo}
+                  onChange={(e) => setTipo(e.target.value as OcorrenciaTipo)}
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-brand"
+                >
+                  {TIPOS.map((t) => (
+                    <option key={t} value={t}>
+                      {OCORRENCIA_LABEL[t]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium">
+                  Descrição (obrigatória)
+                </span>
+                <textarea
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  rows={3}
+                  placeholder="Ex.: faltou 2 caixas do produto X"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-brand"
+                />
+              </label>
+            </Card>
+          )}
+        </>
       )}
 
       {erro && (

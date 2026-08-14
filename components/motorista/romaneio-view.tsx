@@ -13,9 +13,7 @@ import { Card, StatusBadge } from "@/components/ui";
 import { Progress } from "@/components/ui/progress";
 import { MapaRomaneio } from "./mapa-romaneio";
 import { enderecoMapsUrl } from "@/lib/maps";
-import type { NotaMotorista } from "@/lib/types";
-
-const FINAIS = ["aceita", "recusada", "ocorrencia"];
+import { NF_STATUS_FINAIS, type NotaMotorista } from "@/lib/types";
 
 export function RomaneioView({ notas }: { notas: NotaMotorista[] }) {
   const [q, setQ] = useState("");
@@ -30,9 +28,9 @@ export function RomaneioView({ notas }: { notas: NotaMotorista[] }) {
     );
   }, [q, notas]);
 
-  const concluidas = notas.filter((n) => FINAIS.includes(n.status)).length;
+  const concluidas = notas.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length;
   // Primeira NF pendente (na ordem) = a "próxima entrega" (card ativo).
-  const proximaId = notas.find((n) => !FINAIS.includes(n.status))?.id ?? null;
+  const proximaId = notas.find((n) => !NF_STATUS_FINAIS.includes(n.status))?.id ?? null;
 
   return (
     <div className="space-y-3">
@@ -62,7 +60,7 @@ export function RomaneioView({ notas }: { notas: NotaMotorista[] }) {
       )}
 
       {filtradas.map((n) => {
-        const feito = FINAIS.includes(n.status);
+        const feito = NF_STATUS_FINAIS.includes(n.status);
         const ativo = n.id === proximaId;
         return (
           <div

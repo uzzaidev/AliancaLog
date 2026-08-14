@@ -2,8 +2,8 @@ import "server-only";
 
 // Consultas server-side da área de gerência (RLS aplica: gerência vê tudo).
 import { createClient } from "@/lib/supabase/server";
-import { hojeSP } from "@/lib/date";
-import type { NotaStatus } from "@/lib/types";
+import { diasAtrasSP, hojeSP } from "@/lib/date";
+import { NF_STATUS_ABERTOS, type NotaStatus } from "@/lib/types";
 
 // Dia operacional em São Paulo (não UTC — ver lib/date.ts).
 export const hojeISO = () => hojeSP();
@@ -47,6 +47,7 @@ export type NotaRow = {
   destinatario_endereco: string;
   cidade: string | null;
   empresa_nome: string | null;
+  motorista_id: string | null;
   motorista_nome: string | null;
   updated_at: string;
   foto_url: string | null;
@@ -56,7 +57,11 @@ export type NotaFiltro = {
   status?: string;
   motorista?: string;
   empresa?: string;
-  data?: string;
+  // Mesmo padrão de lib/data/cliente.ts (ClienteFiltro.periodo). Sem período
+  // explícito, o default é "hoje + tudo que ainda está em aberto" — uma NF de
+  // ontem ainda pendente não pode ficar escondida esperando o usuário pensar
+  // em trocar o filtro (ver encaminhamentos/luis-fernando-boff.md § A-001).
+  periodo?: "hoje" | "semana" | "mes" | "todos";
 };
 
 export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
@@ -64,10 +69,15 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
   let q = supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,updated_at,foto_url,empresas_clientes(nome),motoristas(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,updated_at,foto_url,motorista_id,empresas_clientes(nome),motoristas(usuarios(nome))",
     )
-    .eq("data_entrega", f.data || hojeISO())
     .order("updated_at", { ascending: false });
+
+  if (f.periodo === "semana") q = q.gte("data_entrega", diasAtrasSP(7));
+  else if (f.periodo === "mes") q = q.gte("data_entrega", diasAtrasSP(30));
+  else if (f.periodo === "hoje") q = q.eq("data_entrega", hojeISO());
+  else if (f.periodo !== "todos")
+    q = q.or(`data_entrega.eq.${hojeISO()},status.in.(${NF_STATUS_ABERTOS.join(",")})`);
 
   if (f.status) q = q.eq("status", f.status);
   if (f.empresa) q = q.eq("empresa_cliente_id", f.empresa);
@@ -88,6 +98,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
       updated_at: r.updated_at as string,
       foto_url: (r.foto_url as string) ?? null,
       empresa_nome: empresa?.nome ?? null,
+      motorista_id: (r.motorista_id as string) ?? null,
       motorista_nome: motorista?.usuarios?.nome ?? null,
     };
   });
@@ -109,7 +120,7 @@ export type CidadeGrupo = { cidade: string; notas: NotaClienteFinal[] };
 export type EmpresaPainel = {
   id: string;
   nome: string;
-  total: number; // NFs importadas hoje
+  total: number; // NFs de hoje + pendências antigas em aberto
   aguardando: number; // ainda sem romaneio
   cidades: CidadeGrupo[]; // agrupadas por cidade (prioridade do cliente)
 };
@@ -120,12 +131,15 @@ export async function getPainelClientes(
   data?: string,
 ): Promise<EmpresaPainel[]> {
   const supabase = await createClient();
-  const { data: rows } = await supabase
+  let q = supabase
     .from("notas_fiscais")
     .select(
       "id,numero_nf,destinatario_nome,cidade,status,romaneio_id,empresa_cliente_id,empresas_clientes(nome)",
-    )
-    .eq("data_entrega", data ?? hojeISO());
+    );
+  q = data
+    ? q.eq("data_entrega", data)
+    : q.or(`data_entrega.eq.${hojeISO()},status.in.(${NF_STATUS_ABERTOS.join(",")})`);
+  const { data: rows } = await q;
 
   const porEmpresa = new Map<string, EmpresaPainel>();
   for (const r of (rows ?? []) as Record<string, unknown>[]) {

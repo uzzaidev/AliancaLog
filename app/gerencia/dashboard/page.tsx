@@ -24,6 +24,7 @@ export default async function GerenciaDashboard({
     status?: string;
     motorista?: string;
     empresa?: string;
+    periodo?: "hoje" | "semana" | "mes" | "todos";
   }>;
 }) {
   const sp = await searchParams;
@@ -65,7 +66,7 @@ export default async function GerenciaDashboard({
 
       <div className="flex flex-col gap-5 lg:flex-row">
         <div className="min-w-0 flex-1 space-y-3">
-          <NotasList notas={notas} />
+          <NotasList notas={notas} motoristas={motoristas.filter((m) => m.ativo)} />
         </div>
         <SidePanel notas={notas} clientes={painelClientes} />
       </div>
