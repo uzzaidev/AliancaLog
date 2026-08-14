@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { hojeSP } from "@/lib/date";
 import { geocodificarLote } from "@/lib/geocode";
+import { NF_STATUS_ABERTOS } from "@/lib/types";
 
 const LOTE_MAX = 15;
 
@@ -17,10 +18,14 @@ export async function geocodificarPendentes(): Promise<GeocodeResult> {
   await requireRole("gerencia");
   const supabase = await createClient();
 
+  // Mesmo filtro "hoje + em aberto" de contarDestinosPendentesDeGeocode
+  // (lib/data/mapa.ts) — o contador do botão já usava isso; a ação em si tinha
+  // ficado presa em "só hoje", então uma NF pendente de dias anteriores contava
+  // no botão mas nunca era de fato processada ao clicar.
   const { data: pendentes } = await supabase
     .from("notas_fiscais")
     .select("id,destinatario_endereco,cidade")
-    .eq("data_entrega", hojeSP())
+    .or(`data_entrega.eq.${hojeSP()},status.in.(${NF_STATUS_ABERTOS.join(",")})`)
     .is("lat", null)
     .is("geocode_status", null)
     .limit(LOTE_MAX);
