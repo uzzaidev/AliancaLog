@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { hojeSP } from "@/lib/date";
 import {
+  duplicatasDoErro,
   encontrarDuplicatas,
   mensagemDuplicatas,
   traduzErroSupabase,
@@ -68,7 +69,13 @@ export async function confirmarImportacao(input: {
     // Compensação: se as NFs não entraram, o romaneio criado acima fica ativo
     // e vazio — o motorista abriria uma rota sem nenhuma entrega. Desfaz.
     if (romaneioId) await supabase.from("romaneios").delete().eq("id", romaneioId);
-    return { error: traduzErroSupabase(error.message) };
+    // Duplicata que escapou da checagem prévia: devolve QUAL linha colidiu, para
+    // a tela marcar em vez de só exibir o texto genérico.
+    const duplicadasDoBanco = duplicatasDoErro(error, rows);
+    return {
+      error: traduzErroSupabase(error.message),
+      ...(duplicadasDoBanco.length > 0 ? { duplicadas: duplicadasDoBanco } : {}),
+    };
   }
 
   revalidatePath("/gerencia/dashboard");

@@ -10,6 +10,7 @@ import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { hojeSP } from "@/lib/date";
 import {
+  duplicatasDoErro,
   encontrarDuplicatas,
   mensagemDuplicatas,
   traduzErroSupabase,
@@ -51,7 +52,16 @@ export async function confirmarImportacaoCliente(input: {
   }));
 
   const { error } = await supabase.from("notas_fiscais").insert(payload);
-  if (error) return { error: traduzErroSupabase(error.message) };
+  if (error) {
+    // No portal do cliente isto é o caso COMUM, não raro: o RLS (`cli_nf_select`)
+    // esconde NF de outra empresa, então `encontrarDuplicatas` passa limpo e só o
+    // banco barra. Sem isto, o usuário via "uma das NFs..." sem saber qual.
+    const duplicadasDoBanco = duplicatasDoErro(error, rows);
+    return {
+      error: traduzErroSupabase(error.message),
+      ...(duplicadasDoBanco.length > 0 ? { duplicadas: duplicadasDoBanco } : {}),
+    };
+  }
 
   revalidatePath("/cliente/notas");
   return { ok: `${rows.length} NF(s) enviada(s).`, count: rows.length };

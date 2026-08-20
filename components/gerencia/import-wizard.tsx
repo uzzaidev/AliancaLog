@@ -11,7 +11,7 @@
 //   - PDF (DANFE) → best-effort: extrai a chave/número; resto é preenchido à mão.
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { IconX } from "@tabler/icons-react";
+import { IconTrash, IconX } from "@tabler/icons-react";
 import { Button, Card, Field, Input } from "@/components/ui";
 import { confirmarImportacao } from "@/app/gerencia/importar/actions";
 import type {
@@ -33,6 +33,29 @@ const MOTIVO_LABEL: Record<DuplicataInfo["motivo"], string> = {
 };
 
 type Linha = Record<string, unknown>;
+
+// Identidade estável de cada linha da grade de conferência.
+//
+// Por que existe: a marcação de duplicata vinda do servidor é por POSIÇÃO
+// (`index`). Se guardássemos a marcação pela posição, remover uma linha
+// deslocaria todas as seguintes e as marcações apontariam para as linhas
+// erradas — era por isso que, ao remover uma duplicada, as outras "perdiam" o
+// aviso. Com um id próprio, a marcação sobrevive a remoções e reordenações.
+// O `__id` é só da tela: nunca vai para o servidor.
+type LinhaEditavel = ImportRow & { __id: string };
+
+let seqLinha = 0;
+function comId(r: ImportRow): LinhaEditavel {
+  seqLinha += 1;
+  return { ...r, __id: `linha-${seqLinha}` };
+}
+
+/** Remove o campo de UI antes de mandar pro servidor. */
+function semId(r: LinhaEditavel): ImportRow {
+  const { __id: _ignorado, ...limpa } = r;
+  void _ignorado;
+  return limpa;
+}
 
 const CAMPOS = [
   { key: "numero_nf", label: "Número da NF", req: true },
@@ -83,13 +106,14 @@ export function ImportWizard({
     observacao: "",
   });
   // Fluxo XML/PDF: linhas já estruturadas e editáveis.
-  const [rows, setRows] = useState<ImportRow[] | null>(null);
+  const [rows, setRows] = useState<LinhaEditavel[] | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
   const [lendo, setLendo] = useState(false);
-  // Duplicatas apontadas pelo servidor: index (na `rows`) → motivo específico.
-  const [duplicadas, setDuplicadas] = useState<Map<number, DuplicataInfo["motivo"]>>(new Map());
+  // Duplicatas apontadas pelo servidor, guardadas pelo `__id` da linha (não pela
+  // posição) — assim remover uma não bagunça a marcação das outras.
+  const [duplicadas, setDuplicadas] = useState<Map<string, DuplicataInfo["motivo"]>>(new Map());
   const [pending, start] = useTransition();
 
   function resetTudo() {
@@ -152,7 +176,7 @@ export function ImportWizard({
               ? "O .zip não tinha nenhum XML de NF-e válido dentro. Confira se o pacote é o de XMLs da carga."
               : "Não consegui extrair NFs. Confira se é um XML de NF-e, um .zip de XMLs ou um DANFE em PDF.",
           );
-        setRows(extraidas);
+        setRows(extraidas.map(comId));
         if (temPdf)
           setAviso(
             "PDF é best-effort: extraí a chave e o número da NF; complete destinatário e endereço abaixo. Para importação completa e automática, prefira o XML da NF-e.",
@@ -186,26 +210,36 @@ export function ImportWizard({
     }));
   }
 
-  function editarRow(i: number, campo: keyof ImportRow, valor: string) {
-    setRows((prev) => {
-      if (!prev) return prev;
-      const next = [...prev];
-      next[i] = { ...next[i], [campo]: valor };
-      return next;
-    });
+  function editarRow(id: string, campo: keyof ImportRow, valor: string) {
+    setRows((prev) =>
+      prev
+        ? prev.map((r) => (r.__id === id ? { ...r, [campo]: valor } : r))
+        : prev,
+    );
     // A linha mudou — a marcação de duplicata (do envio anterior) ficou stale.
+    limparMarcacao(id);
+  }
+
+  function limparMarcacao(id: string) {
     setDuplicadas((prev) => {
-      if (!prev.has(i)) return prev;
+      if (!prev.has(id)) return prev;
       const next = new Map(prev);
-      next.delete(i);
+      next.delete(id);
       return next;
     });
   }
 
-  function removerRow(i: number) {
-    setRows((prev) => (prev ? prev.filter((_, idx) => idx !== i) : prev));
-    // Índices deslocam após remover — limpa tudo, o próximo envio recalcula.
+  function removerRow(id: string) {
+    setRows((prev) => (prev ? prev.filter((r) => r.__id !== id) : prev));
+    // Só a marcação DESTA linha sai; as outras continuam marcadas, já que agora
+    // são identificadas por id e não por posição.
+    limparMarcacao(id);
+  }
+
+  function removerTodasDuplicadas() {
+    setRows((prev) => (prev ? prev.filter((r) => !duplicadas.has(r.__id)) : prev));
     setDuplicadas(new Map());
+    setErro(null);
   }
 
   function confirmar() {
@@ -215,8 +249,12 @@ export function ImportWizard({
       return setErro("Selecione a empresa embarcadora.");
 
     let payload: ImportRow[];
-    if (rows) {
-      payload = rows;
+    // Guarda a lista exata que foi enviada: o servidor responde por posição, e é
+    // por esta lista (não pela `rows` do momento da resposta) que a posição tem
+    // que ser traduzida em `__id`.
+    const enviadas = rows;
+    if (enviadas) {
+      payload = enviadas.map(semId);
     } else {
       if (!map.numero_nf || !map.destinatario_nome || !map.destinatario_endereco)
         return setErro("Mapeie NF, destinatário e endereço.");
@@ -236,8 +274,16 @@ export function ImportWizard({
         setErro(res.error);
         // Marca exatamente as linhas duplicadas — a grade fica como está, pra
         // dar pra corrigir/remover ali mesmo, sem perder o que já foi digitado.
-        if (res.duplicadas?.length) {
-          setDuplicadas(new Map(res.duplicadas.map((d) => [d.index, d.motivo])));
+        if (res.duplicadas?.length && enviadas) {
+          setDuplicadas(
+            new Map(
+              res.duplicadas
+                .map((d) => [enviadas[d.index]?.__id, d.motivo] as const)
+                .filter((par): par is [string, DuplicataInfo["motivo"]] =>
+                  Boolean(par[0]),
+                ),
+            ),
+          );
         }
       } else {
         setResultado(res.ok ?? "Importado.");
@@ -368,13 +414,26 @@ export function ImportWizard({
       {/* Fluxo XML/PDF: grade editável */}
       {rows !== null && rows.length > 0 && (
         <Card className="space-y-3 p-5">
-          <h2 className="font-semibold">Confira as NFs ({rows.length})</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-semibold">Confira as NFs ({rows.length})</h2>
+            {duplicadas.size > 0 && (
+              <Button
+                variant="danger"
+                onClick={removerTodasDuplicadas}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs"
+              >
+                <IconTrash size={14} aria-hidden />
+                Remover {duplicadas.size} duplicada
+                {duplicadas.size > 1 ? "s" : ""}
+              </Button>
+            )}
+          </div>
           <div className="space-y-3">
-            {rows.map((r, i) => {
-              const motivo = duplicadas.get(i);
+            {rows.map((r) => {
+              const motivo = duplicadas.get(r.__id);
               return (
                 <div
-                  key={i}
+                  key={r.__id}
                   className={`rounded-lg border p-3 ${
                     motivo
                       ? "border-danger bg-danger-50"
@@ -392,14 +451,14 @@ export function ImportWizard({
                       aria-label="Número da NF"
                       placeholder="NF"
                       value={r.numero_nf}
-                      onChange={(e) => editarRow(i, "numero_nf", e.target.value)}
+                      onChange={(e) => editarRow(r.__id, "numero_nf", e.target.value)}
                     />
                     <Input
                       aria-label="Destinatário"
                       placeholder="Destinatário"
                       value={r.destinatario_nome}
                       onChange={(e) =>
-                        editarRow(i, "destinatario_nome", e.target.value)
+                        editarRow(r.__id, "destinatario_nome", e.target.value)
                       }
                     />
                     <Input
@@ -407,17 +466,17 @@ export function ImportWizard({
                       placeholder="Endereço"
                       value={r.destinatario_endereco}
                       onChange={(e) =>
-                        editarRow(i, "destinatario_endereco", e.target.value)
+                        editarRow(r.__id, "destinatario_endereco", e.target.value)
                       }
                     />
                     <Input
                       aria-label="Cidade"
                       placeholder="Cidade"
                       value={r.cidade ?? ""}
-                      onChange={(e) => editarRow(i, "cidade", e.target.value)}
+                      onChange={(e) => editarRow(r.__id, "cidade", e.target.value)}
                     />
                     <button
-                      onClick={() => removerRow(i)}
+                      onClick={() => removerRow(r.__id)}
                       className="text-xs text-danger hover:underline"
                     >
                       remover

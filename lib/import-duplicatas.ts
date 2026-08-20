@@ -64,9 +64,45 @@ export function mensagemDuplicatas(duplicadas: DuplicataInfo[]): string {
   return `${duplicadas.length} nota${plural} duplicada${plural} — remova ou corrija antes de importar:\n${linhas.join("\n")}`;
 }
 
-/** Traduz o erro cru do Postgres para o caso de a duplicata escapar da checagem prévia (corrida rara). */
+/** Traduz o erro cru do Postgres para o caso de a duplicata escapar da checagem prévia. */
 export function traduzErroSupabase(mensagem: string): string {
   if (/notas_fiscais_chave_acesso_key/.test(mensagem))
-    return "Uma das NFs tem a mesma chave de acesso de uma nota já existente. Remova a duplicada e tente novamente.";
+    return (
+      "Uma das NFs já existe no sistema (mesma chave de acesso) — pode ter sido " +
+      "enviada antes pela transportadora, e por isso não aparece na sua lista. " +
+      "Remova a nota marcada e envie novamente."
+    );
   return mensagem;
+}
+
+/**
+ * Descobre QUAL linha causou a violação de chave única, a partir do erro do
+ * Postgres — para a tela conseguir marcar a linha em vez de só mostrar um texto
+ * genérico ("uma das NFs...", sem dizer qual).
+ *
+ * Por que é necessário além do `encontrarDuplicatas`: aquele roda com a sessão
+ * do usuário, então o RLS limita o que ele enxerga. No portal do cliente
+ * (`cli_nf_select`), uma NF já cadastrada por OUTRA empresa é invisível — a
+ * checagem prévia passa limpa e só o banco barra, no insert. Aqui não há
+ * vazamento: a chave vem do próprio arquivo que o usuário acabou de enviar,
+ * e devolvemos apenas a posição da linha dele.
+ *
+ * O Postgres informa o valor conflitante em `details`:
+ *   `Key (chave_acesso)=(3524...) already exists.`
+ */
+export function duplicatasDoErro(
+  erro: { message: string; details?: string | null },
+  rows: ImportRow[],
+): DuplicataInfo[] {
+  if (!/notas_fiscais_chave_acesso_key/.test(erro.message)) return [];
+  const m = /\(chave_acesso\)=\(([^)]+)\)/.exec(erro.details ?? "");
+  if (!m) return [];
+  const chave = m[1].trim();
+
+  const encontradas: DuplicataInfo[] = [];
+  rows.forEach((r, index) => {
+    if (r.chave_acesso?.trim() === chave)
+      encontradas.push({ index, numero_nf: r.numero_nf, motivo: "ja_importada" });
+  });
+  return encontradas;
 }
