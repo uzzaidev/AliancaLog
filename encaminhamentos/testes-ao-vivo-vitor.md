@@ -3,7 +3,13 @@
 > **Tudo que precisa ser visto funcionando antes do go-live.** Consolidado em
 > 2026-08-14 a partir do [CHECKLIST.md](../docs/governanca/CHECKLIST.md), do
 > [CHECKPOINT.md](../docs/governanca/CHECKPOINT.md) e dos encaminhamentos da reunião
-> de 12/08. Índice geral: [README.md](./README.md).
+> de 12/08; **atualizado em 2026-08-20**. Índice geral: [README.md](./README.md).
+
+> 🧹 **O banco foi zerado em 20/08** — 61 NFs, 13 canhotos, 4 ocorrências, 12 romaneios
+> e 16 fotos apagados; cadastros e logins preservados. O estado está limpo para começar
+> esta bateria do zero. Para zerar de novo entre rodadas:
+> `node --env-file-if-exists=.env scripts/reset-operacional.mjs --confirmar --fotos`
+> (sem `--confirmar` ele só conta e faz backup).
 
 ## Por que isso está todo concentrado aqui
 
@@ -85,6 +91,18 @@ com pasta dentro de pasta, PDF junto, nome estranho.
 - Todas as notas aparecem na grade de conferência.
 - Testar também nos **dois perfis** (gerência e cliente).
 
+### 2.2b 💻 Fluxo de duplicatas na importação `corrigido em 20/08`
+Foi reportado em uso real e corrigido; precisa de confirmação na tela.
+
+- Subir um lote com NF repetida: a linha duplicada tem que ficar **marcada em vermelho**
+  (antes aparecia só "uma das NFs…" sem dizer qual).
+- **O teste principal:** com 2 ou mais duplicadas marcadas, remover **uma**. As outras
+  **têm que continuar marcadas** — era exatamente esse o bug.
+- Botão **"Remover N duplicadas"** no cabeçalho da grade limpa todas de uma vez.
+- Testar nos **dois perfis**. No portal do cliente há um caso extra: NF já cadastrada
+  por outra empresa é invisível ao cliente (RLS), então a mensagem deve explicar que
+  *"pode ter sido enviada antes pela transportadora"* — e ainda assim marcar a linha.
+
 ### 2.3 💻 Filtro de período `A-002`
 - Trocar o período e ver a lista mudar.
 - No padrão ("Hoje + pendências"), confirmar que uma NF de ontem ainda pendente
@@ -161,7 +179,7 @@ Direto do [CHECKLIST.md](../docs/governanca/CHECKLIST.md):
 
 ## Sugestão de sequência
 
-1. **Agora, sem depender de ninguém:** os 💻 — 1.4, 2.2, 2.3, 2.4, 2.5, 2.7, 3.4.
+1. **Agora, sem depender de ninguém:** os 💻 — 1.4, 2.2, 2.2b, 2.3, 2.4, 2.5, 2.7, 3.4.
 2. **Assim que o Luis subir o deploy:** 1.1, 1.2, 2.1, 2.6 — o núcleo do produto.
 3. **Com motorista real em rota:** 1.3, 3.1, 3.2, 3.3.
 4. **Fechar** a Definition of Done acima e escrever os critérios de sucesso do piloto.

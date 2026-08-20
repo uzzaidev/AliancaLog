@@ -6,12 +6,45 @@
 
 **✅ Status: os 4 itens de dev implementados em 2026-08-14** — `typecheck`/`lint`/
 `build` verdes. Detalhe do que foi feito abaixo do critério de aceite de cada um.
+Em **20/08** entraram ainda a correção do fluxo de duplicatas na importação e o
+reset do banco para uma rodada limpa de testes (ver o fim deste arquivo).
 
-**Pendente:**
-- **Verificação ao vivo de tudo abaixo** (navegador/celular real) — é minha, sou eu
-  quem lida com o cliente. Nada aqui foi visto rodando ainda, só compila.
-- Itens de processo/comercial: A-012, A-013, A-015.
-- Uma decisão de produto em aberto: ver "KPIs do topo" no fim deste arquivo.
+---
+
+## 🔴 Pendências abertas — Vítor (revisado em 2026-08-20)
+
+Detalhe completo em [mvp-a-pendencias.md](./mvp-a-pendencias.md); roteiro de validação
+em [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md).
+
+### MVP A — 7 itens
+
+| # | Item | Observação |
+|---|---|---|
+| 1 | **Validação ao vivo de tudo** | ⏫ maior bloco de risco — nada foi visto rodando |
+| 2 | **Testar o login do `cliente_final`** | nunca foi testado de verdade; é o perfil do risco R-008 |
+| 3 | Escrever os critérios de sucesso do piloto | senão "deu certo?" vira opinião |
+| 4 | Pegar Excel/XML reais com o Matheus | dado sujo é onde o parser quebra |
+| 5 | Testar a foto de 1280px em luz ruim | se a assinatura não for legível, o produto perde valor probatório |
+| 6 | Piloto com 2–3 motoristas | primeira entrega real |
+| 7 | Material de apoio + treinamento (A-015) | guia de 1 página + coordenador |
+
+> ⚠️ **Os itens 1, 5 e 6 dependem do deploy** (câmera e Service Worker exigem HTTPS) —
+> que é do Luis e é o caminho crítico do projeto. Enquanto o staging não subir, dá para
+> adiantar só a parte que roda no `npm run dev`: ver os marcados 💻 no roteiro.
+
+### Processo / comercial
+
+- **A-012** — alinhar o `.zip` com a Rotta. **Precisa acontecer antes** do A-003 ir para produção.
+- **A-013** — prospectar integração por API (baixa prioridade).
+
+### Decisões que travam a Fase B do Luis
+
+1. **Roteirização: Google Routes (pago, sem teto) × OSRM self-hospedado (~R$30/mês de infra própria)?**
+2. **Financeiro: levantar tarifa por empresa, custo/km e custo/hora com o Matheus.**
+3. Priorizar o bloco — minha sugestão: exportação → KPIs de motorista → financeiro.
+4. Web Push antes de investir nas lojas de app?
+
+---
 
 5 itens de desenvolvimento (frontend) + 3 itens de processo/comercial.
 
@@ -278,6 +311,73 @@ explícito na tela:
 era a decisão de KPI que ficou explicitamente comigo, e o bug estava embutido nela.
 Vale ele revisar a consulta nova (3 queries em paralelo, uma delas `count` com
 `head: true`).
+
+---
+
+## ✅ Fluxo de duplicatas na importação — corrigido (2026-08-20)
+
+Reportado em uso real: *"dá erro mas não aparece qual é a duplicada; e quando removo
+uma, as outras param de aparecer como duplicadas"*. Eram **três** problemas, com causas
+diferentes — daí o "às vezes mostra, às vezes não".
+
+### 1. O erro não dizia qual linha era
+
+A mensagem *"Uma das NFs tem a mesma chave de acesso…"* vem do caminho de **fallback**:
+quando a checagem prévia não detecta e é o banco que rejeita no insert. Nesse caminho o
+servidor não devolvia `duplicadas`, então a tela não tinha o que marcar.
+
+**Por que a checagem prévia falha justamente no portal do cliente:** `encontrarDuplicatas`
+roda com a **sessão do usuário**, então o RLS limita o que ela enxerga. Uma NF já
+cadastrada por **outra empresa** é invisível para o cliente (`cli_nf_select`) — a
+checagem passa limpa e só a constraint global barra.
+
+Corrigido com `duplicatasDoErro()` (`lib/import-duplicatas.ts`): lê o `details` do erro
+do Postgres (`Key (chave_acesso)=(...) already exists`) e mapeia de volta para a linha.
+**Sem vazamento** — a chave vem do arquivo que o próprio usuário acabou de enviar, e só
+devolvemos a posição da linha dele. A mensagem também ficou honesta: *"pode ter sido
+enviada antes pela transportadora, e por isso não aparece na sua lista"*.
+
+### 2. As marcações sumiam ao remover uma linha
+
+Bug meu, explícito no código:
+
+```js
+function removerRow(i) {
+  setRows(...)
+  setDuplicadas(new Map());  // ← limpava TODAS
+}
+```
+
+O motivo era real: as duplicatas eram identificadas por **posição**, e remover uma linha
+desloca todas as seguintes — as marcações passariam a apontar para as linhas erradas. A
+"solução" era limpar tudo.
+
+Corrigido na raiz: cada linha da grade ganhou **identidade própria** (`__id`, só da tela,
+nunca vai para o servidor). Remover uma preserva a marcação das outras; editar uma limpa
+só a dela.
+
+### 3. Faltava o botão de remoção em lote
+
+**"Remover N duplicadas"** no cabeçalho da grade — aparece só quando há duplicatas,
+mostra a contagem e limpa todas de uma vez.
+
+---
+
+## 🧹 Banco resetado para testes (2026-08-20)
+
+A pedido, para começar uma rodada limpa. Apagados: **61 NFs, 13 canhotos, 4 ocorrências,
+12 romaneios e 16 fotos** do Storage. **Preservados:** empresas, usuários, motoristas,
+veículos e os logins — dá para entrar e testar direto, sem rodar o seed.
+
+Script reaproveitável em `scripts/reset-operacional.mjs`, com **dry-run por padrão**:
+
+```bash
+node --env-file-if-exists=.env scripts/reset-operacional.mjs             # só conta + backup
+node --env-file-if-exists=.env scripts/reset-operacional.mjs --confirmar --fotos
+```
+
+Backups em `backups/`. Usa a service role key porque o `DATABASE_URL` está fora do ar
+(ver o bloqueio no [arquivo do Luis](./luis-fernando-boff.md)).
 
 ---
 

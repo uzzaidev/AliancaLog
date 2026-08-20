@@ -15,13 +15,29 @@ tomadas pelo Vítor (PO) aplicadas. Fonte original:
 - [fase-b-pendencias.md](./fase-b-pendencias.md) — o que falta do MVP Completo (quase tudo do Luis)
 - [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md) — **roteiro priorizado do que precisa ser visto rodando**
 
-**Status geral:** todo o código do MVP A está escrito e passa em typecheck/lint/build/
-smoke de segurança. O que falta para o go-live é **infraestrutura de produção**
-(deploy, Sentry, backup — Luis) e **validação real** (celular, cliente, piloto —
-Vítor). Nenhuma feature nova bloqueia o piloto.
+**Status geral (revisado em 2026-08-20):** todo o código do MVP A está escrito e passa
+em typecheck/lint/build + `test:security` 9/9. O que falta para o go-live é
+**infraestrutura de produção** (Luis) e **validação real** (Vítor). Nenhuma feature nova
+bloqueia o piloto — **o gargalo é operação, não desenvolvimento.**
 
-⚠️ **Caminho crítico: o deploy na Vercel.** Câmera e Service Worker exigem HTTPS, então
-metade do roteiro de teste do Vítor só roda depois que o staging estiver no ar.
+### ⚠️ Dois bloqueios em série
+
+```
+DATABASE_URL quebrado  →  Deploy Vercel  →  Testes ao vivo  →  Piloto  →  Go-live
+   (Luis, rápido)          (Luis, ⏫)         (Vítor)
+```
+
+1. **`DATABASE_URL` com senha inválida** (descoberto em 20/08) — derruba `db:migrate`,
+   `db:status` e `db:backup`. **Nenhuma migration nova pode ser aplicada** até resolver.
+2. **Deploy na Vercel** — câmera e Service Worker exigem HTTPS, então 5 das 7
+   pendências do Vítor ficam paradas até o staging subir.
+
+### Contagem de pendências
+
+| | MVP A | Fase B |
+|---|---|---|
+| **Luis** | 8 itens | quase tudo |
+| **Vítor** | 7 itens + 2 de processo | 4 decisões que destravam o Luis |
 
 ## Decisões tomadas nesta rodada (sobrescrevem a ata onde conflitam)
 

@@ -14,11 +14,75 @@ em cada item logo abaixo do critério de aceite dele; resumo completo também no
 Ordem sugerida original: A-001 → A-009 → A-005 → A-004 → A-007 → A-006 → A-010, com QA
 rodando em paralelo desde já — seguida à risca.
 
-**Pendente (fora do escopo deste arquivo, não é meu):** parte do Vítor (A-002, A-003,
-A-008, camada visual do mapa no A-006 — ver
-[vitor-pirolli.md](./vitor-pirolli.md)), testes E2E Playwright (adiado por decisão
-explícita nesta sessão) e verificação visual em navegador/celular real dos fluxos
-novos.
+> **A parte do Vítor também foi concluída** em 14/08 (A-002, A-003, A-008 e a camada
+> visual do mapa no A-006) — ver [vitor-pirolli.md](./vitor-pirolli.md). Os
+> encaminhamentos da reunião de 12/08 estão **fechados dos dois lados**.
+
+---
+
+## 🔴 Pendências abertas — Luis (revisado em 2026-08-20)
+
+Conferido contra o código nesta data, não contra o que estava marcado.
+Detalhe completo: [mvp-a-pendencias.md](./mvp-a-pendencias.md) e
+[fase-b-pendencias.md](./fase-b-pendencias.md).
+
+### ⚠️ BLOQUEIO NOVO — `DATABASE_URL` com senha inválida
+
+Descoberto em 20/08. `password authentication failed for user "postgres"`.
+Derruba **três comandos de uma vez**:
+
+```
+npm run db:migrate   ❌     npm run db:status   ❌     npm run db:backup   ❌
+```
+
+**Efeito prático: não dá para aplicar nenhuma migration nova enquanto isso durar** —
+e o backup manual, que hoje é a única rede de proteção do banco, também está fora.
+
+Já aconteceu antes: o [CHECKPOINT.md](../docs/governanca/CHECKPOINT.md) registra um
+reset de senha pelo mesmo motivo (o pooler do Supabase parou de aceitar a antiga,
+`EAUTHQUERY`). Provavelmente é só regenerar a senha no painel e atualizar o `.env`.
+
+> A conexão via **service role key** continua funcionando normalmente (é o que o
+> `npm run test:security`, o `seed` e o app usam) — o problema é só no caminho
+> `pg`/`DATABASE_URL` dos scripts de migration/backup.
+
+### MVP A — 8 itens
+
+| # | Item | Urgência |
+|---|---|---|
+| 0 | **Corrigir o `DATABASE_URL`** (acima) | 🔴 trava seu próprio trabalho |
+| 1 | **Deploy na Vercel** | ⏫ caminho crítico do projeto |
+| 2 | Domínio + SSL | depois do staging |
+| 3 | Monitoramento de erros (Sentry) — confirmado ausente do `package.json` | antes de dado real |
+| 4 | Backup automático do banco | antes de dado real |
+| 5 | Cache offline da lista do dia — `STORE_CACHE` segue só esqueleto | refinamento |
+| 6 | Testes E2E (Playwright) — confirmado ausente | não bloqueia piloto |
+| 7 | Criar os logins reais (16 motoristas + ~20 empresas) | quando o Vítor trouxer as listas |
+
+*Sem dono definido:* CI (GitHub Actions) — não existe `.github/workflows`.
+
+**Por que o deploy é o caminho crítico:** câmera e Service Worker exigem HTTPS, então
+**5 das 7 pendências do Vítor ficam travadas** até o staging subir.
+
+### Fase B — praticamente toda sua
+
+Roteirização com ordem otimizada · KPIs de motorista · Financeiro · Dashboards e
+exportação · Web Push · E-mail resumo · Múltiplas fotos (completar).
+
+Duas dependem de **decisão do Vítor/PO antes de começar**: a escolha
+Google Routes × OSRM (custo recorrente) e o levantamento de tarifas/custos com o
+Matheus. Ver [fase-b-pendencias.md](./fase-b-pendencias.md).
+
+### Para revisar (mexeram no seu território)
+
+- **`getResumoHoje`** (`lib/data/gerencia.ts`) — o Vítor corrigiu um bug que escapou do
+  code review do A-007 e reescreveu a consulta (3 queries em paralelo). Detalhe no
+  A-001 abaixo e em [vitor-pirolli.md](./vitor-pirolli.md).
+- **`lib/import-duplicatas.ts`** — ganhou `duplicatasDoErro()` em 20/08, que lê o
+  `details` do erro do Postgres para identificar a linha duplicada. Contexto: no portal
+  do cliente o RLS (`cli_nf_select`) esconde NF de outra empresa, então
+  `encontrarDuplicatas` passa limpo e só o banco barra — o usuário via "uma das NFs..."
+  sem saber qual. Vale sua revisão por tocar em RLS/segurança.
 
 ---
 

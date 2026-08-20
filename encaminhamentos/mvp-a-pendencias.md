@@ -1,7 +1,7 @@
 # MVP A — o que falta para o go-live
 
-> Revisão de 2026-08-14 do [CHECKLIST.md](../docs/governanca/CHECKLIST.md) (Sprints 0–4 +
-> Pré-piloto) **conferida contra o código**, não só contra o que estava marcado.
+> Revisão original de 2026-08-14 do [CHECKLIST.md](../docs/governanca/CHECKLIST.md)
+> (Sprints 0–4 + Pré-piloto), **reconferida contra o código em 2026-08-20**.
 > Índice geral: [README.md](./README.md).
 
 ## Resumo
@@ -11,12 +11,31 @@
 
 | | Itens abertos | Natureza |
 |---|---|---|
-| **Luis** | 7 | Deploy, monitoramento, backup, testes, cache offline |
+| **Luis** | 8 | Banco travado, deploy, monitoramento, backup, testes, cache offline |
 | **Vítor** | 7 | Validação ao vivo, dados reais, piloto, treinamento |
 
-**O caminho crítico é o deploy.** Sete das pendências do Vítor dependem de existir uma
-URL em HTTPS — câmera e Service Worker não funcionam em `http://localhost` no celular.
-Enquanto não subir, o piloto não começa.
+### Verificado nesta data (20/08)
+
+- 19 migrations no repositório, todas aplicadas.
+- `npm run test:security` **9/9** contra o banco real (inclui T4a/b/c do A-007).
+- Sentry, Playwright e CI: **confirmados ausentes**.
+- `STORE_CACHE`: **confirmado ainda como esqueleto** (nunca escrito nem lido).
+- Sem `vercel.json`/`.vercel` no repo — deploy segue pendente.
+
+## ⚠️ Dois bloqueios em série
+
+```
+DATABASE_URL quebrado  →  Deploy Vercel  →  Testes ao vivo  →  Piloto  →  Go-live
+   (Luis, rápido)          (Luis, ⏫)         (Vítor)
+```
+
+**1. O `DATABASE_URL` está com senha inválida** (descoberto em 20/08). Derruba
+`db:migrate`, `db:status` e `db:backup` — na prática, **nenhuma migration nova pode ser
+aplicada** até isso ser resolvido. É rápido, mas trava todo o trabalho de banco do Luis.
+
+**2. O deploy é o caminho crítico do projeto.** Câmera e Service Worker exigem HTTPS,
+então **5 das 7 pendências do Vítor** ficam paradas até o staging subir. Enquanto isso,
+dá para adiantar só a parte do roteiro que roda em `npm run dev`.
 
 ---
 
@@ -41,7 +60,24 @@ Confirmado por leitura de código, não por confiança no que estava marcado:
 
 ---
 
-## Luis — 7 itens
+## Luis — 8 itens
+
+### 0. Corrigir o `DATABASE_URL` `🔴 trava o próprio trabalho dele`
+
+**Descoberto em 20/08:** `password authentication failed for user "postgres"`.
+
+```
+npm run db:migrate   ❌     npm run db:status   ❌     npm run db:backup   ❌
+```
+
+Já aconteceu antes — o [CHECKPOINT.md](../docs/governanca/CHECKPOINT.md) registra um
+reset de senha pelo mesmo motivo (o pooler do Supabase deixou de aceitar a antiga,
+`EAUTHQUERY`). Provavelmente é regenerar no painel e atualizar o `.env`.
+
+A conexão por **service role key** segue funcionando (é o que o app, o `seed` e o
+`test:security` usam) — o problema é só o caminho `pg`/`DATABASE_URL` dos scripts.
+
+**Aceite:** `npm run db:status` lista as 19 migrations sem erro.
 
 ### 1. Deploy na Vercel `⏫ bloqueia o resto`
 GitHub já está conectado; falta a Vercel apontada para o repo, com as variáveis de
@@ -64,9 +100,14 @@ canhoto falhar no celular do motorista em campo, ninguém fica sabendo.
 monitoramento com stack trace.
 
 ### 4. Backup automático do banco
-Hoje `npm run db:backup` é **manual**. Antes de entrar dado real de cliente, precisa
-ser automático (o próprio Supabase tem backup no plano pago; confirmar qual plano o
-projeto está usando).
+Hoje `npm run db:backup` é **manual** — e desde 20/08 nem manual funciona, porque
+depende do `DATABASE_URL` (item 0). Antes de entrar dado real de cliente, precisa ser
+automático (o próprio Supabase tem backup no plano pago; confirmar qual plano o projeto
+está usando).
+
+> Enquanto isso, o `scripts/reset-operacional.mjs` (criado em 20/08) faz dump das
+> tabelas de movimento em JSON via service role — serve de rede de proteção pontual,
+> **não** substitui backup do banco inteiro.
 
 ### 5. Cache offline da lista do dia `→ leitura offline no boot`
 **Confirmado como não feito**: `STORE_CACHE` (`lib/offline/db.ts`) é criado e limpo no
@@ -131,12 +172,26 @@ etapas (equipe faz sozinha → depois acompanha junto).
 
 ## Ordem recomendada
 
-1. **Luis: deploy na Vercel** — destrava tudo.
-2. **Vítor: bateria de testes ao vivo** no staging (roteiro no arquivo dedicado).
-3. **Luis: Sentry + backup** — antes de entrar dado real de cliente.
-4. **Vítor: critérios do piloto + dados reais** com o Matheus.
-5. **Luis: cache offline da lista** — dá para ir em paralelo, mas é o refinamento que
-   mais muda a experiência real na Serra.
-6. **Piloto** → ajustes → go-live.
+1. **Luis: corrigir o `DATABASE_URL`** — rápido, e sem isso ele não aplica migration nenhuma.
+2. **Luis: deploy na Vercel** — destrava tudo do lado do Vítor.
+3. **Vítor: bateria de testes ao vivo** no staging (roteiro no arquivo dedicado).
+   Os marcados 💻 já podem ser feitos antes do deploy.
+4. **Luis: Sentry + backup** — antes de entrar dado real de cliente.
+5. **Vítor: critérios do piloto + dados reais** com o Matheus.
+6. **Luis: cache offline da lista** — pode ir em paralelo, mas é o refinamento que mais
+   muda a experiência real na Serra.
+7. **Piloto** → ajustes → go-live.
 
 **Não são bloqueio de piloto:** Playwright, CI e o item obsoleto de imutabilidade.
+
+---
+
+## O gargalo não é desenvolvimento
+
+Vale registrar, porque muda a conversa com o cliente: **nenhuma linha de código de
+produto está faltando** para o MVP A. O que separa o projeto do go-live é
+**operação** — deploy, monitoramento, backup e a bateria de validação real.
+
+Nada disso é incerto ou exploratório; é execução. A Fase B, sim, é desenvolvimento —
+e depende de duas decisões de produto que ainda não foram tomadas
+([fase-b-pendencias.md](./fase-b-pendencias.md)).

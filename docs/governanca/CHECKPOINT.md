@@ -3,7 +3,36 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-08-14
+**Última atualização:** 2026-08-20
+
+## 🔴 Bloqueio ativo — `DATABASE_URL` com senha inválida (2026-08-20)
+
+`password authentication failed for user "postgres"` — derruba `npm run db:migrate`,
+`db:status` e `db:backup`. **Nenhuma migration nova pode ser aplicada** até ser
+resolvido, e o backup manual (única rede de proteção do banco hoje) está fora do ar.
+Já aconteceu antes, ver "Sprint 3.5" mais abaixo (`EAUTHQUERY` no pooler). A conexão
+por **service role key** segue normal — app, `seed` e `test:security` funcionam.
+
+**Mudanças de 2026-08-20:**
+1. **Fluxo de duplicatas na importação corrigido** (reportado em uso real). Três
+   problemas: (a) o erro não dizia qual linha era, porque no caminho de fallback o
+   servidor não devolvia `duplicadas` — causa raiz: `encontrarDuplicatas` roda com a
+   sessão do usuário, e o RLS `cli_nf_select` esconde NF de outra empresa, então a
+   checagem prévia passa limpa e só a constraint global barra; (b) remover uma duplicada
+   limpava a marcação de todas, porque o estado era indexado por posição; (c) faltava
+   remoção em lote. Corrigidos com `duplicatasDoErro()` (lê o `details` do erro do
+   Postgres), identidade estável por linha (`__id`) e o botão "Remover N duplicadas".
+2. **Banco zerado a pedido do Vítor** para uma rodada limpa de testes: 61 NFs, 13
+   canhotos, 4 ocorrências, 12 romaneios e 16 fotos apagados; cadastros e logins
+   preservados. Script reaproveitável em `scripts/reset-operacional.mjs`, com dry-run
+   por padrão e backup automático em `backups/`.
+3. **Revisão de pendências conferida contra o código** — `encaminhamentos/` atualizado
+   (MVP A, Fase B, roteiro de testes e os dois arquivos por pessoa). Confirmado nesta
+   data: Sentry, Playwright e CI ausentes; `STORE_CACHE` ainda esqueleto; sem deploy.
+
+---
+
+**Última atualização anterior:** 2026-08-14
 **Sprint atual:** Encaminhamentos da reunião de 12/08 ([ata](../../reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md)) **concluídos dos dois lados** → o MVP A entra em fase de deploy + validação real
 **Status geral:** 🟢 **Todo o código do MVP A está escrito** e passa em typecheck/lint/build + `test:security` 9/9. O que falta para o go-live não é feature: é **infra de produção** (deploy Vercel, Sentry, backup — Luis) e **validação real** (celular, cliente, piloto — Vítor). Levantamento completo em [encaminhamentos/mvp-a-pendencias.md](../../encaminhamentos/mvp-a-pendencias.md).
 

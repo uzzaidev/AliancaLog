@@ -1,8 +1,14 @@
 # Fase B (MVP Completo) — o que falta
 
-> Revisão de 2026-08-14 da seção "Fase B" do
-> [CHECKLIST.md](../docs/governanca/CHECKLIST.md), **conferida contra o código**.
+> Revisão original de 2026-08-14 da seção "Fase B" do
+> [CHECKLIST.md](../docs/governanca/CHECKLIST.md), **reconferida contra o código em
+> 2026-08-20** — nenhum item novo entrou nem saiu desde então.
 > Índice geral: [README.md](./README.md).
+
+> **Antes de mexer aqui:** o MVP A ainda não está no ar. A Fase B só começa depois do
+> deploy e do piloto — ver [mvp-a-pendencias.md](./mvp-a-pendencias.md). E o Luis está
+> com o `DATABASE_URL` fora do ar, então **nenhuma migration nova** (que praticamente
+> todo item deste arquivo exige) pode ser aplicada até isso ser resolvido.
 
 ## Achado principal: a Fase B já começou sem ninguém marcar
 
