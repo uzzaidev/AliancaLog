@@ -1,5 +1,6 @@
 // Sincronização da fila offline com o servidor (/api/sync).
 // Idempotente via client_id. Para o loop assim que uma requisição falha (offline).
+import * as Sentry from "@sentry/nextjs";
 import { listarPendentes, removerDaFila } from "./queue";
 
 export const EVENTO_FILA = "alianca-fila-mudou";
@@ -62,6 +63,11 @@ export async function flushFila(): Promise<{ enviados: number; restantes: number
             /* corpo não era JSON — segue sem detalhe */
           }
           ultimoErro = `NF ${c.numero_nf}: não foi possível enviar${detalhe ? ` (${detalhe})` : ""} — registre a entrega novamente.`;
+          Sentry.captureMessage(`Falha de validação no sync da NF ${c.numero_nf}: ${detalhe || "dados inválidos"}`, {
+            level: "warning",
+            tags: { area: "offline-sync", nf_id: c.nf_id, status: c.status },
+            extra: { client_id: c.client_id, detalhe },
+          });
           await removerDaFila(c.client_id);
         } else {
           let detalhe = "";
@@ -71,12 +77,27 @@ export async function flushFila(): Promise<{ enviados: number; restantes: number
             /* corpo não era JSON — segue sem detalhe */
           }
           ultimoErro = `NF ${c.numero_nf}: erro ${res.status}${detalhe ? ` — ${detalhe}` : ""}`;
+          if (res.status >= 500) {
+            Sentry.captureMessage(`Erro de servidor (${res.status}) no sync da NF ${c.numero_nf}`, {
+              level: "error",
+              tags: { area: "offline-sync", http_status: String(res.status) },
+              extra: { client_id: c.client_id, nf_id: c.nf_id, detalhe },
+            });
+          }
           break; // erro de servidor — tenta de novo depois.
         }
-      } catch {
+      } catch (err) {
         ultimoErro = `NF ${c.numero_nf}: falha de rede ao enviar`;
+        // Só reporta ao Sentry se for erro inesperado de execução, não offline padrão
+        if (typeof navigator !== "undefined" && navigator.onLine) {
+          Sentry.captureException(err, {
+            tags: { area: "offline-sync" },
+            extra: { client_id: c.client_id, nf_id: c.nf_id },
+          });
+        }
         break; // sem rede — interrompe e tenta no próximo gatilho.
       }
+
     }
   } finally {
     rodando = false;

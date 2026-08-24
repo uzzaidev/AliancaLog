@@ -1,0 +1,52 @@
+name: Backup Automático do Banco de Dados
+
+on:
+  schedule:
+    # Roda diariamente às 06:00 UTC (03:00 Horário de Brasília)
+    - cron: "0 6 * * *"
+  workflow_dispatch: # Permite disparo manual pelo painel do GitHub
+
+jobs:
+  backup:
+    name: Executar pg_dump e salvar artefato
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar cliente PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar backup do banco
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Secret DATABASE_URL não configurada no repositório."
+            exit 1
+          fi
+          npm run db:backup
+
+      - name: Compactar dump SQL
+        run: |
+          gzip -9 backups/*.sql
+
+      - name: Salvar artefato de backup no GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: backups/*.sql.gz
+          retention-days: 30
+
