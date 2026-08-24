@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { IconChevronLeft } from "@tabler/icons-react";
 import { CanhotoForm } from "@/components/motorista/canhoto-form";
 import { getNota } from "@/lib/data/motorista";
@@ -10,10 +9,14 @@ export default async function CanhotoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const nf = await getNota(id);
-  if (!nf) notFound();
+  let nf = null;
+  try {
+    nf = await getNota(id);
+  } catch {
+    // Modo offline no servidor ou falha de conexão — client tentará obter do STORE_CACHE
+  }
 
-  const voltarHref = nf.romaneio_id
+  const voltarHref = nf?.romaneio_id
     ? `/motorista/romaneio/${nf.romaneio_id}`
     : "/motorista/entregas";
 
@@ -28,7 +31,8 @@ export default async function CanhotoPage({
       <h1 className="text-lg font-bold tracking-tight text-dark">
         Registrar canhoto
       </h1>
-      <CanhotoForm nf={nf} />
+      <CanhotoForm nf={nf} nfId={id} />
     </div>
   );
 }
+

@@ -22,7 +22,7 @@ export default async function RomaneioPage({
           <IconChevronLeft size={16} /> Voltar
         </Link>
       </div>
-      <RomaneioView notas={notas} />
+      <RomaneioView notas={notas} romaneioId={id} />
     </div>
   );
 }

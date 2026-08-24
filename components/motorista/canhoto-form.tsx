@@ -14,6 +14,11 @@ import {
 import { Button, Card } from "@/components/ui";
 import { comprimirImagem } from "@/lib/offline/image";
 import { enderecoMapsUrl } from "@/lib/maps";
+import {
+  atualizarStatusNotaCache,
+  obterNotaCache,
+  salvarNotaCache,
+} from "@/lib/offline/cache";
 import { enfileirar, listarPendentes } from "@/lib/offline/queue";
 import { flushFila, notificarFila } from "@/lib/offline/sync";
 import {
@@ -51,8 +56,15 @@ const STATUS_BTNS: {
 
 const TIPOS = Object.keys(OCORRENCIA_LABEL) as OcorrenciaTipo[];
 
-export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
+export function CanhotoForm({
+  nf: initialNf,
+  nfId,
+}: {
+  nf?: NotaMotorista | null;
+  nfId?: string;
+}) {
   const router = useRouter();
+  const [nf, setNf] = useState<NotaMotorista | null>(initialNf ?? null);
   // Foto de chegada (A-010): separada da foto do canhoto, prova que o motorista
   // esteve no local mesmo quando a entrega não se conclui (ex.: cliente ausente).
   const [fotoChegada, setFotoChegada] = useState<Blob | null>(null);
@@ -67,6 +79,25 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    async function sincronizarNota() {
+      if (initialNf) {
+        await salvarNotaCache(initialNf);
+        if (ativo) setNf(initialNf);
+      } else if (nfId) {
+        const doCache = await obterNotaCache(nfId);
+        if (ativo && doCache) {
+          setNf(doCache);
+        }
+      }
+    }
+    sincronizarNota();
+    return () => {
+      ativo = false;
+    };
+  }, [initialNf, nfId]);
 
   // Carimbo de localização do registro (best-effort — segue sem GPS se o
   // motorista negar ou não houver sinal; nunca bloqueia o registro).
@@ -105,6 +136,7 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
   }
 
   async function confirmar() {
+    if (!nf) return setErro("Dados da NF não disponíveis.");
     setErro(null);
     if (!fotoChegada)
       return setErro("Foto de chegada é obrigatória para registrar.");
@@ -133,6 +165,8 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
         gps_precisao: gpsRef.current?.prec,
         criado_em: Date.now(),
       });
+      // Atualiza o cache local imediatamente para refletir na lista offline
+      await atualizarStatusNotaCache(nf.id, status);
       notificarFila();
       await flushFila();
       // Só diz "Registrado" se ESTE item saiu mesmo da fila (o servidor confirmou).
@@ -152,6 +186,7 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
     }
   }
 
+
   // Mensagem do que ainda falta para poder enviar (as duas fotos são sempre obrigatórias).
   const faltando = !fotoChegada
     ? "Tire a foto de chegada para continuar."
@@ -162,6 +197,14 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
         : status === "ocorrencia" && !desc.trim()
           ? "Descreva a ocorrência."
           : null;
+
+  if (!nf) {
+    return (
+      <Card className="p-6 text-center text-sm text-muted">
+        Carregando informações da NF…
+      </Card>
+    );
+  }
 
   if (resultado) {
     return (
@@ -175,6 +218,7 @@ export function CanhotoForm({ nf }: { nf: NotaMotorista }) {
       </Card>
     );
   }
+
 
   return (
     <div className="space-y-4">

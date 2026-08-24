@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   IconSearch,
@@ -14,9 +14,56 @@ import { Progress } from "@/components/ui/progress";
 import { MapaRomaneio } from "./mapa-romaneio";
 import { enderecoMapsUrl } from "@/lib/maps";
 import { NF_STATUS_FINAIS, type NotaMotorista } from "@/lib/types";
+import {
+  obterNotasRomaneioCache,
+  salvarNotasRomaneioCache,
+} from "@/lib/offline/cache";
+import { EVENTO_FILA } from "@/lib/offline/sync";
 
-export function RomaneioView({ notas }: { notas: NotaMotorista[] }) {
+export function RomaneioView({
+  notas: initialNotas,
+  romaneioId,
+}: {
+  notas: NotaMotorista[];
+  romaneioId?: string;
+}) {
+  const [notas, setNotas] = useState<NotaMotorista[]>(initialNotas);
   const [q, setQ] = useState("");
+
+  useEffect(() => {
+    let ativo = true;
+
+    async function sincronizar() {
+      if (initialNotas && initialNotas.length > 0) {
+        if (romaneioId) {
+          await salvarNotasRomaneioCache(romaneioId, initialNotas);
+        }
+        if (ativo) setNotas(initialNotas);
+      } else if (romaneioId) {
+        const doCache = await obterNotasRomaneioCache(romaneioId);
+        if (ativo && doCache && doCache.length > 0) {
+          setNotas(doCache);
+        }
+      }
+    }
+
+    sincronizar();
+
+    async function recarregarCache() {
+      if (romaneioId) {
+        const doCache = await obterNotasRomaneioCache(romaneioId);
+        if (ativo && doCache) {
+          setNotas(doCache);
+        }
+      }
+    }
+
+    window.addEventListener(EVENTO_FILA, recarregarCache);
+    return () => {
+      ativo = false;
+      window.removeEventListener(EVENTO_FILA, recarregarCache);
+    };
+  }, [initialNotas, romaneioId]);
 
   const filtradas = useMemo(() => {
     const t = q.trim().toLowerCase();
