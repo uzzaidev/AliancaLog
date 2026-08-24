@@ -5,10 +5,10 @@
 > 2026-08-20** — nenhum item novo entrou nem saiu desde então.
 > Índice geral: [README.md](./README.md).
 
-> **Antes de mexer aqui:** o MVP A ainda não está no ar. A Fase B só começa depois do
-> deploy e do piloto — ver [mvp-a-pendencias.md](./mvp-a-pendencias.md). E o Luis está
-> com o `DATABASE_URL` fora do ar, então **nenhuma migration nova** (que praticamente
-> todo item deste arquivo exige) pode ser aplicada até isso ser resolvido.
+> **Antes de mexer aqui:** o MVP A já está em HTTPS e o `DATABASE_URL` voltou a funcionar.
+> Mesmo assim, a Fase B só deve começar depois da validação real e do piloto — ver
+> [mvp-a-pendencias.md](./mvp-a-pendencias.md). O gargalo agora é produto/operação, não
+> capacidade de aplicar migration.
 
 ## Achado principal: a Fase B já começou sem ninguém marcar
 

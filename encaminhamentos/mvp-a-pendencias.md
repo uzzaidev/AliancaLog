@@ -1,197 +1,141 @@
 # MVP A — o que falta para o go-live
 
-> Revisão original de 2026-08-14 do [CHECKLIST.md](../docs/governanca/CHECKLIST.md)
-> (Sprints 0–4 + Pré-piloto), **reconferida contra o código em 2026-08-20**.
+> Atualizado em 2026-08-24 após pull dos últimos commits.
 > Índice geral: [README.md](./README.md).
 
 ## Resumo
 
-**Todo o código do MVP A está escrito.** O que falta é quase inteiramente
-**infraestrutura de produção e validação real** — não é feature nova.
+Todo o código central do MVP A está escrito. O deploy HTTPS, o cache offline completo,
+o Sentry e o workflow de backup já entraram no repositório. O que falta agora é
+configuração de secrets, validação real e operação do piloto.
 
-| | Itens abertos | Natureza |
-|---|---|---|
-| **Luis** | 8 | Banco travado, deploy, monitoramento, backup, testes, cache offline |
-| **Vítor** | 7 | Validação ao vivo, dados reais, piloto, treinamento |
+## O que entrou nos últimos commits
 
-### Verificado nesta data (20/08)
+### `9984000` — cache offline de romaneios e NFs
 
-- 19 migrations no repositório, todas aplicadas.
-- `npm run test:security` **9/9** contra o banco real (inclui T4a/b/c do A-007).
-- Sentry, Playwright e CI: **confirmados ausentes**.
-- `STORE_CACHE`: **confirmado ainda como esqueleto** (nunca escrito nem lido).
-- Sem `vercel.json`/`.vercel` no repo — deploy segue pendente.
+- Novo `lib/offline/cache.ts`.
+- `/motorista/entregas` usa `EntregasView` com fallback para `STORE_CACHE`.
+- `/motorista/romaneio/[id]` cacheia e recupera NFs do romaneio.
+- `/motorista/canhoto/[id]` tenta buscar NF do cache se o servidor/rede falhar.
+- Ao registrar entrega offline, o status da NF é atualizado no cache local.
 
-## ⚠️ Dois bloqueios em série
+### `76f6f56` e `3050ef1` — Sentry + backup
 
-```
-DATABASE_URL quebrado  →  Deploy Vercel  →  Testes ao vivo  →  Piloto  →  Go-live
-   (Luis, rápido)          (Luis, ⏫)         (Vítor)
-```
+- `@sentry/nextjs` adicionado.
+- `instrumentation.ts`, `sentry.client.config.ts`, `sentry.server.config.ts` e
+  `sentry.edge.config.ts` criados.
+- `next.config.ts` envolvido com `withSentryConfig`.
+- `lib/offline/sync.ts` envia falhas relevantes do sync offline ao Sentry.
+- `.github/workflows/db-backup.yml` roda `npm run db:backup` diariamente e salva artifact.
+- `.env.example` documenta `NEXT_PUBLIC_SENTRY_DSN`.
 
-**1. O `DATABASE_URL` está com senha inválida** (descoberto em 20/08). Derruba
-`db:migrate`, `db:status` e `db:backup` — na prática, **nenhuma migration nova pode ser
-aplicada** até isso ser resolvido. É rápido, mas trava todo o trabalho de banco do Luis.
+## Luis — pendências reais
 
-**2. O deploy é o caminho crítico do projeto.** Câmera e Service Worker exigem HTTPS,
-então **5 das 7 pendências do Vítor** ficam paradas até o staging subir. Enquanto isso,
-dá para adiantar só a parte do roteiro que roda em `npm run dev`.
+### 1. Configurar e validar Sentry
 
----
+O código já está plugado, mas falta operação:
 
-## Correções ao CHECKLIST (o que estava desatualizado)
+- Cadastrar `NEXT_PUBLIC_SENTRY_DSN` na Vercel.
+- Confirmar se também serão usados `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` e `SENTRY_PROJECT`
+  para source maps/release tracking.
+- Provocar um erro controlado em produção e confirmar que aparece no painel do Sentry.
+- Validar especialmente eventos do `offline-sync`, porque ali ficam falhas silenciosas de campo.
 
-Confirmado por leitura de código, não por confiança no que estava marcado:
+### 2. Validar backup automático
 
-- **"Push para o GitHub"** — na verdade **já feito**. O remote `uzzaidev/AliancaLog`
-  existe e os commits estão lá. Só o **deploy na Vercel** segue em aberto.
-- **"Imutabilidade forte do canhoto (bloquear re-registro)"** (Sprint 2) — **obsoleto**.
-  O A-007 fez o oposto de propósito: removeu o índice `uq_canhoto_nf` justamente para
-  permitir várias tentativas por NF. Reescrever ou remover o item, senão vira
-  contradição com o que está em produção.
-- **"Perguntar ao Matheus se as empresas conseguem encaminhar os XMLs"** (Pré-piloto) —
-  **respondido na reunião de 12/08** (decisão D-005: cliente manda `.zip` de XMLs ao
-  fechar a carga). O que sobrou dele é o A-012, que já está em
-  [vitor-pirolli.md](./vitor-pirolli.md).
-- **"Smoke test de RLS formal — falta script versionado"** — o script **existe**
-  (`scripts/smoke-seguranca.mjs`, rodando por `npm run test:security`, 9/9 no banco
-  real). Falta confirmar se cobre o perfil `cliente_final`, que era a outra metade do
-  item.
+O workflow existe em `.github/workflows/db-backup.yml`.
 
----
+Falta:
 
-## Luis — 8 itens
+- Cadastrar `DATABASE_URL` em GitHub Secrets.
+- Rodar `workflow_dispatch` manualmente uma vez.
+- Confirmar que o artifact `db-backup-*` é gerado como `.sql.gz`.
+- Conferir retenção de 30 dias e combinar se isso atende ou se precisa backup externo/Supabase pago.
 
-### 0. Corrigir o `DATABASE_URL` `🔴 trava o próprio trabalho dele`
+### 3. Criar logins reais
 
-**Descoberto em 20/08:** `password authentication failed for user "postgres"`.
+Depende do Vítor/Matheus trazerem as listas:
 
-```
-npm run db:migrate   ❌     npm run db:status   ❌     npm run db:backup   ❌
-```
+- 16 motoristas.
+- Aproximadamente 20 empresas/clientes.
 
-Já aconteceu antes — o [CHECKPOINT.md](../docs/governanca/CHECKPOINT.md) registra um
-reset de senha pelo mesmo motivo (o pooler do Supabase deixou de aceitar a antiga,
-`EAUTHQUERY`). Provavelmente é regenerar no painel e atualizar o `.env`.
+O fluxo manual existe em `/gerencia/cadastros`; Luis avalia se vale script de carga em lote.
 
-A conexão por **service role key** segue funcionando (é o que o app, o `seed` e o
-`test:security` usam) — o problema é só o caminho `pg`/`DATABASE_URL` dos scripts.
+### 4. Domínio definitivo + SSL
 
-**Aceite:** `npm run db:status` lista as 19 migrations sem erro.
+`alianca-log.vercel.app` já resolve o HTTPS para teste/piloto. Falta decidir se o go-live
+terá domínio próprio.
 
-### 1. Deploy na Vercel `⏫ bloqueia o resto`
-GitHub já está conectado; falta a Vercel apontada para o repo, com as variáveis de
-ambiente do Supabase, e uma URL de staging no ar.
+### 5. E2E/CI geral
 
-**Por que é o item mais urgente:** câmera (`getUserMedia`) e Service Worker exigem
-**HTTPS**. Sem deploy, ninguém consegue testar bipagem nem offline num celular real —
-e isso trava 5 das 7 pendências do Vítor.
+Ainda não existe Playwright nem workflow geral de `npm test` em PR/push. Não bloqueia piloto,
+mas é a próxima rede de proteção técnica se o time continuar mexendo em paralelo.
 
-**Aceite:** URL de staging abre o login em HTTPS, e dá para instalar o PWA no celular.
+## Vítor — pendências reais
 
-### 2. Domínio + SSL
-Depois do staging, o domínio definitivo para o go-live.
+### 1. Rodar validação ao vivo
 
-### 3. Monitoramento de erros (Sentry ou similar)
-Não existe nada hoje — nenhuma dependência de monitoramento no `package.json`. Se um
-canhoto falhar no celular do motorista em campo, ninguém fica sabendo.
+Usar o roteiro em [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md), agora em HTTPS:
+`https://alianca-log.vercel.app`.
 
-**Aceite:** um erro provocado de propósito em produção aparece no painel de
-monitoramento com stack trace.
+Prioridade:
 
-### 4. Backup automático do banco
-Hoje `npm run db:backup` é **manual** — e desde 20/08 nem manual funciona, porque
-depende do `DATABASE_URL` (item 0). Antes de entrar dado real de cliente, precisa ser
-automático (o próprio Supabase tem backup no plano pago; confirmar qual plano o projeto
-está usando).
+- A-007: segunda tentativa não perde foto/status.
+- Offline: modo avião, fila e cold-open com `STORE_CACHE`.
+- A-006: motorista no mapa em tempo real.
+- R-008: cliente não vê NF de outra empresa.
 
-> Enquanto isso, o `scripts/reset-operacional.mjs` (criado em 20/08) faz dump das
-> tabelas de movimento em JSON via service role — serve de rede de proteção pontual,
-> **não** substitui backup do banco inteiro.
+### 2. Testar `cliente_final`
 
-### 5. Cache offline da lista do dia `→ leitura offline no boot`
-**Confirmado como não feito**: `STORE_CACHE` (`lib/offline/db.ts`) é criado e limpo no
-logout, mas **nunca é escrito nem lido**. Só o esqueleto existe.
+Login do cliente final continua sendo o perfil menos validado. É o ponto principal de
+risco de isolamento/RLS.
 
-Efeito prático: o motorista só enxerga as entregas offline se a aba **já estava
-aberta**. Se ele fechar o app numa área sem sinal e reabrir, vê tela vazia. Numa
-operação na Serra, esse é o cenário provável, não a exceção.
+### 3. Critérios de sucesso do piloto
 
-**Aceite:** abrir o app em modo avião, do zero, e ainda ver o romaneio e as NFs do dia.
+Transformar em texto acordado com o cliente. Sugestão:
 
-### 6. Testes E2E (Playwright)
-Adiado por decisão explícita na sessão de 14/08 — não é esquecimento. Com o QA agora
-sob sua responsabilidade, é seu. Não precisa cobrir tudo: priorizar login por role,
-registrar canhoto offline→sync, e isolamento entre empresas (R-008).
+- 2–3 motoristas.
+- 5 dias úteis.
+- ≥95% das entregas registradas pelo app.
+- Zero perda de canhoto no sync.
+- Dashboard consultado pelo Matheus sem depender de pedido manual.
 
-### 7. Criar os logins reais
-16 motoristas + ~20 empresas, quando o Vítor trouxer as listas do Matheus. O fluxo de
-cadastro já existe na UI (`/gerencia/cadastros`), então talvez seja só operacional —
-avaliar se vale um script de carga em lote.
+### 4. Dados reais
 
-### Extra sem dono definido — CI (GitHub Actions)
-Não existe `.github/`. Hoje `npm test` (typecheck + lint + smoke de segurança) só roda
-se alguém lembrar. Não é bloqueio de piloto, mas com dois devs mexendo no mesmo repo
-vira rede de proteção barata.
+Pegar com Matheus:
 
----
+- 2–3 planilhas/arquivos reais.
+- `.zip` real de XMLs de carga fechada.
+- Lista real de motoristas.
+- Lista real de empresas/clientes para criação de logins.
 
-## Vítor — 7 itens
+### 5. Foto e usabilidade em campo
 
-### 1. Validação ao vivo de tudo que foi construído `⏫`
-Roteiro completo e priorizado em
-[testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md). É o maior bloco de risco do MVP A:
-**todo o código compila, mas quase nada foi visto rodando com dado real.**
+Validar em celular real:
 
-### 2. Login do `cliente_final` nunca foi testado de verdade
-Gerência e motorista foram confirmados em uso real; o portal do cliente, não. Como é
-justamente o perfil com o risco R-008 (ver dado de outra empresa), vale testar cedo.
+- Foto de chegada obrigatória.
+- Foto do canhoto a 1280px em luz ruim/canhoto amassado/caneta fraca.
+- Uso com sol na tela, pressa e toque em campo.
 
-### 3. Critérios de sucesso do piloto (escrever)
-Não existem ainda. Sugestão do próprio checklist: 2–3 motoristas × 5 dias, ≥95% das
-entregas pelo app, zero perda no sync, Matheus abrindo o dashboard sem ser lembrado.
-Precisa virar texto acordado com o cliente, senão "o piloto deu certo?" vira opinião.
+### 6. Piloto + treinamento
 
-### 4. Excel/XML reais das empresas
-Pegar com o Matheus 2–3 arquivos reais para testar a importação com dado sujo de
-verdade (é onde o parser costuma quebrar). Conecta com o A-012.
-
-### 5. Testar a foto de 1280px com canhotos reais em luz ruim
-A compressão foi ajustada de 800px para 1280px justamente para a assinatura ficar
-legível no zoom — mas isso nunca foi validado com canhoto amassado, foto contra o sol,
-caneta fraca. Se não estiver legível, o produto inteiro perde o valor probatório.
-
-### 6. Piloto com 2–3 motoristas
-Primeira entrega real registrada pelo app. Depois, os ajustes que saírem dele.
-
-### 7. Material de apoio + treinamento
-Guia de 1 página + treinamento do coordenador. É o A-015 da ata, no formato de duas
-etapas (equipe faz sozinha → depois acompanha junto).
-
----
+- Rodar piloto com 2–3 motoristas.
+- Registrar falhas com print/contexto.
+- Preparar guia de 1 página e treinamento do coordenador.
 
 ## Ordem recomendada
 
-1. **Luis: corrigir o `DATABASE_URL`** — rápido, e sem isso ele não aplica migration nenhuma.
-2. **Luis: deploy na Vercel** — destrava tudo do lado do Vítor.
-3. **Vítor: bateria de testes ao vivo** no staging (roteiro no arquivo dedicado).
-   Os marcados 💻 já podem ser feitos antes do deploy.
-4. **Luis: Sentry + backup** — antes de entrar dado real de cliente.
-5. **Vítor: critérios do piloto + dados reais** com o Matheus.
-6. **Luis: cache offline da lista** — pode ir em paralelo, mas é o refinamento que mais
-   muda a experiência real na Serra.
-7. **Piloto** → ajustes → go-live.
+1. Luis: configurar Sentry na Vercel e validar evento.
+2. Luis: configurar `DATABASE_URL` nos GitHub Secrets e validar workflow de backup.
+3. Vítor: executar testes ao vivo em produção HTTPS.
+4. Vítor: coletar dados reais/listas com Matheus.
+5. Luis: criar logins reais.
+6. Vítor: critérios do piloto + treinamento.
+7. Piloto → ajustes → go-live.
 
-**Não são bloqueio de piloto:** Playwright, CI e o item obsoleto de imutabilidade.
+## Não é bloqueio imediato
 
----
-
-## O gargalo não é desenvolvimento
-
-Vale registrar, porque muda a conversa com o cliente: **nenhuma linha de código de
-produto está faltando** para o MVP A. O que separa o projeto do go-live é
-**operação** — deploy, monitoramento, backup e a bateria de validação real.
-
-Nada disso é incerto ou exploratório; é execução. A Fase B, sim, é desenvolvimento —
-e depende de duas decisões de produto que ainda não foram tomadas
-([fase-b-pendencias.md](./fase-b-pendencias.md)).
+- Playwright/E2E.
+- CI geral.
+- Fase B.
+- Lojas de app.

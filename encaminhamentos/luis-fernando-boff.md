@@ -20,7 +20,53 @@ rodando em paralelo desde já — seguida à risca.
 
 ---
 
-## 🔴 Pendências abertas — Luis (revisado em 2026-08-20)
+## ✅ Atualização — Luis (2026-08-24)
+
+Os bloqueios de infraestrutura que estavam no topo deste arquivo mudaram depois dos
+últimos commits/pull.
+
+### Feito / entregue
+
+- `DATABASE_URL` resolvido; migrations/status/backup voltaram a funcionar.
+- Deploy HTTPS ativo em `alianca-log.vercel.app`.
+- Cache offline completo do `STORE_CACHE` implementado para romaneios/NFs do motorista.
+- Sentry integrado com `@sentry/nextjs`.
+- `lib/offline/sync.ts` agora reporta falhas relevantes ao Sentry.
+- Backup automático criado em `.github/workflows/db-backup.yml`.
+- Revisões de segurança de `getResumoHoje` e `lib/import-duplicatas.ts` aprovadas.
+
+### Falta para o Luis
+
+1. **Configurar Sentry na Vercel**
+   - Cadastrar `NEXT_PUBLIC_SENTRY_DSN`.
+   - Decidir/configurar `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` e `SENTRY_PROJECT` se forem usar source maps.
+   - Provocar um erro controlado e confirmar evento no painel do Sentry.
+
+2. **Validar backup automático**
+   - Cadastrar `DATABASE_URL` em GitHub Secrets.
+   - Rodar manualmente o workflow `Backup Automático do Banco de Dados`.
+   - Confirmar artifact `.sql.gz` gerado e retenção de 30 dias.
+
+3. **Criar logins reais**
+   - Aguardar listas do Vítor/Matheus.
+   - Criar 16 motoristas e aproximadamente 20 empresas/clientes.
+   - Avaliar se será manual em `/gerencia/cadastros` ou por script.
+
+4. **Domínio definitivo**
+   - `alianca-log.vercel.app` já serve para teste/piloto.
+   - Falta decidir/configurar domínio próprio se for requisito de go-live.
+
+5. **QA automatizado**
+   - Playwright ainda não existe.
+   - CI geral de `npm test` em PR/push ainda não existe.
+   - Não bloqueia piloto, mas é a próxima rede de proteção.
+
+### Histórico abaixo
+
+A seção seguinte registra o estado revisado em 20/08 antes dos commits de deploy/cache/Sentry/backup.
+Ela fica mantida como histórico técnico, mas a lista válida de pendências é a atualização acima.
+
+## Histórico — pendências Luis revisadas em 2026-08-20
 
 Conferido contra o código nesta data, não contra o que estava marcado.
 Detalhe completo: [mvp-a-pendencias.md](./mvp-a-pendencias.md) e

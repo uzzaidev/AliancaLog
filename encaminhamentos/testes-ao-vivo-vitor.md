@@ -3,7 +3,7 @@
 > **Tudo que precisa ser visto funcionando antes do go-live.** Consolidado em
 > 2026-08-14 a partir do [CHECKLIST.md](../docs/governanca/CHECKLIST.md), do
 > [CHECKPOINT.md](../docs/governanca/CHECKPOINT.md) e dos encaminhamentos da reunião
-> de 12/08; **atualizado em 2026-08-20**. Índice geral: [README.md](./README.md).
+> de 12/08; **atualizado em 2026-08-24**. Índice geral: [README.md](./README.md).
 
 > 🧹 **O banco foi zerado em 20/08** — 61 NFs, 13 canhotos, 4 ocorrências, 12 romaneios
 > e 16 fotos apagados; cadastros e logins preservados. O estado está limpo para começar
@@ -22,11 +22,12 @@ Isso é do Vítor porque exige acesso ao cliente, ao motorista em campo e a arqu
 da operação. Já aconteceu de algo compilar perfeitamente e estar visivelmente quebrado
 na tela (o mapa aparecendo por cima da topbar foi descoberto só por print).
 
-## Pré-requisito que bloqueia metade da lista
+## Pré-requisito atualizado
 
-⚠️ **Câmera e Service Worker exigem HTTPS.** No celular, `http://localhost` não serve.
-Os testes marcados 📱 só rodam depois do **deploy na Vercel**, que é do Luis
-(ver [mvp-a-pendencias.md](./mvp-a-pendencias.md)).
+✅ **Deploy HTTPS ativo:** `https://alianca-log.vercel.app`.
+
+Câmera, Service Worker, PWA e cold-open offline já podem ser testados no celular real.
+`http://localhost` continua útil só para os testes de desktop/desenvolvimento.
 
 Os marcados 💻 dá para fazer agora, no `npm run dev`.
 
@@ -146,14 +147,12 @@ valor probatório e a compressão precisa mudar antes do piloto.
 Sol na tela, com luvas, dirigindo. Os alvos de toque são de 48px — confirmar se
 funciona de verdade, não só no papel.
 
-### 3.3 📱 Cold-open offline `conhecido como não implementado`
+### 3.3 📱 Cold-open offline `STORE_CACHE implementado em 24/08`
 Fechar o app **sem sinal** e reabrir do zero.
 
-**Hoje isso não funciona** — a lista só existe se a aba já estava aberta (o cache
-`STORE_CACHE` é só esqueleto, ver [mvp-a-pendencias.md](./mvp-a-pendencias.md) item 5
-do Luis). Vale confirmar o quanto isso atrapalha na prática **antes** do Luis investir
-no refinamento: se na Serra o motorista fecha o app com frequência, sobe de
-refinamento para bloqueio.
+**O que confirmar:** romaneio e NFs aparecem mesmo com o app abrindo do zero em
+modo avião/sem sinal. Depois de registrar canhoto offline, a lista local deve refletir
+o novo status antes mesmo do sync subir.
 
 ### 3.4 💻 Layout em telas reais
 Já foram corrigidos "no escuro", sem confirmação visual:
@@ -179,9 +178,9 @@ Direto do [CHECKLIST.md](../docs/governanca/CHECKLIST.md):
 
 ## Sugestão de sequência
 
-1. **Agora, sem depender de ninguém:** os 💻 — 1.4, 2.2, 2.2b, 2.3, 2.4, 2.5, 2.7, 3.4.
-2. **Assim que o Luis subir o deploy:** 1.1, 1.2, 2.1, 2.6 — o núcleo do produto.
-3. **Com motorista real em rota:** 1.3, 3.1, 3.2, 3.3.
+1. **Agora, em produção HTTPS:** 1.1, 1.2, 2.1, 2.6 e 3.3 — o núcleo do produto.
+2. **Também pode rodar em desktop/dev:** os 💻 — 1.4, 2.2, 2.2b, 2.3, 2.4, 2.5, 2.7, 3.4.
+3. **Com motorista real em rota:** 1.3, 3.1, 3.2.
 4. **Fechar** a Definition of Done acima e escrever os critérios de sucesso do piloto.
 
 > Anote o que falhar aqui mesmo, com print. Foi assim que os dois últimos bugs reais

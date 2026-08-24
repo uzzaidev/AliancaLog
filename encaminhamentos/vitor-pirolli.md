@@ -11,7 +11,64 @@ reset do banco para uma rodada limpa de testes (ver o fim deste arquivo).
 
 ---
 
-## 🔴 Pendências abertas — Vítor (revisado em 2026-08-20)
+## ✅ Atualização — Vítor (2026-08-24)
+
+O deploy HTTPS já está ativo em `alianca-log.vercel.app`, então os testes que dependiam
+de câmera/Service Worker em celular não estão mais bloqueados por infraestrutura.
+
+### Feito / destravado
+
+- A parte de dev da reunião de 12/08 segue concluída.
+- Correção de duplicatas na importação foi feita em 20/08.
+- Banco foi resetado para bateria limpa de testes em 20/08.
+- Deploy HTTPS está ativo.
+- `STORE_CACHE` foi implementado para cold-open offline do motorista.
+- Sentry e backup automático foram plugados pelo Luis.
+
+### Falta para o Vítor
+
+1. **Rodar validação ao vivo em produção HTTPS**
+   - Usar `https://alianca-log.vercel.app`.
+   - Priorizar A-007, offline, cold-open, A-006/mapa e isolamento R-008.
+
+2. **Testar `cliente_final`**
+   - Confirmar login e redirecionamento.
+   - Confirmar que cliente só vê NFs da própria empresa.
+
+3. **Executar testes com dado real**
+   - `.zip` real de XMLs.
+   - Excel/arquivos reais das empresas.
+   - Fluxo de duplicatas nos perfis gerência e cliente.
+
+4. **Validar foto e usabilidade em campo**
+   - Foto de chegada obrigatória.
+   - Canhoto 1280px legível em luz ruim/canhoto amassado/caneta fraca.
+   - Uso no celular em sol, pressa e toque real.
+
+5. **Escrever critérios do piloto**
+   - 2–3 motoristas, 5 dias, ≥95% das entregas pelo app, zero perda de sync, dashboard usado pelo Matheus.
+
+6. **Trazer listas para o Luis**
+   - 16 motoristas.
+   - Aproximadamente 20 empresas/clientes.
+
+7. **Conduzir piloto e treinamento**
+   - Piloto com 2–3 motoristas.
+   - Guia de 1 página.
+   - Treinamento do coordenador.
+
+8. **Decisões de Fase B**
+   - Google Routes vs OSRM/VROOM.
+   - Levantar tarifas/custos com Matheus.
+   - Priorizar exportação/KPIs/financeiro.
+   - Decidir Web Push antes de lojas.
+
+### Histórico abaixo
+
+A seção seguinte registra o estado revisado em 20/08. Ela fica mantida como histórico,
+mas a lista válida de pendências é a atualização acima.
+
+## Histórico — pendências Vítor revisadas em 2026-08-20
 
 Detalhe completo em [mvp-a-pendencias.md](./mvp-a-pendencias.md); roteiro de validação
 em [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md).
