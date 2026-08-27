@@ -25,10 +25,24 @@ export type CanhotoStatus = "aceita" | "recusada" | "ocorrencia";
 // motorista, excluir, contar concluídas...).
 export const NF_STATUS_FINAIS: NotaStatus[] = ["aceita"];
 
-// Status em que uma NF ainda não chegou a um desfecho — usado pra não deixar
-// pendência antiga invisível quando nenhum período específico é escolhido
-// (dashboard, painel de clientes, mapa).
-export const NF_STATUS_ABERTOS: NotaStatus[] = ["pendente", "em_rota"];
+// Status que ainda exigem alguma ação — o "a fazer" da operação. Usado pra não
+// deixar pendência antiga invisível quando nenhum período específico é escolhido
+// (dashboard, painel de clientes, mapa, alerta de NF parada).
+//
+// `ocorrencia` e `recusada` entram aqui desde a migration 0022: a NF passou a
+// guardar o DESFECHO da última tentativa em vez de virar sempre 'pendente', mas
+// continua precisando de nova tentativa/tratativa. Ou seja:
+//   pendente   → nunca foi tentada
+//   em_rota    → está com o motorista agora
+//   ocorrencia → tentada, deu problema  ─┐ ambas voltaram ao painel
+//   recusada   → tentada, cliente recusou ┘ (sem romaneio nem motorista)
+// Só `aceita` encerra (ver NF_STATUS_FINAIS).
+export const NF_STATUS_ABERTOS: NotaStatus[] = [
+  "pendente",
+  "em_rota",
+  "ocorrencia",
+  "recusada",
+];
 
 export type OcorrenciaTipo =
   | "item_faltando"

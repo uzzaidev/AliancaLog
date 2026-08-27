@@ -6,11 +6,29 @@ Divisão de tarefas dos encaminhamentos da ata de 12/08/2026, já com decisões 
 
 ## Arquivos desta pasta
 
+- **[reuniao-27-08.md](./reuniao-27-08.md)** — **mais recente**. A D-003 (status de
+  ocorrência) foi resolvida pelo PO com a migration `0022`; traz também a lista do que
+  já estava resolvido antes da ata ser processada.
 - [mvp-a-pendencias.md](./mvp-a-pendencias.md) — fotografia atual do que falta para go-live.
 - [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md) — roteiro priorizado de validação real.
 - [luis-fernando-boff.md](./luis-fernando-boff.md) — backend/infra/offline/GIS/QA, com histórico técnico.
 - [vitor-pirolli.md](./vitor-pirolli.md) — frontend/produto/comercial, com histórico técnico.
 - [fase-b-pendencias.md](./fase-b-pendencias.md) — escopo restante do MVP Completo.
+
+## ⚠️ Novo em 27/08
+
+- **Modelo de status refinado (migration `0022`)** — a NF passou a guardar o **desfecho
+  da última tentativa** (`ocorrencia` / `recusada`) em vez de virar sempre `pendente`.
+  Agora `pendente` significa "nunca foi tentada". As duas continuam como "a fazer"
+  (`NF_STATUS_ABERTOS`), então nada que dependia de "voltar ao painel" mudou — isso
+  sempre dependeu de `romaneio_id`/`motorista_id`, não do status.
+
+- **Bug de produção corrigido:** registrar ocorrência falhava com 500 (duas falhas de
+  RLS encadeadas — migrations `0020` e `0021`). Cobertura de teste adicionada (T8a–T8d);
+  `test:security` agora com 13 verificações. **Pendente revisão do Luis** (mexe em RLS).
+- **Pendência nova para o Luis:** um erro 500 **trava a fila offline inteira** — foi por
+  isso que uma entrega aceita, sem problema nenhum, ficou presa atrás da ocorrência
+  quebrada. Detalhe em [luis-fernando-boff.md](./luis-fernando-boff.md).
 
 ## Status atual — 24/08/2026
 

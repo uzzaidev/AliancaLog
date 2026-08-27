@@ -61,6 +61,99 @@ Os bloqueios de infraestrutura que estavam no topo deste arquivo mudaram depois 
    - CI geral de `npm test` em PR/push ainda não existe.
    - Não bloqueia piloto, mas é a próxima rede de proteção.
 
+---
+
+## 🔴 Novo (27/08) — um erro 500 trava a fila offline inteira
+
+`lib/offline/sync.ts`, no `else` final do `flushFila` (~linha 87):
+
+```js
+break; // erro de servidor — tenta de novo depois.
+```
+
+Quando um item recebe **500**, o flush **para ali** e todos os registros atrás dele
+ficam presos. Não é descuido — é decisão deliberada, e **correta para 500 transitório**
+(servidor fora do ar, timeout): não faz sentido queimar a fila inteira contra um
+servidor que caiu.
+
+O problema é o **500 permanente**. Aconteceu de verdade hoje: a falha de RLS na
+ocorrência (corrigida pelas migrations `0020`/`0021` abaixo) virou um item "veneno" que
+nunca passava e segurava tudo atrás dele. O Vítor viu uma entrega **aceita**, sem
+problema nenhum, parada na fila — ela só estava atrás da ocorrência quebrada. Isso
+explica o "para nota aceita também" que ele reportou.
+
+**Risco em campo:** motorista faz 10 entregas, a terceira esbarra num 500 permanente,
+e as sete seguintes **nunca chegam ao painel**. Para ele todas foram "registradas" —
+não há como perceber.
+
+O caso do **400 já tem a saída certa** (descarta só aquele item e segue, ~linha 53).
+Falta o equivalente para o 500 que não vai passar nunca.
+
+**Sugestão** — não implementei porque mexe na fila offline, que é seu território e o
+ponto mais sensível do produto:
+
+1. Contar falhas por `client_id`; depois de N tentativas (3–5), **pular o item** e
+   seguir a fila em vez de parar. Nada se perde — ele continua enfileirado, só deixa
+   de bloquear os outros.
+2. Diferenciar na tela "espera aí" de "isso não vai passar". Hoje o banner mostra o
+   erro, mas o motorista não sabe se precisa agir.
+
+O Sentry já captura esses 500 com `area: offline-sync`, então dá pra medir a
+frequência real antes de escolher o N.
+
+---
+
+## 🐛 Corrigido hoje (27/08) — ocorrência falhava em produção `sua revisão pendente`
+
+Erro que o Vítor pegou testando no celular:
+`new row violates row-level security policy for table "ocorrencias"` (500).
+Entrega **aceita** funcionava; só **ocorrência** falhava.
+
+Eram **duas falhas de RLS encadeadas**, na mesma transação:
+
+**Migration `0020`** — assimetria entre as tabelas:
+
+| Tabela | INSERT | SELECT |
+|---|---|---|
+| `canhotos` | ✅ | ✅ `mot_canhoto_select` |
+| `ocorrencias` | ✅ | ❌ **não existia** |
+
+A `registrar_entrega_offline` grava nas duas com `ON CONFLICT (client_id)`. Resolver o
+`ON CONFLICT` exige **ler** a linha conflitante pelo índice único; sem policy de SELECT,
+o Postgres nega essa leitura e reporta como violação **na inserção**. O canhoto passava
+justamente porque o motorista tem SELECT nele.
+
+**Migration `0021`** — apareceu depois de corrigir a primeira: o Postgres aplica as
+policies de **SELECT à linha NOVA de um UPDATE**. Ao devolver a NF ao painel (A-007),
+zerar `motorista_id` tira a linha do alcance de `mot_nf_select`, e o próprio UPDATE é
+recusado. O `WITH CHECK` de `mot_nf_update` já permitia `motorista_id is null` — o
+bloqueio vinha da policy de leitura, não da de escrita.
+
+Correção: o motorista passa a enxergar também as NFs **em que ele já registrou
+canhoto**. Precisou de uma função `security definer` (`motorista_registrou_nf`) porque
+referenciar `canhotos` direto na policy de `notas_fiscais` causa
+**recursão infinita** — `cli_canhoto_select` consulta `notas_fiscais` de volta.
+
+> **Efeito colateral que isso também conserta:** depois de uma ocorrência, o motorista
+> **perdia acesso ao próprio histórico** (`/motorista/historico`), porque a NF saía da
+> posse dele. Era uma regressão silenciosa do A-007 sobre o que a `0015` tinha aberto.
+
+**Por que passou pelos seus testes:** o `T7` exercitava ocorrência com o cliente
+**`admin`**, que ignora RLS. O caminho real (sessão do motorista → RPC) nunca era
+testado. Adicionei o **T8** cobrindo isso, com os dois cenários de segurança:
+
+```
+✓ T8a motorista registra OCORRÊNCIA pela RPC
+✓ T8b NF volta pro painel como pendente
+✓ T8c motorista mantém acesso ao próprio histórico após a devolução
+✓ T8d outro motorista NÃO vê NF solta
+```
+
+`npm run test:security` agora com **13 verificações**, todas passando. Validado que
+nenhum motorista passou a ver NF de outro nem NF solta.
+
+**Precisa da sua revisão:** as duas migrations mexem em RLS.
+
 ### Histórico abaixo
 
 A seção seguinte registra o estado revisado em 20/08 antes dos commits de deploy/cache/Sentry/backup.

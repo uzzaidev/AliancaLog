@@ -137,6 +137,64 @@ async function main() {
     ok(!o1.error && !!o2.error, "T7 ocorrência não duplica no reenvio (mesmo client_id)" + (o2.error ? "" : " — FALHA: duplicou"));
   }
 
+  // ── T8 — registrar OCORRÊNCIA pela RPC, com a sessão do motorista ──
+  // Este bloco existe por causa de um bug real que chegou em produção (27/08):
+  // o T7 acima usa `admin`, que IGNORA RLS — então o caminho que o app usa de
+  // verdade (sessão do motorista → registrar_entrega_offline) nunca era exercido,
+  // e duas falhas de RLS passaram batido:
+  //   • sem SELECT em `ocorrencias`, o ON CONFLICT do insert era barrado (0020);
+  //   • ao devolver a NF pro painel, zerar motorista_id tirava a linha do alcance
+  //     de `mot_nf_select` e o próprio UPDATE era recusado (0021).
+  // Qualquer regressão nessas policies volta a quebrar a ocorrência no celular.
+  {
+    const nfOc = await mkNf(joaoId, romAtivo, "em_rota");
+    const cid = tag + "-rpc-oc";
+    criados.canhotos.push(cid);
+    criados.ocorrencias.push(cid);
+
+    const { error } = await cli.rpc("registrar_entrega_offline", {
+      p_client_id: cid,
+      p_nota_fiscal_id: nfOc,
+      p_status: "ocorrencia",
+      p_foto_url: "smoke/canhoto.jpg",
+      p_foto_chegada_url: "smoke/chegada.jpg",
+      p_lat: null, p_lng: null, p_gps_precisao: null,
+      p_observacao: null,
+      p_ocorrencia_tipo: "cliente_ausente",
+      p_ocorrencia_desc: "smoke test",
+    });
+    ok(!error, "T8a motorista registra OCORRÊNCIA pela RPC" + (error ? " — FALHA: " + error.message : ""));
+
+    // Desde a migration 0022 a NF guarda o DESFECHO da tentativa, não vira
+    // 'pendente'. Quem faz ela "voltar ao painel" é romaneio_id/motorista_id
+    // nulos — os dois lados precisam valer ao mesmo tempo.
+    const { data: depois } = await admin
+      .from("notas_fiscais")
+      .select("status,romaneio_id,motorista_id")
+      .eq("id", nfOc)
+      .single();
+    ok(depois?.status === "ocorrencia", "T8b NF guarda o desfecho da tentativa (ficou " + depois?.status + ")");
+    ok(
+      depois?.romaneio_id === null && depois?.motorista_id === null,
+      "T8b2 NF volta pro painel: sai do romaneio e do motorista",
+    );
+
+    // O motorista tem que continuar enxergando a NF que ele atendeu, mesmo depois
+    // de ela sair da posse dele — é o que sustenta /motorista/historico.
+    const { data: visivel } = await cli.from("notas_fiscais").select("id").eq("id", nfOc);
+    ok(visivel?.length === 1, "T8c motorista mantém acesso ao próprio histórico após a devolução");
+
+    // E um motorista diferente NÃO pode enxergar essa NF agora solta.
+    const outro = createClient(url, anon, { auth: { autoRefreshToken: false, persistSession: false } });
+    const { error: eCarlos } = await outro.auth.signInWithPassword({ email: "carlos@rotta.com.br", password: "alianca123" });
+    if (eCarlos) {
+      ok(true, "T8d (pulado — login do carlos indisponível: " + eCarlos.message + ")");
+    } else {
+      const { data: vazou } = await outro.from("notas_fiscais").select("id").eq("id", nfOc);
+      ok(!vazou?.length, "T8d outro motorista NÃO vê NF solta" + (vazou?.length ? " — FALHA: vazou" : ""));
+    }
+  }
+
   // ── teardown ──
   await admin.from("canhotos").delete().in("client_id", criados.canhotos);
   await admin.from("ocorrencias").delete().in("client_id", criados.ocorrencias);

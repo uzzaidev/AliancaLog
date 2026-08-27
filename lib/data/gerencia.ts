@@ -29,7 +29,11 @@ export const hojeISO = () => hojeSP();
 export type ResumoDia = {
   /** NFs programadas para hoje. */
   total: number;
-  /** Em aberto com data de hoje. */
+  /**
+   * NFs de HOJE que ainda exigem ação (qualquer `NF_STATUS_ABERTOS`, não só
+   * literalmente 'pendente'). Existe para a faixa de KPIs poder dizer quanto do
+   * passivo é atraso: `pendenteTotal - pendente` = o que sobrou de dias anteriores.
+   */
   pendente: number;
   /** Passivo real: toda NF em aberto, inclusive atrasada de dias anteriores. */
   pendenteTotal: number;
@@ -75,8 +79,12 @@ export async function getResumoHoje(data?: string): Promise<ResumoDia> {
 
   for (const row of (doDia.data ?? []) as { status: NotaStatus }[]) {
     r.total++;
-    if (row.status === "pendente") r.pendente++;
-    else if (row.status === "em_rota") r.em_rota++;
+    // Conta pelo conjunto "em aberto", não só por 'pendente': desde a migration
+    // 0022 uma NF de hoje pode estar como 'ocorrencia'/'recusada' e continuar
+    // exigindo ação. Contar só 'pendente' faria essas notas parecerem atraso de
+    // dias anteriores na linha de apoio do KPI.
+    if (NF_STATUS_ABERTOS.includes(row.status)) r.pendente++;
+    if (row.status === "em_rota") r.em_rota++;
   }
 
   for (const row of (tentativas.data ?? []) as { status: CanhotoStatus }[]) {
