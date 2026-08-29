@@ -31,6 +31,10 @@
    dinâmica do canhoto sem rede falhava antes de chegar ao formulário. A lista
    vazia do servidor agora limpa o cache, romaneio 100% é removido localmente e
    o formulário abre inline na tela já carregada, sem navegação de rede.
+8. Após a correção, os dois testes passaram. Para não substituir a confirmação
+   de conclusão por um estado vazio, “Minhas entregas” agora mantém os romaneios
+   fechados do dia com selo verde, progresso completo e acesso de consulta;
+   fechados anteriores continuam somente no histórico.
 
 ## Correção do fluxo motorista/mobile e painel (2026-08-28)
 

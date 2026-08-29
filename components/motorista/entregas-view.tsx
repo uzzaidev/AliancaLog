@@ -57,40 +57,56 @@ export function EntregasView({
         </Card>
       )}
 
-      {romaneios.map((r) => (
-        <Card
-          key={r.id}
-          className={`space-y-3 p-4 ${
-            r.confirmado_em ? "border-2 border-brand" : ""
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-dark">{r.total} NFs</span>
-            <Badge tone={r.confirmado_em ? "info" : "neutral"}>
-              {r.confirmado_em ? "Em andamento" : "Aguardando confirmação"}
-            </Badge>
-          </div>
+      {romaneios.map((r) => {
+        const fechado = r.status === "fechado";
+        return (
+          <Card
+            key={r.id}
+            className={`space-y-3 p-4 ${
+              fechado
+                ? "border-2 border-success"
+                : r.confirmado_em
+                  ? "border-2 border-brand"
+                  : ""
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-dark">{r.total} NFs</span>
+              <Badge
+                tone={fechado ? "success" : r.confirmado_em ? "info" : "neutral"}
+              >
+                {fechado
+                  ? "Fechado"
+                  : r.confirmado_em
+                    ? "Em andamento"
+                    : "Aguardando confirmação"}
+              </Badge>
+            </div>
 
-          {r.confirmado_em ? (
-            <>
-              <Progress done={r.concluidas} total={r.total} />
-              <Link href={`/motorista/romaneio/${r.id}`} className="block">
-                <Button className="w-full">
-                  Abrir entregas
-                  <IconChevronRight size={18} />
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-muted">
-                Confirme para iniciar as entregas deste romaneio.
-              </p>
-              <ConfirmarButton romaneioId={r.id} />
-            </>
-          )}
-        </Card>
-      ))}
+            {r.confirmado_em || fechado ? (
+              <>
+                <Progress done={r.concluidas} total={r.total} />
+                <Link href={`/motorista/romaneio/${r.id}`} className="block">
+                  <Button
+                    variant={fechado ? "secondary" : "primary"}
+                    className="w-full"
+                  >
+                    {fechado ? "Ver entregas concluídas" : "Abrir entregas"}
+                    <IconChevronRight size={18} />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted">
+                  Confirme para iniciar as entregas deste romaneio.
+                </p>
+                <ConfirmarButton romaneioId={r.id} />
+              </>
+            )}
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -21,16 +21,15 @@ export type RomaneioMotorista = {
   concluidas: number;
 };
 
-// "Do dia" aqui é "trabalho em aberto do motorista", não literalmente a data de
-// criação — um romaneio de ontem que ficou sem fechar (ex.: NF ainda pendente)
-// continua aparecendo em "Minhas entregas" até ser fechado, em vez de sumir
-// silenciosamente quando o dia vira (ver A-001).
+// "Minhas entregas" reúne o trabalho em aberto (mesmo de dias anteriores) e os
+// romaneios fechados HOJE. Assim o motorista recebe confirmação visual de que a
+// carga terminou; fechados antigos permanecem apenas no histórico.
 export async function getRomaneiosDoDia(): Promise<RomaneioMotorista[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("romaneios")
     .select("id,status,confirmado_em,created_at,notas_fiscais(status)")
-    .eq("status", "ativo")
+    .or(`status.eq.ativo,and(status.eq.fechado,data.eq.${hoje()})`)
     .order("created_at", { ascending: true });
 
   return ((data ?? []) as Record<string, unknown>[]).map((r) => {
