@@ -9,9 +9,11 @@ import { createClient } from "@/lib/supabase/client";
 export function RealtimeRefresher({
   channel: channelName = "gerencia-dashboard",
   dark = false,
+  showIndicator = true,
 }: {
   channel?: string;
   dark?: boolean;
+  showIndicator?: boolean;
 }) {
   const router = useRouter();
   const [live, setLive] = useState(false);
@@ -51,6 +53,8 @@ export function RealtimeRefresher({
       supabase.removeChannel(channel);
     };
   }, [router, channelName]);
+
+  if (!showIndicator) return null;
 
   return (
     <span

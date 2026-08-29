@@ -121,7 +121,7 @@ export async function obterNotaCache(
 
 /**
  * Atualiza o status de uma nota no cache local (individual e listas de romaneios).
- * Chamado imediatamente quando o motorista registra canhoto/ocorrência offline.
+ * Chamado depois que o servidor confirma o canhoto/ocorrência.
  */
 export async function atualizarStatusNotaCache(
   nfId: string,
@@ -178,6 +178,61 @@ export async function atualizarStatusNotaCache(
     }
   } catch {
     // Best-effort
+  }
+}
+
+/**
+ * Alinha o cache somente DEPOIS da confirmação do servidor.
+ * Aceita permanece no romaneio; recusa/ocorrência voltam ao painel da gerência
+ * e precisam sair da lista local do motorista para não permitir uma nova
+ * tentativa sem reatribuição.
+ */
+export async function reconciliarNotaAposSync(
+  nfId: string,
+  status: NotaStatus,
+): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    if (status === "aceita") {
+      await atualizarStatusNotaCache(nfId, status);
+      return;
+    }
+
+    const nota = await obterNotaCache(nfId);
+    if (nota) {
+      await salvarNotaCache({ ...nota, status, romaneio_id: null });
+    }
+
+    const entradas = await idbGetAll<CacheEntry<unknown>>(STORE_CACHE);
+    const totais = new Map<string, { total: number; concluidas: number }>();
+    for (const item of entradas) {
+      if (!item.key.startsWith("notas_romaneio_")) continue;
+      const romaneioId = item.key.slice("notas_romaneio_".length);
+      const notas = Array.isArray(item.data)
+        ? (item.data as NotaMotorista[]).filter((n) => n.id !== nfId)
+        : [];
+      await idbPut<CacheEntry<NotaMotorista[]>>(STORE_CACHE, {
+        key: item.key,
+        data: notas,
+        updated_at: Date.now(),
+      });
+      totais.set(romaneioId, {
+        total: notas.length,
+        concluidas: notas.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length,
+      });
+    }
+
+    const romaneios = await obterRomaneiosCache();
+    if (romaneios) {
+      await salvarRomaneiosCache(
+        romaneios.map((r) => {
+          const contagem = totais.get(r.id);
+          return contagem ? { ...r, ...contagem } : r;
+        }),
+      );
+    }
+  } catch {
+    // Best-effort: Realtime/router.refresh ainda reconciliam com o servidor.
   }
 }
 

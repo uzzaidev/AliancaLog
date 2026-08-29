@@ -10,21 +10,18 @@ import {
   IconMapPin,
   IconNavigation,
   IconRefresh,
+  IconCloudUpload,
 } from "@tabler/icons-react";
 import { Button, Card } from "@/components/ui";
 import { comprimirImagem } from "@/lib/offline/image";
 import { enderecoMapsUrl } from "@/lib/maps";
-import {
-  atualizarStatusNotaCache,
-  obterNotaCache,
-  salvarNotaCache,
-} from "@/lib/offline/cache";
-import { enfileirar, listarPendentes } from "@/lib/offline/queue";
-import { flushFila, notificarFila } from "@/lib/offline/sync";
+import { obterNotaCache, salvarNotaCache } from "@/lib/offline/cache";
+import { enfileirar, listarPendentes, removerDaFila } from "@/lib/offline/queue";
+import { agendarSyncBackground, flushFila, notificarFila } from "@/lib/offline/sync";
+import type { NotaComRomaneio } from "@/lib/data/motorista";
 import {
   OCORRENCIA_LABEL,
   type CanhotoStatus,
-  type NotaMotorista,
   type OcorrenciaTipo,
 } from "@/lib/types";
 
@@ -60,11 +57,11 @@ export function CanhotoForm({
   nf: initialNf,
   nfId,
 }: {
-  nf?: NotaMotorista | null;
+  nf?: NotaComRomaneio | null;
   nfId?: string;
 }) {
   const router = useRouter();
-  const [nf, setNf] = useState<NotaMotorista | null>(initialNf ?? null);
+  const [nf, setNf] = useState<NotaComRomaneio | null>(initialNf ?? null);
   // Foto de chegada (A-010): separada da foto do canhoto, prova que o motorista
   // esteve no local mesmo quando a entrega não se conclui (ex.: cliente ausente).
   const [fotoChegada, setFotoChegada] = useState<Blob | null>(null);
@@ -78,7 +75,12 @@ export function CanhotoForm({
   const [obs, setObs] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [resultado, setResultado] = useState<string | null>(null);
+  const [resultado, setResultado] = useState<{
+    texto: string;
+    sincronizado: boolean;
+    falhou: boolean;
+    clientId: string;
+  } | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -165,20 +167,27 @@ export function CanhotoForm({
         gps_precisao: gpsRef.current?.prec,
         criado_em: Date.now(),
       });
-      // Atualiza o cache local imediatamente para refletir na lista offline
-      await atualizarStatusNotaCache(nf.id, status);
+      await agendarSyncBackground();
       notificarFila();
       await flushFila();
-      // Só diz "Registrado" se ESTE item saiu mesmo da fila (o servidor confirmou).
-      // Se continua na fila, foi salvo mas ainda não sincronizou.
-      const aindaNaFila = (await listarPendentes()).some(
-        (p) => p.client_id === clientId,
-      );
-      setResultado(
-        aindaNaFila
-          ? "Salvo — pendente de sincronização. Envia sozinho quando tiver sinal."
-          : "Registrado!",
-      );
+      const item = (await listarPendentes()).find((p) => p.client_id === clientId);
+      if (!item) {
+        setResultado({ texto: "Registrado e confirmado!", sincronizado: true, falhou: false, clientId });
+      } else if (item.bloqueado_por_validacao) {
+        setResultado({
+          texto: item.bloqueado_por_validacao,
+          sincronizado: false,
+          falhou: true,
+          clientId,
+        });
+      } else {
+        setResultado({
+          texto: "Salvo no aparelho — pendente de sincronização. Envia ao reconectar ou reabrir o app.",
+          sincronizado: false,
+          falhou: false,
+          clientId,
+        });
+      }
     } catch {
       setErro("Não consegui salvar. Tente novamente.");
     } finally {
@@ -207,14 +216,43 @@ export function CanhotoForm({
   }
 
   if (resultado) {
+    const IconeResultado = resultado.falhou
+      ? IconAlertTriangle
+      : resultado.sincronizado
+        ? IconCircleCheck
+        : IconCloudUpload;
+    const voltar = nf.romaneio_id
+      ? `/motorista/romaneio/${nf.romaneio_id}`
+      : "/motorista/entregas";
     return (
       <Card className="space-y-4 p-6 text-center">
-        <IconCircleCheck size={44} className="mx-auto text-success" />
-        <p className="text-lg font-semibold text-success">{resultado}</p>
+        <IconeResultado
+          size={44}
+          className={`mx-auto ${resultado.falhou ? "text-danger" : resultado.sincronizado ? "text-success" : "text-info"}`}
+        />
+        <p
+          className={`text-lg font-semibold ${resultado.falhou ? "text-danger" : resultado.sincronizado ? "text-success" : "text-info"}`}
+        >
+          {resultado.texto}
+        </p>
         <p className="text-sm text-muted">NF {nf.numero_nf}</p>
-        <Button className="w-full" onClick={() => router.back()}>
+        <Button className="w-full" onClick={() => router.replace(voltar)}>
           Voltar para a lista
         </Button>
+        {resultado.falhou && (
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={async () => {
+              if (!window.confirm("Descartar esta tentativa inválida e tentar novamente? As fotos permanecem na tela somente enquanto ela estiver aberta.")) return;
+              await removerDaFila(resultado.clientId);
+              notificarFila();
+              setResultado(null);
+            }}
+          >
+            Corrigir e tentar novamente
+          </Button>
+        )}
       </Card>
     );
   }

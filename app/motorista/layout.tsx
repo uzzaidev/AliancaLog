@@ -4,6 +4,7 @@ import { SwRegister } from "@/components/motorista/sw-register";
 import { SyncBanner } from "@/components/motorista/sync-banner";
 import { requireRole } from "@/lib/auth/dal";
 import { getRomaneiosDoDia } from "@/lib/data/motorista";
+import { RealtimeRefresher } from "@/components/gerencia/realtime-refresher";
 
 export default async function MotoristaLayout({
   children,
@@ -21,6 +22,7 @@ export default async function MotoristaLayout({
   return (
     <div className="min-h-full bg-canvas">
       <SwRegister />
+      <RealtimeRefresher channel="motorista-atualizacao" showIndicator={false} />
       <PosicaoTracker motoristaId={user.id} ativo={rastreando} />
       <MotoristaHeader
         nome={user.nome ?? user.email ?? "Motorista"}

@@ -32,7 +32,7 @@
 | Test runner | Script Node próprio (sem framework) | `scripts/smoke-seguranca.mjs` |
 | Deploy | Vercel (inferido — HTTPS exigido por câmera/SW, sem `vercel.json` pois usa zero-config) | [CHECKPOINT.md](../governanca/CHECKPOINT.md), ausência de config = padrão Vercel para Next.js |
 | Observabilidade | Sentry (`@sentry/nextjs`) | `sentry.*.config.ts`, `instrumentation.ts` |
-| PWA | Service Worker próprio (não Serwist/Workbox) + manifest via App Router | `public/sw.js`, `app/manifest.ts` |
+| PWA | Service Worker próprio (cache estático + Background Sync) + manifest via App Router | `public/sw.js`, `app/manifest.ts` |
 
 **Nota sobre lockfiles:** `pnpm-lock.yaml` está versionado mas desatualizado/não usado — todo o fluxo (`npm ci`, scripts, CI) assume `package-lock.json`/npm. Candidato a remoção (ver §11).
 
@@ -128,7 +128,7 @@ Toda leitura passa por aqui (Server Components chamam essas funções direto, se
 
 ---
 
-## 5. Schema do banco — 10 tabelas, 22 migrations
+## 5. Schema do banco — 10 tabelas, 23 migrations
 
 ```
 empresas_clientes → usuarios → motoristas
@@ -164,6 +164,7 @@ motorista_posicao    (1 linha por motorista, GPS ao vivo)
 | 0020 | Motorista pode ver a própria ocorrência mesmo após a NF sair do seu romaneio |
 | 0021 | Motorista mantém acesso ao histórico após a NF ser devolvida ao painel (`motorista_registrou_nf()`) |
 | 0022 | Ocorrência passa a ser status visível separado no painel da gerência (não mais "pendente") |
+| 0023 | Backfill de desfechos legados + confirmação atômica do romaneio pelo motorista |
 
 **Modelo de autorização em 3 camadas** (nenhuma delas sozinha é suficiente):
 1. `proxy.ts` — checagem **otimista** por role do JWT, sem tocar o banco (UX: evita flash de conteúdo errado)
@@ -314,4 +315,4 @@ graph TB
 
 ## Como isto foi gerado
 
-Inventário extraído direto do código nesta sessão (2026-08-28): `package.json`, árvore de `app/`/`components/`/`lib/`, todas as 22 migrations em `supabase/migrations/`, `proxy.ts`, `lib/auth/dal.ts`, contagem real de linhas e de verificações do smoke test, workflows em `.github/`. Nenhuma afirmação deste documento veio de memória ou de documentação anterior sem confirmação no código — onde a documentação anterior (`CHECKPOINT.md`) tinha uma informação desatualizada (localização do repositório, ver nota de ambiente lá), foi corrigida diretamente nele, não aqui.
+Inventário extraído direto do código nesta sessão (2026-08-28): `package.json`, árvore de `app/`/`components/`/`lib/`, todas as 23 migrations em `supabase/migrations/`, `proxy.ts`, `lib/auth/dal.ts`, contagem real de linhas e de verificações do smoke test, workflows em `.github/`. Nenhuma afirmação deste documento veio de memória ou de documentação anterior sem confirmação no código — onde a documentação anterior (`CHECKPOINT.md`) tinha uma informação desatualizada (localização do repositório, ver nota de ambiente lá), foi corrigida diretamente nele, não aqui.

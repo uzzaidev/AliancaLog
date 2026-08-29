@@ -7,21 +7,16 @@ import { createClient } from "@/lib/supabase/server";
 // Motorista confirma o recebimento do romaneio antes de sair: marca o horário de
 // início e coloca as NFs pendentes em rota.
 export async function confirmarRomaneio(romaneioId: string) {
-  const user = await requireRole("motorista");
+  await requireRole("motorista");
   const supabase = await createClient();
 
-  await supabase
-    .from("romaneios")
-    .update({ status: "ativo", confirmado_em: new Date().toISOString() })
-    .eq("id", romaneioId)
-    .eq("motorista_id", user.id);
+  const { error } = await supabase.rpc("confirmar_romaneio_motorista", {
+    p_romaneio_id: romaneioId,
+  });
 
-  await supabase
-    .from("notas_fiscais")
-    .update({ status: "em_rota" })
-    .eq("romaneio_id", romaneioId)
-    .eq("status", "pendente");
+  if (error) return { error: `Não foi possível iniciar o romaneio: ${error.message}` };
 
   revalidatePath("/motorista/entregas");
   revalidatePath(`/motorista/romaneio/${romaneioId}`);
+  return { ok: true };
 }

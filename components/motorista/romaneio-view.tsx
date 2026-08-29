@@ -9,7 +9,7 @@ import {
   IconChevronRight,
   IconNavigation,
 } from "@tabler/icons-react";
-import { Card, StatusBadge } from "@/components/ui";
+import { Badge, Card, StatusBadge } from "@/components/ui";
 import { Progress } from "@/components/ui/progress";
 import { MapaRomaneio } from "./mapa-romaneio";
 import { enderecoMapsUrl } from "@/lib/maps";
@@ -19,6 +19,7 @@ import {
   salvarNotasRomaneioCache,
 } from "@/lib/offline/cache";
 import { EVENTO_FILA } from "@/lib/offline/sync";
+import { listarPendentes, type CanhotoPendente } from "@/lib/offline/queue";
 
 export function RomaneioView({
   notas: initialNotas,
@@ -28,12 +29,15 @@ export function RomaneioView({
   romaneioId?: string;
 }) {
   const [notas, setNotas] = useState<NotaMotorista[]>(initialNotas);
+  const [naFila, setNaFila] = useState<Map<string, CanhotoPendente>>(new Map());
   const [q, setQ] = useState("");
 
   useEffect(() => {
     let ativo = true;
 
     async function sincronizar() {
+      const fila = await listarPendentes();
+      if (ativo) setNaFila(new Map(fila.map((item) => [item.nf_id, item])));
       if (initialNotas && initialNotas.length > 0) {
         if (romaneioId) {
           await salvarNotasRomaneioCache(romaneioId, initialNotas);
@@ -50,6 +54,8 @@ export function RomaneioView({
     sincronizar();
 
     async function recarregarCache() {
+      const fila = await listarPendentes();
+      if (ativo) setNaFila(new Map(fila.map((item) => [item.nf_id, item])));
       if (romaneioId) {
         const doCache = await obterNotasRomaneioCache(romaneioId);
         if (ativo && doCache) {
@@ -77,7 +83,8 @@ export function RomaneioView({
 
   const concluidas = notas.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length;
   // Primeira NF pendente (na ordem) = a "próxima entrega" (card ativo).
-  const proximaId = notas.find((n) => !NF_STATUS_FINAIS.includes(n.status))?.id ?? null;
+  const proximaId =
+    notas.find((n) => !NF_STATUS_FINAIS.includes(n.status) && !naFila.has(n.id))?.id ?? null;
 
   return (
     <div className="space-y-3">
@@ -108,6 +115,7 @@ export function RomaneioView({
 
       {filtradas.map((n) => {
         const feito = NF_STATUS_FINAIS.includes(n.status);
+        const pendenteSync = naFila.get(n.id);
         const ativo = n.id === proximaId;
         return (
           <div
@@ -117,8 +125,12 @@ export function RomaneioView({
             }`}
           >
             <Link
-              href={`/motorista/canhoto/${n.id}`}
-              className="block transition active:bg-canvas"
+              href={pendenteSync ? "#" : `/motorista/canhoto/${n.id}`}
+              onClick={(event) => {
+                if (pendenteSync) event.preventDefault();
+              }}
+              aria-disabled={!!pendenteSync}
+              className={`block transition ${pendenteSync ? "cursor-not-allowed opacity-75" : "active:bg-canvas"}`}
             >
               <div className="flex items-start gap-3 p-4">
                 <div className="min-w-0 flex-1">
@@ -140,7 +152,11 @@ export function RomaneioView({
                   </div>
                 </div>
                 <div className="shrink-0 self-center">
-                  {feito ? (
+                  {pendenteSync ? (
+                    <Badge tone={pendenteSync.bloqueado_por_validacao ? "danger" : "info"}>
+                      {pendenteSync.bloqueado_por_validacao ? "Erro no envio" : "Aguardando envio"}
+                    </Badge>
+                  ) : feito ? (
                     <StatusBadge status={n.status} />
                   ) : (
                     <IconChevronRight size={20} className="text-brand" />

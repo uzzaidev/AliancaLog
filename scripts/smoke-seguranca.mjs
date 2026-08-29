@@ -254,7 +254,26 @@ async function main() {
     }
   }
 
-  // ── T9 — ISOLAMENTO ENTRE EMPRESAS (risco R-008) ──
+  // ── T9 — CONFIRMAÇÃO ATÔMICA DO ROMANEIO ──
+  {
+    const romConfirmacao = await mkRomaneio(joaoId, "ativo");
+    const nfConfirmacao = await mkNf(joaoId, romConfirmacao, "pendente");
+    await admin.from("romaneios").update({ confirmado_em: null }).eq("id", romConfirmacao);
+
+    const { error } = await cli.rpc("confirmar_romaneio_motorista", {
+      p_romaneio_id: romConfirmacao,
+    });
+    const { data: romDepois } = await admin
+      .from("romaneios").select("confirmado_em").eq("id", romConfirmacao).single();
+    const { data: nfDepois } = await admin
+      .from("notas_fiscais").select("status").eq("id", nfConfirmacao).single();
+    ok(
+      !error && romDepois?.confirmado_em && nfDepois?.status === "em_rota",
+      "T9 confirmação atômica atualiza romaneio e NFs" + (error ? " — ERRO: " + error.message : ""),
+    );
+  }
+
+  // ── T10 — ISOLAMENTO ENTRE EMPRESAS (risco R-008) ──
   // O risco mais grave registrado no PLAN.md: cliente final enxergar dado de
   // outra empresa. Até 27/08 NÃO havia teste automatizado disso — o CHECKLIST
   // pedia explicitamente ("cliente A não vê NF da empresa B") e o critério estava
@@ -268,7 +287,7 @@ async function main() {
       : { data: null };
 
     if (!outraEmp || !donoOutra) {
-      ok(false, "T9 NÃO VERIFICADO — o ambiente não tem duas empresas com login de cliente");
+      ok(false, "T10 NÃO VERIFICADO — o ambiente não tem duas empresas com login de cliente");
     } else {
       // Uma NF de cada empresa, ambas soltas (sem motorista/romaneio).
       const nfLeite = await mkNf(null, null, "pendente", leite.id);
@@ -276,18 +295,18 @@ async function main() {
 
       const cliLeite = await entrarComo("acesso@leitetravizao.com.br");
       if (!cliLeite) {
-        ok(false, "T9 NÃO VERIFICADO — login do cliente Leite Travizão indisponível");
+        ok(false, "T10 NÃO VERIFICADO — login do cliente Leite Travizão indisponível");
       } else {
         // Positivo primeiro: prova que a consulta do cliente FUNCIONA. Sem isto,
         // um T9b verde não distinguiria "RLS bloqueou" de "consulta quebrada".
         const { data: propria, error: ePropria } = await cliLeite
           .from("notas_fiscais").select("id").eq("id", nfLeite);
         ok(!ePropria && propria?.length === 1,
-          "T9a cliente vê a NF da própria empresa" + (ePropria ? " — ERRO: " + ePropria.message : ""));
+          "T10a cliente vê a NF da própria empresa" + (ePropria ? " — ERRO: " + ePropria.message : ""));
 
         naoVeNada(
           await cliLeite.from("notas_fiscais").select("id").eq("id", nfOutraEmp),
-          `T9b cliente NÃO vê NF de outra empresa (${outraEmp.nome})`,
+          `T10b cliente NÃO vê NF de outra empresa (${outraEmp.nome})`,
         );
 
         // Não pode nem inserir NF em nome de outra empresa (cli_nf_insert).
@@ -296,7 +315,7 @@ async function main() {
           destinatario_nome: "Hack", destinatario_endereco: "Rua Y, 2",
           data_entrega: hoje, status: "pendente",
         });
-        ok(!!eIns, "T9c cliente NÃO cria NF para outra empresa" + (eIns ? "" : " — FALHA: criou"));
+        ok(!!eIns, "T10c cliente NÃO cria NF para outra empresa" + (eIns ? "" : " — FALHA: criou"));
         if (!eIns) {
           const { data: lixo } = await admin.from("notas_fiscais")
             .select("id").eq("numero_nf", tag + "-hack");
@@ -314,7 +333,7 @@ async function main() {
         });
         naoVeNada(
           await cliLeite.from("ocorrencias").select("id").eq("client_id", cidAlheio),
-          "T9d cliente NÃO vê ocorrência de NF de outra empresa",
+          "T10d cliente NÃO vê ocorrência de NF de outra empresa",
         );
       }
     }

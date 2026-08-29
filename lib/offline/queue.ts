@@ -20,6 +20,11 @@ export type CanhotoPendente = {
   lng?: number;
   gps_precisao?: number;
   criado_em: number;
+  // Erros de validação preservam a prova no aparelho. Antes o item era apagado
+  // e o formulário acabava mostrando "Registrado!" mesmo com rejeição do servidor.
+  bloqueado_por_validacao?: string;
+  tentativas_sync?: number;
+  ultimo_erro_sync?: string;
 };
 
 export async function enfileirar(c: CanhotoPendente): Promise<void> {
@@ -37,6 +42,19 @@ export async function contarPendentes(): Promise<number> {
 
 export async function removerDaFila(clientId: string): Promise<void> {
   await idbDelete(STORE_FILA, clientId);
+}
+
+export async function registrarFalhaNaFila(
+  item: CanhotoPendente,
+  mensagem: string,
+  permanente = false,
+): Promise<void> {
+  await idbPut(STORE_FILA, {
+    ...item,
+    tentativas_sync: (item.tentativas_sync ?? 0) + 1,
+    ultimo_erro_sync: mensagem,
+    bloqueado_por_validacao: permanente ? mensagem : item.bloqueado_por_validacao,
+  });
 }
 
 // Limpa fila + cache local do dispositivo. Chamado no logout para não vazar

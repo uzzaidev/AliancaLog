@@ -47,6 +47,10 @@ export function SyncBanner() {
     window.addEventListener("online", tentar);
     window.addEventListener(EVENTO_FILA, onEvt);
     document.addEventListener("visibilitychange", onVis);
+    const onSwMessage = (event: MessageEvent) => {
+      if (event.data?.type === "ALIANCA_SYNC_CONCLUIDO") tentar();
+    };
+    navigator.serviceWorker?.addEventListener("message", onSwMessage);
     const iv = setInterval(tentar, 30000);
 
     return () => {
@@ -55,6 +59,7 @@ export function SyncBanner() {
       window.removeEventListener("online", tentar);
       window.removeEventListener(EVENTO_FILA, onEvt);
       document.removeEventListener("visibilitychange", onVis);
+      navigator.serviceWorker?.removeEventListener("message", onSwMessage);
     };
   }, []);
 

@@ -3,15 +3,36 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-08-20
+**Última atualização:** 2026-08-28
 
-## 🔴 Bloqueio ativo — `DATABASE_URL` com senha inválida (2026-08-20)
+## Correção do fluxo motorista/mobile e painel (2026-08-28)
 
-`password authentication failed for user "postgres"` — derruba `npm run db:migrate`,
-`db:status` e `db:backup`. **Nenhuma migration nova pode ser aplicada** até ser
-resolvido, e o backup manual (única rede de proteção do banco hoje) está fora do ar.
-Já aconteceu antes, ver "Sprint 3.5" mais abaixo (`EAUTHQUERY` no pooler). A conexão
-por **service role key** segue normal — app, `seed` e `test:security` funcionam.
+1. **Causa confirmada em produção:** o mobile gravava corretamente, mas o deployment
+   antigo filtrava `recusada`/`ocorrencia` e mantinha KPIs zerados. A NF 24468 foi
+   acompanhada ponta a ponta: banco atualizado, fotos presentes e retirada do
+   romaneio; no frontend antigo ela apenas desapareceu.
+2. **Fila offline endurecida:** HTTP 400 não apaga mais a prova nem vira falso
+   “Registrado”; item fica preservado e identificado como erro, com correção manual.
+   Envio ganhou timeout de 45s, falha 5xx de uma NF não bloqueia as seguintes e o
+   cache só muda após confirmação do servidor.
+3. **PWA:** Service Worker v3 ganhou Background Sync em navegadores compatíveis;
+   fallback de reabertura/online/intervalo segue ativo para iOS e demais navegadores.
+4. **Reconciliação do motorista:** NF recusada/com ocorrência sai do romaneio local
+   após sync; item ainda na fila fica bloqueado contra envio duplicado; Realtime
+   invisível atualiza também cabeçalho e dados server-side do motorista.
+5. **Migration 0023 aplicada:** backfill conservador corrigiu 1 NF legada (24127:
+   `pendente` → `ocorrencia`) e criou `confirmar_romaneio_motorista`, tornando
+   confirmação do romaneio + mudança das NFs para `em_rota` uma única transação.
+   Backup lógico prévio: `backups/backfill_0023_antes.json`.
+6. **Testes:** novo `test:offline`, smoke real ampliado com confirmação atômica;
+   typecheck, lint, offline, segurança/RLS e build de produção verdes.
+
+## Histórico — bloqueio de `DATABASE_URL` em 2026-08-20 (resolvido)
+
+Naquela data, `password authentication failed for user "postgres"` derrubava
+`db:migrate`, `db:status` e `db:backup`. A conexão foi restabelecida; em 28/08 a
+migration 0023 foi aplicada normalmente. A conexão por **service role key**
+permaneceu normal durante o incidente.
 
 **Mudanças de 2026-08-20:**
 1. **Fluxo de duplicatas na importação corrigido** (reportado em uso real). Três
