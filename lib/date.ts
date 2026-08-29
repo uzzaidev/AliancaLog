@@ -45,3 +45,51 @@ export function diaSeguinte(dataYMD: string): string {
   const [ano, mes, dia] = dataYMD.split("-").map(Number);
   return new Date(Date.UTC(ano, mes - 1, dia + 1)).toISOString().slice(0, 10);
 }
+
+// ── Exibição de instantes (timestamptz) ──────────────────────────────────────
+//
+// SEMPRE fixar `timeZone` ao formatar para a tela. Sem isso o resultado depende
+// do relógio de quem executa, e isso quebra de duas formas:
+//
+//   1. Hidratação: o Server Component roda na Vercel (UTC) e imprime "20:43";
+//      o mesmo componente re-renderiza no celular (UTC-3) e imprime "17:43".
+//      Texto diferente entre servidor e cliente = React error #418, a tela
+//      inteira é descartada e remontada. Aconteceu em produção em 27/08.
+//   2. Correção: um canhoto registrado às 17:43 aparecia como 20:43 no painel,
+//      porque o servidor formatava no próprio fuso.
+//
+// A operação é no Brasil, então a hora que interessa é sempre a de São Paulo —
+// independente de onde o código roda ou de onde o usuário está.
+
+/** Hora (HH:MM) de um instante ISO, sempre no fuso da operação. */
+export function horaSP(iso: string): string {
+  return new Date(iso).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: TZ,
+  });
+}
+
+/** Data e hora curtas (DD/MM HH:MM) de um instante ISO, no fuso da operação. */
+export function dataHoraSP(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: TZ,
+  });
+}
+
+/** Data por extenso ("segunda-feira, 27 de agosto de 2026") no fuso da operação. */
+export function dataExtensaSP(dataYMD: string): string {
+  // Ancora no meio-dia UTC: qualquer fuso do Brasil cai no mesmo dia-calendário,
+  // então a data por extenso não "anda" para o dia anterior.
+  return new Date(`${dataYMD}T12:00:00Z`).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: TZ,
+  });
+}

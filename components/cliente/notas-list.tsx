@@ -23,6 +23,7 @@ import {
   type NotaStatus,
 } from "@/lib/types";
 import type { NotaCliente } from "@/lib/data/cliente";
+import { dataHoraSP } from "@/lib/date";
 
 type CacheVal = ComprovanteDetalhe | null | "loading" | undefined;
 
@@ -41,14 +42,8 @@ const ICONE: Record<
   pendente: { icon: IconClock, box: "bg-gray-100", fg: "text-gray-400" },
 };
 
-function dataHora(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+// Fuso fixo da operação — ver o porquê em lib/date.ts (hidratação + hora correta).
+const dataHora = dataHoraSP;
 
 const TENTATIVA_META: Record<string, { label: string; tone: TimelineStep["tone"] }> = {
   aceita: { label: "Canhoto aceito", tone: "done" },

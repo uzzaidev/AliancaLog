@@ -36,6 +36,19 @@ const hoje = new Intl.DateTimeFormat("en-CA", {
 
 let falhas = 0;
 const ok = (c, m) => { console.log((c ? "✓ " : "✗ ") + m); if (!c) falhas++; };
+
+/**
+ * Afirma que uma consulta RODOU e não devolveu nada — o jeito correto de testar
+ * bloqueio por RLS, que filtra em silêncio (lista vazia, sem erro).
+ *
+ * Existe porque `const { data } = await ...; ok(!data?.length)` PASSA quando a
+ * consulta falha (data vira null). Isso transforma erro de infraestrutura em
+ * "teste verde" — a mesma classe de falsa confiança que o T7 antigo tinha.
+ */
+const naoVeNada = ({ data, error }, msg) => {
+  if (error) return ok(false, msg + " — NÃO VERIFICADO: a consulta falhou (" + error.message + ")");
+  return ok(Array.isArray(data) && data.length === 0, msg + (data?.length ? " — FALHA: VAZOU" : ""));
+};
 const tag = "SMK9-" + Date.now();
 const criados = { canhotos: [], ocorrencias: [], nfs: [], romaneios: [] };
 
@@ -61,15 +74,22 @@ async function main() {
     criados.romaneios.push(data.id);
     return data.id;
   };
-  const mkNf = async (motorista, romaneio, status) => {
+  const mkNf = async (motorista, romaneio, status, empresa = leite.id) => {
     const { data, error } = await admin.from("notas_fiscais")
-      .insert({ numero_nf: tag + "-" + Math.random().toString(36).slice(2, 6), empresa_cliente_id: leite.id,
+      .insert({ numero_nf: tag + "-" + Math.random().toString(36).slice(2, 6), empresa_cliente_id: empresa,
         destinatario_nome: "Alvo", destinatario_endereco: "Rua X, 1", cidade: "Caxias do Sul",
         motorista_id: motorista, romaneio_id: romaneio, data_entrega: hoje, status })
       .select("id").single();
     if (error) throw error;
     criados.nfs.push(data.id);
     return data.id;
+  };
+
+  /** Faz login e devolve o client; null se o usuário não existir no ambiente. */
+  const entrarComo = async (email, senha = "alianca123") => {
+    const c = createClient(url, anon, { auth: { autoRefreshToken: false, persistSession: false } });
+    const { error } = await c.auth.signInWithPassword({ email, password: senha });
+    return error ? null : c;
   };
 
   const romAtivo = await mkRomaneio(joaoId, "ativo");
@@ -128,13 +148,46 @@ async function main() {
     const { data } = await admin.from("romaneios").select("status").eq("id", romFechado).single();
     ok(data.status === "fechado", "T6 romaneio fechado não reabre pelo motorista (segue " + data.status + ")");
   }
-  // T7 — ocorrência idempotente por client_id (via admin, simula reenvio)
+  // T7 — RETRY da fila offline: reenviar o MESMO client_id pela RPC é no-op.
+  //
+  // Antes este teste inseria em `ocorrencias` com o cliente `admin`, que IGNORA
+  // RLS — ou seja, exercitava só o índice único, nunca o caminho real do app.
+  // Foi essa cegueira que deixou passar o bug de 27/08 (ver T8). Agora usa a
+  // sessão do motorista e a própria RPC, que é o que a fila chama.
+  //
+  // Esta é A garantia de que o offline depende: quando o celular reenvia por
+  // falta de confirmação, o servidor não pode duplicar nada.
   {
-    const base = { nota_fiscal_id: nfImut, tipo: "avaria", descricao: "x", client_id: tag + "-oc" };
-    criados.ocorrencias.push(tag + "-oc");
-    const o1 = await admin.from("ocorrencias").insert(base);
-    const o2 = await admin.from("ocorrencias").insert(base);
-    ok(!o1.error && !!o2.error, "T7 ocorrência não duplica no reenvio (mesmo client_id)" + (o2.error ? "" : " — FALHA: duplicou"));
+    const nfRetry = await mkNf(joaoId, romAtivo, "em_rota");
+    const cid = tag + "-retry";
+    criados.canhotos.push(cid);
+    criados.ocorrencias.push(cid);
+    const params = {
+      p_client_id: cid,
+      p_nota_fiscal_id: nfRetry,
+      p_status: "ocorrencia",
+      p_foto_url: "smoke/canhoto.jpg",
+      p_foto_chegada_url: "smoke/chegada.jpg",
+      p_lat: null, p_lng: null, p_gps_precisao: null,
+      p_observacao: null,
+      p_ocorrencia_tipo: "avaria",
+      p_ocorrencia_desc: "smoke retry",
+    };
+
+    const r1 = await cli.rpc("registrar_entrega_offline", params);
+    ok(!r1.error && r1.data?.[0]?.ja_existia === false,
+      "T7a 1º envio grava a tentativa" + (r1.error ? " — ERRO: " + r1.error.message : ""));
+
+    const r2 = await cli.rpc("registrar_entrega_offline", params);
+    ok(!r2.error && r2.data?.[0]?.ja_existia === true,
+      "T7b reenvio do MESMO client_id é no-op (ja_existia)" + (r2.error ? " — ERRO: " + r2.error.message : ""));
+
+    const { count: nOc } = await admin.from("ocorrencias")
+      .select("id", { count: "exact", head: true }).eq("client_id", cid);
+    const { count: nCa } = await admin.from("canhotos")
+      .select("id", { count: "exact", head: true }).eq("client_id", cid);
+    ok(nOc === 1 && nCa === 1,
+      `T7c retry não duplicou (canhotos=${nCa}, ocorrencias=${nOc}, esperado 1 e 1)`);
   }
 
   // ── T8 — registrar OCORRÊNCIA pela RPC, com a sessão do motorista ──
@@ -185,24 +238,120 @@ async function main() {
     ok(visivel?.length === 1, "T8c motorista mantém acesso ao próprio histórico após a devolução");
 
     // E um motorista diferente NÃO pode enxergar essa NF agora solta.
-    const outro = createClient(url, anon, { auth: { autoRefreshToken: false, persistSession: false } });
-    const { error: eCarlos } = await outro.auth.signInWithPassword({ email: "carlos@rotta.com.br", password: "alianca123" });
-    if (eCarlos) {
-      ok(true, "T8d (pulado — login do carlos indisponível: " + eCarlos.message + ")");
+    const outro = await entrarComo("carlos@rotta.com.br");
+    if (!outro) {
+      ok(false, "T8d NÃO VERIFICADO — login do carlos indisponível");
     } else {
-      const { data: vazou } = await outro.from("notas_fiscais").select("id").eq("id", nfOc);
-      ok(!vazou?.length, "T8d outro motorista NÃO vê NF solta" + (vazou?.length ? " — FALHA: vazou" : ""));
+      naoVeNada(
+        await outro.from("notas_fiscais").select("id").eq("id", nfOc),
+        "T8d outro motorista NÃO vê NF solta",
+      );
+      // Caso básico que faltava: NF atribuída a OUTRO motorista.
+      naoVeNada(
+        await outro.from("notas_fiscais").select("id").eq("id", nfCanhoto),
+        "T8e motorista NÃO vê NF de outro motorista",
+      );
     }
   }
 
-  // ── teardown ──
-  await admin.from("canhotos").delete().in("client_id", criados.canhotos);
-  await admin.from("ocorrencias").delete().in("client_id", criados.ocorrencias);
-  await admin.from("notas_fiscais").delete().in("id", criados.nfs);
-  await admin.from("romaneios").delete().in("id", criados.romaneios);
+  // ── T9 — ISOLAMENTO ENTRE EMPRESAS (risco R-008) ──
+  // O risco mais grave registrado no PLAN.md: cliente final enxergar dado de
+  // outra empresa. Até 27/08 NÃO havia teste automatizado disso — o CHECKLIST
+  // pedia explicitamente ("cliente A não vê NF da empresa B") e o critério estava
+  // sendo dado como coberto só porque a policy existia.
+  {
+    const { data: outraEmp } = await admin.from("empresas_clientes")
+      .select("id,nome").neq("id", leite.id).limit(1).maybeSingle();
+    const { data: donoOutra } = outraEmp
+      ? await admin.from("usuarios").select("email")
+          .eq("role", "cliente_final").eq("empresa_id", outraEmp.id).maybeSingle()
+      : { data: null };
+
+    if (!outraEmp || !donoOutra) {
+      ok(false, "T9 NÃO VERIFICADO — o ambiente não tem duas empresas com login de cliente");
+    } else {
+      // Uma NF de cada empresa, ambas soltas (sem motorista/romaneio).
+      const nfLeite = await mkNf(null, null, "pendente", leite.id);
+      const nfOutraEmp = await mkNf(null, null, "pendente", outraEmp.id);
+
+      const cliLeite = await entrarComo("acesso@leitetravizao.com.br");
+      if (!cliLeite) {
+        ok(false, "T9 NÃO VERIFICADO — login do cliente Leite Travizão indisponível");
+      } else {
+        // Positivo primeiro: prova que a consulta do cliente FUNCIONA. Sem isto,
+        // um T9b verde não distinguiria "RLS bloqueou" de "consulta quebrada".
+        const { data: propria, error: ePropria } = await cliLeite
+          .from("notas_fiscais").select("id").eq("id", nfLeite);
+        ok(!ePropria && propria?.length === 1,
+          "T9a cliente vê a NF da própria empresa" + (ePropria ? " — ERRO: " + ePropria.message : ""));
+
+        naoVeNada(
+          await cliLeite.from("notas_fiscais").select("id").eq("id", nfOutraEmp),
+          `T9b cliente NÃO vê NF de outra empresa (${outraEmp.nome})`,
+        );
+
+        // Não pode nem inserir NF em nome de outra empresa (cli_nf_insert).
+        const { error: eIns } = await cliLeite.from("notas_fiscais").insert({
+          numero_nf: tag + "-hack", empresa_cliente_id: outraEmp.id,
+          destinatario_nome: "Hack", destinatario_endereco: "Rua Y, 2",
+          data_entrega: hoje, status: "pendente",
+        });
+        ok(!!eIns, "T9c cliente NÃO cria NF para outra empresa" + (eIns ? "" : " — FALHA: criou"));
+        if (!eIns) {
+          const { data: lixo } = await admin.from("notas_fiscais")
+            .select("id").eq("numero_nf", tag + "-hack");
+          for (const l of lixo ?? []) criados.nfs.push(l.id);
+        }
+
+        // Ocorrência registrada numa NF da OUTRA empresa não pode vazar.
+        // (A ocorrência do T7 é de NF da própria Leite, então serviria de falso
+        //  negativo — por isso criamos uma na empresa alheia, de propósito.)
+        const cidAlheio = tag + "-oc-alheia";
+        criados.ocorrencias.push(cidAlheio);
+        await admin.from("ocorrencias").insert({
+          nota_fiscal_id: nfOutraEmp, tipo: "avaria", descricao: "de outra empresa",
+          client_id: cidAlheio,
+        });
+        naoVeNada(
+          await cliLeite.from("ocorrencias").select("id").eq("client_id", cidAlheio),
+          "T9d cliente NÃO vê ocorrência de NF de outra empresa",
+        );
+      }
+    }
+  }
 
   console.log("\n" + (falhas === 0 ? "✓✓✓ SEGURANÇA OK — todos os controles ativos" : `✗ ${falhas} falha(s)`));
-  process.exit(falhas === 0 ? 0 : 1);
+  return falhas;
 }
 
-main().catch((e) => { console.error("Erro:", e.message ?? e); process.exit(1); });
+/**
+ * Remove tudo que o teste criou. Fica FORA do main e roda em `finally` porque
+ * este script escreve no banco REAL: se um teste estourar no meio, o teardown
+ * inline não rodava e sobravam NFs/romaneios de teste em produção, poluindo o
+ * painel da gerência com notas "SMK9-…".
+ */
+async function limpar() {
+  try {
+    if (criados.canhotos.length)
+      await admin.from("canhotos").delete().in("client_id", criados.canhotos);
+    if (criados.ocorrencias.length)
+      await admin.from("ocorrencias").delete().in("client_id", criados.ocorrencias);
+    if (criados.nfs.length)
+      await admin.from("notas_fiscais").delete().in("id", criados.nfs);
+    if (criados.romaneios.length)
+      await admin.from("romaneios").delete().in("id", criados.romaneios);
+  } catch (e) {
+    console.error("⚠ limpeza incompleta:", e.message ?? e);
+    console.error("  registros com a tag", tag, "podem ter ficado no banco.");
+  }
+}
+
+let saida = 1;
+try {
+  saida = (await main()) === 0 ? 0 : 1;
+} catch (e) {
+  console.error("Erro:", e.message ?? e);
+} finally {
+  await limpar();
+}
+process.exit(saida);

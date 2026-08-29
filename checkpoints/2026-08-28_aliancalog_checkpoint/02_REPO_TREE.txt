@@ -1,0 +1,160 @@
+Aliança Log — árvore completa do repositório
+Gerado em 2026-08-28, commit d2756ae, branch main
+Comando: find . -type d \( -name node_modules -o -name .next -o -name .git \) -prune -o -type f -print
+Excluídos: node_modules/, .next/, .git/ (build output e dependências, não são código-fonte)
+Total: 204 arquivos versionáveis
+
+.env
+.env.example
+.github/workflows/db-backup.yml
+.gitignore
+.nvmrc
+AGENTS.md
+CLAUDE.md
+PROMPT_GENERIC_PROJECT_CHECKPOINT.md
+README.md
+
+app/                                    — App Router (rotas + Server Actions)
+├── AGENTS.md
+├── api/sync/route.ts                   — único endpoint HTTP real (recebe fila offline)
+├── cliente/
+│   ├── importar/{actions.ts,page.tsx}
+│   ├── layout.tsx                      — requireRole('cliente_final')
+│   └── notas/{actions.ts,page.tsx}
+├── favicon.ico
+├── gerencia/
+│   ├── cadastros/{actions.ts,page.tsx}
+│   ├── dashboard/{actions.ts,geocode-actions.ts,page.tsx}
+│   ├── importar/{actions.ts,page.tsx,types.ts}
+│   ├── layout.tsx                      — requireRole('gerencia')
+│   └── romaneios/
+│       ├── [id]/page.tsx
+│       ├── actions.ts
+│       ├── novo/page.tsx
+│       └── page.tsx
+├── globals.css                         — tokens de design (@theme, Tailwind v4)
+├── layout.tsx                          — layout raiz
+├── login/{login-form.tsx,page.tsx}
+├── manifest.ts                         — PWA manifest (convenção App Router)
+├── motorista/
+│   ├── actions.ts
+│   ├── canhoto/[id]/page.tsx
+│   ├── entregas/page.tsx
+│   ├── historico/page.tsx
+│   ├── layout.tsx                      — requireRole('motorista')
+│   └── romaneio/[id]/page.tsx
+└── page.tsx                            — redireciona por role (via proxy.ts)
+
+backups/                                — dumps gerados por scripts/backup.mjs e reset-operacional.mjs
+├── reset-operacional-2026-08-20T20-12-59-590Z.json
+├── reset-operacional-2026-08-20T20-15-01-177Z.json
+└── retida-snapshot-2026-07-13T19-57-32-960Z.json
+
+components/                             — 42 componentes, ver 07_UI_COMPONENTS_CATALOG.md
+├── AGENTS.md
+├── app-shell.tsx
+├── brand/logo.tsx
+├── cliente/            (5 arquivos)    — portal do cliente
+├── comprovante-modal.tsx                — compartilhado gerência+cliente
+├── gerencia/           (15 arquivos)   — dashboard, importação, romaneios, cadastros, mapa
+├── logout-button.tsx
+├── mapa/leaflet-map.tsx                — wrapper único do Leaflet
+├── motorista/          (10 arquivos)   — app de campo offline-first
+└── ui/                 (7 arquivos)    — design system genérico
+
+docs/
+├── README.md                           — índice de docs/
+├── auxilio/
+│   ├── CHECKPOINT_TECNICO.md           — raio-x de arquitetura extraído do código (arquivo único, sessão anterior)
+│   └── aliancalog-arquitetura.excalidraw
+├── comercial/          (15 arquivos)   — propostas, contrato, escopo R01, planilhas
+├── db/MIGRATIONS.md                    — fluxo de migrations
+└── governanca/
+    ├── CHECKLIST.md                    — progresso por sprint
+    ├── CHECKPOINT.md                   — diário de sessão (atualizado a cada sessão)
+    └── PLAN.md                         — plano de produto + time
+
+encaminhamentos/                        — pendências pós-reunião, por pessoa
+├── PLANO VITOR.md
+├── README.md
+├── fase-b-pendencias.md
+├── luis-fernando-boff.md
+├── mvp-a-pendencias.md
+├── reuniao-27-08.md
+├── testes-ao-vivo-vitor.md
+└── vitor-pirolli.md
+
+eslint.config.mjs
+instrumentation.ts                      — registra Sentry por runtime (nodejs/edge)
+
+lib/                                    — lógica compartilhada, ver 05/08/11/12
+├── AGENTS.md
+├── alertas.ts                          — regra de "NF parada" (+7 dias)
+├── auth/{actions.ts,dal.ts}            — login/logout + requireRole/requireUser
+├── data/                               — 6 arquivos, leituras server-side por área
+│   ├── cliente.ts
+│   ├── comprovante.ts
+│   ├── gerencia.ts
+│   ├── mapa.ts
+│   ├── motorista.ts
+│   └── romaneios.ts
+├── date.ts                             — fuso de operação (horaSP/dataHoraSP/dataExtensaSP/hojeSP)
+├── geocode.ts                          — Nominatim/OpenStreetMap
+├── import-duplicatas.ts
+├── import-nf.ts                        — parser XML/PDF de NF-e
+├── maps.ts                             — deep link Google Maps
+├── nfe.ts                              — decodifica chave de acesso do DANFE
+├── offline/                            — 5 arquivos, ver 11_OFFLINE_SYNC_PIPELINE_FROM_CODE.md
+│   ├── cache.ts
+│   ├── db.ts
+│   ├── image.ts
+│   ├── queue.ts
+│   └── sync.ts
+├── supabase/                           — 5 arquivos, ver 12_AUTH_AND_AUTHZ.md
+│   ├── admin.ts                        — service role key, só servidor
+│   ├── client.ts
+│   ├── env.ts
+│   ├── proxy.ts
+│   └── server.ts
+└── types.ts                            — enums e tipos de domínio, fonte única de verdade
+
+next-env.d.ts
+next.config.ts
+package-lock.json
+package.json
+pnpm-lock.yaml                          — órfão, não usado (ver 16_TECH_DEBT_FINDINGS.md)
+postcss.config.mjs
+proxy.ts                                — roteamento por perfil (Next 16: era middleware.ts)
+
+public/
+├── file.svg / globe.svg / next.svg / vercel.svg / window.svg   — assets padrão do create-next-app, não usados pelo produto
+├── pdf.worker.min.mjs                  — worker do pdfjs-dist
+└── sw.js                               — Service Worker próprio (hand-rolled)
+
+reuniões/12.08/2026-08-12-ata-alianca-log-ajustes-iza-rotta.md
+
+scripts/                                — infra de banco + testes
+├── backup.mjs
+├── gen-setup-sql.mjs
+├── lib/pg.mjs
+├── migrate-status.mjs
+├── migrate.mjs
+├── reset-operacional.mjs
+├── seed.mjs
+└── smoke-seguranca.mjs                 — suíte de segurança, ver 15_TESTS_COVERAGE_MAP.md
+
+sentry.client.config.ts
+sentry.edge.config.ts
+sentry.server.config.ts
+
+supabase/
+├── .temp/cli-latest
+├── AGENTS.md
+├── config.toml
+├── migrations/                         — 22 arquivos, 0001 a 0022, ver 09_DATABASE_SCHEMA_FROM_MIGRATIONS.md
+└── setup.sql                           — gerado por scripts/gen-setup-sql.mjs (concat das migrations)
+
+tsconfig.json
+tsconfig.tsbuildinfo
+
+checkpoints/                            — esta pasta (não listada acima por ser gerada nesta sessão)

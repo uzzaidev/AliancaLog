@@ -12,10 +12,11 @@ Documentos de referência, nesta ordem de leitura (ver também [docs/README.md](
 1. [README.md](./README.md) — visão geral e setup
 2. [docs/governanca/PLAN.md](./docs/governanca/PLAN.md) — produto, arquitetura e **quem no time é responsável por quê**
 3. [docs/governanca/CHECKLIST.md](./docs/governanca/CHECKLIST.md) — passo a passo marcável
-4. [docs/governanca/CHECKPOINT.md](./docs/governanca/CHECKPOINT.md) — snapshot do estado atual, atualizar a cada sessão
-5. [docs/db/MIGRATIONS.md](./docs/db/MIGRATIONS.md) — fluxo de migrations do banco
-6. `docs/comercial/` — documentos comerciais e o escopo técnico original (R01) em PDF
-7. `docs/auxilio/` — material de apoio (diagramas de arquitetura etc.)
+4. [docs/governanca/CHECKPOINT.md](./docs/governanca/CHECKPOINT.md) — snapshot do estado atual (narrativa de sessão: o que mudou e por quê), atualizar a cada sessão
+5. [docs/auxilio/CHECKPOINT_TECNICO.md](./docs/auxilio/CHECKPOINT_TECNICO.md) — raio-x do sistema **extraído do código**, não do histórico: stack, todas as rotas, componentes por área, mapa de acesso a dados, as 22 migrations, RLS/autorização em 3 camadas, integrações, testes e dívida técnica, cada afirmação com evidência (arquivo/linha). Complementa o CHECKPOINT.md em vez de substituí-lo; **não** é atualizado a cada sessão, só quando a arquitetura mudar de forma relevante (nova tabela, novo perfil, nova integração) — antes de confiar nele, confira a data/commit no topo do arquivo contra o `git log` atual.
+6. [docs/db/MIGRATIONS.md](./docs/db/MIGRATIONS.md) — fluxo de migrations do banco
+7. `docs/comercial/` — documentos comerciais e o escopo técnico original (R01) em PDF
+8. `docs/auxilio/` — material de apoio (diagramas de arquitetura etc.)
 
 `AGENTS.md` (gerado pelo `create-next-app`) avisa que este projeto usa **Next.js 16**, que tem breaking
 changes relevantes. O principal: **o antigo `middleware.ts` agora se chama `proxy.ts`** (mesma função,

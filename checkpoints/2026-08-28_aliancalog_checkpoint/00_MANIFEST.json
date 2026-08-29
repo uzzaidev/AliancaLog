@@ -1,0 +1,105 @@
+{
+  "checkpoint_date": "2026-08-28",
+  "generated_at": "2026-08-28T21:30:00-03:00",
+  "repository": "AliancaLog",
+  "repository_path": "C:\\Users\\USER\\Desktop\\UZZ. AI\\AliancaLog",
+  "commit_hash": "d2756ae",
+  "branch": "main",
+  "methodology": "PROMPT_GENERIC_PROJECT_CHECKPOINT.md v2.0, adaptado ao tamanho real do projeto — arquivos 11 e 20 divergem do template genérico porque os subsistemas que documentariam (pipeline de workers, daemon Hermes) não existem neste projeto; ver nota no topo de cada um.",
+  "stack_detection": {
+    "tipo_projeto": "fullstack (PWA)",
+    "linguagem_principal": "TypeScript",
+    "framework_principal": "Next.js 16.2.9 (App Router)",
+    "package_manager": "npm",
+    "database": "PostgreSQL via Supabase (sa-east-1)",
+    "orm": "nenhum — SQL puro + @supabase/supabase-js / pg"
+  },
+  "stats": {
+    "total_files_versionados": 204,
+    "total_linhas_app_lib_components_scripts": 10150,
+    "total_linhas_sql_migrations": 1169,
+    "rotas_de_pagina": 18,
+    "rotas_de_api": 1,
+    "server_actions": 18,
+    "componentes_react": 42,
+    "tabelas_no_banco": 10,
+    "migrations": 22,
+    "policies_rls": 27,
+    "verificacoes_de_seguranca": 21,
+    "test_coverage_percent": "não medido — sem framework/ferramenta de coverage instalada"
+  },
+  "versions": {
+    "node": ">=24",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "typescript": "^5",
+    "tailwindcss": "^4",
+    "supabase-js": "2.108.2"
+  },
+  "critical_findings": {
+    "security": [
+      "R-008 (isolamento entre empresas) coberto por 4 testes automatizados (T9a-d) e meta-verificado nesta sessão",
+      "2 bugs reais de RLS corrigidos em produção em 2026-08-27/28 (migrations 0020/0021) — ver 10_RLS_AND_SECURITY.md",
+      "canhotos/ocorrencias só têm um caminho de escrita (RPC registrar_entrega_offline) — nenhum insert direto encontrado fora dela"
+    ],
+    "performance": [
+      "Sem paginação em getNotasDoDia/getPainelClientes — não crítico no volume de piloto atual",
+      "Índices existem para os filtros mais comuns (data/empresa/motorista/romaneio)"
+    ],
+    "testing": [
+      "0% de cobertura em componentes/E2E/unitário — só RLS é testado automaticamente",
+      "Suíte de segurança reescrita nesta sessão para autenticar como cada role real (a versão anterior usava service role e não discriminava RLS quebrado de consulta quebrada)"
+    ],
+    "tech_debt": [
+      "notas-list.tsx (602 linhas) e import-wizard.tsx (510 linhas) excedem o limite de 500 linhas do CLAUDE.md",
+      "pnpm-lock.yaml versionado mas não usado (projeto é 100% npm)",
+      "CI só cobre backup diário — nenhum workflow builda/testa/lint em push ou PR",
+      "import_batches (migration 0013) é esqueleto sem nenhum uso real de código"
+    ]
+  },
+  "priorities": {
+    "P0_quick_wins": [
+      "Decidir destino de pnpm-lock.yaml (remover ou justificar)",
+      "Confirmar se canhotos.sincronizado é campo morto"
+    ],
+    "P1_medium_wins": [
+      "CI mínimo em PR: typecheck + lint + test:security",
+      "Split de notas-list.tsx e import-wizard.tsx"
+    ],
+    "P2_long_term": [
+      "Decidir sobre import_batches: implementar migração de legado (A-008) ou remover",
+      "Cobertura de teste além de RLS (unitário de parsers, E2E de 1 fluxo completo)",
+      "Offline-first completo (abrir o app pela 1ª vez sem rede)"
+    ]
+  },
+  "files_generated": [
+    "00_MANIFEST.json",
+    "01_STACK_DETECTION.md",
+    "02_REPO_TREE.txt",
+    "03_BUILD_RUNBOOK.md",
+    "04_DEPENDENCIES.md",
+    "05_ARCHITECTURE_FROM_CODE.md",
+    "06_ROUTES_FROM_CODE.md",
+    "07_UI_COMPONENTS_CATALOG.md",
+    "08_DATA_ACCESS_MAP.md",
+    "09_DATABASE_SCHEMA_FROM_MIGRATIONS.md",
+    "10_RLS_AND_SECURITY.md",
+    "11_OFFLINE_SYNC_PIPELINE_FROM_CODE.md",
+    "12_AUTH_AND_AUTHZ.md",
+    "13_INTEGRATIONS_AND_COST.md",
+    "14_OBSERVABILITY.md",
+    "15_TESTS_COVERAGE_MAP.md",
+    "16_TECH_DEBT_FINDINGS.md",
+    "17_ARCHITECTURE_DIAGRAMS.md",
+    "18_KNOWN_ISSUES_AND_RISKS.md",
+    "19_ESTADO_ATUAL_E_HISTORICO.md",
+    "20_HERMES_DAEMON_INTEGRATION.md",
+    "99_AI_CONTEXT_PACK.md"
+  ],
+  "notes": [
+    "11_OFFLINE_SYNC_PIPELINE_FROM_CODE.md substitui o 11_WORKER_PIPELINE_FROM_CODE.md do template — este projeto não tem worker/fila de infraestrutura; o análogo estrutural é a fila offline do motorista (IndexedDB + /api/sync).",
+    "20_HERMES_DAEMON_INTEGRATION.md é explicitamente 'não aplicável' — mantido na numeração só por paridade estrutural com outros checkpoints do mesmo padrão.",
+    "Existe também docs/auxilio/CHECKPOINT_TECNICO.md — versão em arquivo único do mesmo levantamento, gerada mais cedo na mesma sessão, antes de o Vítor pedir explicitamente o formato de pasta com um arquivo por fase.",
+    "Toda tabela/afirmação técnica neste checkpoint foi verificada lendo o código/migrations diretamente nesta sessão (2026-08-28) — nenhuma copiada de memória de sessões anteriores sem confirmação."
+  ]
+}

@@ -388,11 +388,14 @@ Ver [CHECKLIST.md](./CHECKLIST.md) (seções "Pré-piloto" e "Sprint 4").
 ---
 
 ## Ambiente / decisões operacionais
-- **Localização do projeto:** `C:\Users\USER\OneDrive\Desktop\UZZ. AI\AliancaLog` — repo Git conectado ao
-  GitHub (`uzzaidev/AliancaLog`). **Está dentro do OneDrive**: `node_modules`/`.next` vão sincronizar e gerar
-  ruído. Se ficar lento, considere excluir essas pastas do OneDrive (botão direito → "Liberar espaço" não
-  resolve sync contínuo; o caminho mais confiável é mover o repo pra fora do OneDrive de novo e só
-  empurrar pro GitHub via `git push`, sem depender da pasta sincronizada).
+- **Localização do projeto:** `C:\Users\USER\Desktop\UZZ. AI\AliancaLog` — repo Git conectado ao
+  GitHub (`uzzaidev/AliancaLog`). **Movido para fora do OneDrive em 2026-08-28** (o Vítor desinstalou o
+  OneDrive): a sincronização parou no meio e partiu o projeto — inclusive o `.git` — em duas metades
+  complementares entre o caminho antigo (`OneDrive\Desktop\...`) e o novo (`Desktop\...`). Nada foi
+  perdido (as metades não tinham arquivos em comum), mas foi preciso encerrar o `OneDrive.exe`, consolidar
+  os dois lados com robocopy e revalidar `git fsck` + `typecheck`/`lint`/`build`/`test:security` do zero.
+  **Não deixe o projeto voltar para dentro de uma pasta sincronizada (OneDrive/Google Drive/Dropbox)** —
+  sincronização em tempo real e um repositório Git não combinam bem quando há muita escrita concorrente.
 - **Next.js 16:** o antigo `middleware` agora é **Proxy** (`proxy.ts` na raiz). Não criar `middleware.ts`. O `create-next-app` deixou um `AGENTS.md` orientando a ler `node_modules/next/dist/docs/` antes de codar — seguir para futuras mudanças do Next 16.
 - **Logins de demonstração** (senha `alianca123`): `gerencia@rotta.com.br`, `joao@rotta.com.br`, `acesso@leitetravizao.com.br`.
 - **Time e % de remuneração** consolidados em [PLAN.md](./PLAN.md) e [docs/comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx](../comercial/ALIANCA_LOG_PERCENTUAIS_E_TAREFAS.xlsx).

@@ -8,15 +8,10 @@ import { IconMapPin } from "@tabler/icons-react";
 import { Modal } from "@/components/ui/modal";
 import { Spinner, StatusBadge } from "@/components/ui";
 import { NOTA_STATUS_META, OCORRENCIA_LABEL, type ComprovanteDetalhe } from "@/lib/types";
+import { dataHoraSP } from "@/lib/date";
 
-function dataHora(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+// Fuso fixo da operação — ver o porquê em lib/date.ts (hidratação + hora correta).
+const dataHora = dataHoraSP;
 
 export function ComprovanteModal({
   nfId,

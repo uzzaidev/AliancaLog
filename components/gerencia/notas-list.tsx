@@ -30,13 +30,10 @@ import {
 import type { MotoristaItem, NotaRow } from "@/lib/data/gerencia";
 import { NF_STATUS_FINAIS } from "@/lib/types";
 import { DIAS_PARA_ALERTA, diasParada, isNotaParada } from "@/lib/alertas";
+import { horaSP } from "@/lib/date";
 
-function hora(iso: string) {
-  return new Date(iso).toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+// Fuso fixo da operação — ver o porquê em lib/date.ts (hidratação + hora correta).
+const hora = horaSP;
 
 const TH =
   "px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted";

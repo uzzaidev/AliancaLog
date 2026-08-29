@@ -5,6 +5,8 @@ import { ClienteHero, type ClienteResumo } from "@/components/cliente/hero";
 import { NotasListCliente } from "@/components/cliente/notas-list";
 import { getNotasCliente } from "@/lib/data/cliente";
 import type { ClienteFiltro } from "@/lib/data/cliente";
+import { NF_STATUS_FINAIS } from "@/lib/types";
+import { dataExtensaSP, hojeSP } from "@/lib/date";
 
 const PERIODO_LABEL: Record<
   NonNullable<ClienteFiltro["periodo"]>,
@@ -39,18 +41,16 @@ export default async function ClienteNotas({
     pendente: notas.filter(
       (n) => n.status === "pendente" || n.status === "em_rota",
     ).length,
-    finalizadas: notas.filter((n) =>
-      ["aceita", "recusada", "ocorrencia"].includes(n.status),
-    ).length,
+    // Só 'aceita' encerra (NF_STATUS_FINAIS). Antes esta lista era fixa e incluía
+    // recusada/ocorrência — desde a migration 0022 essas voltam ao painel para
+    // nova tentativa, então contá-las como "finalizadas" inflava a barra de
+    // progresso do cliente com entregas que ainda vão acontecer.
+    finalizadas: notas.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length,
   };
 
   const p = PERIODO_LABEL[filtro.periodo ?? "hoje"];
-  const dataHoje = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  // Fuso fixo: sem isso o servidor (UTC) mostraria o dia seguinte a partir das 21h.
+  const dataHoje = dataExtensaSP(hojeSP());
 
   return (
     <div className="space-y-4">

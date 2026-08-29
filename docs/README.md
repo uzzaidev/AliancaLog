@@ -11,7 +11,7 @@ Documentação do projeto, organizada por assunto. Para visão geral e setup do 
 | [governanca/](./governanca/) | Plano do produto, checklist de progresso e checkpoint de sessão | [PLAN.md](./governanca/PLAN.md) |
 | [db/](./db/) | Documentação do banco de dados (fluxo de migrations) | [MIGRATIONS.md](./db/MIGRATIONS.md) |
 | [comercial/](./comercial/) | Propostas, contrato, escopo técnico original (R01), planilhas de percentuais/orçamento | [ALIANCA_LOG_DOCUMENTO_MESTRE.md](./comercial/ALIANCA_LOG_DOCUMENTO_MESTRE.md) |
-| [auxilio/](./auxilio/) | Material de apoio (diagramas de arquitetura etc.) | [aliancalog-arquitetura.excalidraw](./auxilio/aliancalog-arquitetura.excalidraw) |
+| [auxilio/](./auxilio/) | Material de apoio (diagramas de arquitetura, checkpoint técnico) | [aliancalog-arquitetura.excalidraw](./auxilio/aliancalog-arquitetura.excalidraw) |
 
 ### governanca/ — plano, progresso, estado atual
 
@@ -36,6 +36,7 @@ Documentação do projeto, organizada por assunto. Para visão geral e setup do 
 ### auxilio/ — material de apoio
 
 - `aliancalog-arquitetura.excalidraw` — diagrama de arquitetura (abrir em [excalidraw.com](https://excalidraw.com) ou na extensão do VSCode).
+- [CHECKPOINT_TECNICO.md](./auxilio/CHECKPOINT_TECNICO.md) — raio-x do sistema **extraído do código** (stack, rotas, componentes, schema, auth, integrações, testes, dívida técnica), não do histórico de decisões. Complementa o diagrama acima com texto verificável; ao contrário do `CHECKPOINT.md` de governança, não é atualizado a cada sessão — só quando a arquitetura muda de forma relevante.
 
 ## Como organizar novos documentos
 

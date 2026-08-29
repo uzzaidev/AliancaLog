@@ -14,6 +14,7 @@ import dynamic from "next/dynamic";
 import { IconMapPin, IconRefresh, IconSteeringWheel } from "@tabler/icons-react";
 import { Button, Card, Spinner } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
+import { horaSP } from "@/lib/date";
 import type { PontoDestino, PontoEntregue, PosicaoMotorista } from "@/lib/data/mapa";
 import { geocodificarPendentes } from "@/app/gerencia/dashboard/geocode-actions";
 import type { MotoristaMapa, PontoMapa } from "@/components/mapa/leaflet-map";
@@ -116,7 +117,7 @@ export function MapaEntregas({
           lng: e.lng,
           status: e.status,
           titulo: `NF ${e.numero_nf}`,
-          subtitulo: `${e.destinatario_nome} · ${new Date(e.registrado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`,
+          subtitulo: `${e.destinatario_nome} · ${horaSP(e.registrado_em)}`,
         }));
 
   // Servidor manda QUEM está ativo (com nome); o Realtime só sobrepõe a posição
