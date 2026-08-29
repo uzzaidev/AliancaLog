@@ -26,6 +26,7 @@ export default async function GerenciaDashboard({
     motorista?: string;
     empresa?: string;
     periodo?: "hoje" | "semana" | "mes" | "todos";
+    emissao?: string;
   }>;
 }) {
   const sp = await searchParams;

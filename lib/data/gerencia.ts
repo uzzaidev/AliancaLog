@@ -125,6 +125,8 @@ export type NotaFiltro = {
   // ontem ainda pendente não pode ficar escondida esperando o usuário pensar
   // em trocar o filtro (ver encaminhamentos/luis-fernando-boff.md § A-001).
   periodo?: "hoje" | "semana" | "mes" | "todos";
+  /** Dia em que a NF foi criada/importada no Aliança Log (`created_at`). */
+  emissao?: string;
 };
 
 export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
@@ -136,11 +138,27 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
     )
     .order("updated_at", { ascending: false });
 
-  if (f.periodo === "semana") q = q.gte("data_entrega", diasAtrasSP(7));
+  // A data explícita de emissão/entrada no sistema substitui o recorte
+  // operacional padrão. Assim também aparecem as NFs daquele dia que já foram
+  // aceitas e não pertencem mais ao passivo atual.
+  const emissaoValida = /^\d{4}-\d{2}-\d{2}$/.test(f.emissao ?? "")
+    ? f.emissao
+    : undefined;
+  if (emissaoValida) {
+    q = q
+      .gte("created_at", inicioDiaSP(emissaoValida))
+      .lt("created_at", inicioDiaSP(diaSeguinte(emissaoValida)));
+  } else if (f.periodo === "semana") q = q.gte("data_entrega", diasAtrasSP(7));
   else if (f.periodo === "mes") q = q.gte("data_entrega", diasAtrasSP(30));
   else if (f.periodo === "hoje") q = q.eq("data_entrega", hojeISO());
   else if (f.periodo !== "todos")
-    q = q.or(`data_entrega.eq.${hojeISO()},status.in.(${NF_STATUS_ABERTOS.join(",")})`);
+    // Visão operacional padrão: além das NFs programadas para hoje e do passivo
+    // aberto, mantém visível toda entrega concluída hoje. Sem o recorte por
+    // `entregue_em`, uma NF atrasada aceita hoje desaparecia imediatamente da
+    // tabela, embora o canhoto e o KPI já registrassem a entrega.
+    q = q.or(
+      `data_entrega.eq.${hojeISO()},status.in.(${NF_STATUS_ABERTOS.join(",")}),and(entregue_em.gte.${inicioDiaSP(hojeISO())},entregue_em.lt.${inicioDiaSP(diaSeguinte(hojeISO()))})`,
+    );
 
   if (f.status) q = q.eq("status", f.status);
   if (f.empresa) q = q.eq("empresa_cliente_id", f.empresa);

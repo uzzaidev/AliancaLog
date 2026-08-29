@@ -23,7 +23,7 @@
 | Linguagem | TypeScript | `tsconfig.json` |
 | Framework | Next.js 16.2.9 (App Router) | [package.json](../../package.json) |
 | UI | React 19.2.4 + Tailwind v4 | [package.json](../../package.json) |
-| Package manager | npm (`package-lock.json`) | `pnpm-lock.yaml` também presente mas não é o usado — ver nota abaixo |
+| Package manager | pnpm 10 no deploy; npm também suportado localmente | `pnpm-lock.yaml`, `package-lock.json`, configuração da Vercel |
 | Node exigido | ≥24 | [package.json](../../package.json) `engines`, [.nvmrc](../../.nvmrc) |
 | Database | PostgreSQL via Supabase, região `sa-east-1` | `supabase/migrations/`, [README.md](../../README.md) |
 | ORM | Nenhum — SQL puro em migrations + `@supabase/supabase-js`/`pg` direto | `lib/supabase/*.ts`, `scripts/migrate.mjs` |
@@ -34,7 +34,9 @@
 | Observabilidade | Sentry (`@sentry/nextjs`) | `sentry.*.config.ts`, `instrumentation.ts` |
 | PWA | Service Worker próprio (cache estático + Background Sync) + manifest via App Router | `public/sw.js`, `app/manifest.ts` |
 
-**Nota sobre lockfiles:** `pnpm-lock.yaml` está versionado mas desatualizado/não usado — todo o fluxo (`npm ci`, scripts, CI) assume `package-lock.json`/npm. Candidato a remoção (ver §11).
+**Nota sobre lockfiles:** a Vercel detecta e usa `pnpm-lock.yaml` com instalação
+congelada; ele precisa acompanhar toda mudança de dependências no `package.json`.
+Os scripts também funcionam via npm no ambiente local.
 
 ---
 

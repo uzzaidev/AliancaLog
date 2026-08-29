@@ -271,6 +271,27 @@ async function main() {
       !error && romDepois?.confirmado_em && nfDepois?.status === "em_rota",
       "T9 confirmação atômica atualiza romaneio e NFs" + (error ? " — ERRO: " + error.message : ""),
     );
+
+    const cid = tag + "-fecha-auto";
+    criados.canhotos.push(cid);
+    const entrega = await cli.rpc("registrar_entrega_offline", {
+      p_client_id: cid,
+      p_nota_fiscal_id: nfConfirmacao,
+      p_status: "aceita",
+      p_foto_url: "smoke/canhoto.jpg",
+      p_foto_chegada_url: "smoke/chegada.jpg",
+      p_lat: null, p_lng: null, p_gps_precisao: null,
+      p_observacao: null,
+      p_ocorrencia_tipo: null,
+      p_ocorrencia_desc: null,
+    });
+    const { data: fechado } = await admin
+      .from("romaneios").select("status,fechado_em").eq("id", romConfirmacao).single();
+    ok(
+      !entrega.error && fechado?.status === "fechado" && fechado?.fechado_em,
+      "T9b última NF aceita fecha o romaneio automaticamente" +
+        (entrega.error ? " — ERRO: " + entrega.error.message : ""),
+    );
   }
 
   // ── T10 — ISOLAMENTO ENTRE EMPRESAS (risco R-008) ──

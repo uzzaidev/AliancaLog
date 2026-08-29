@@ -3,7 +3,29 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-08-28
+**Última atualização:** 2026-08-29
+
+## Entregas aceitas visíveis e fechamento automático (2026-08-29)
+
+1. Confirmado em produção: as NFs 24471 e 24127 foram aceitas em 29/08, mas
+   tinham `data_entrega` anterior e por isso desapareciam do filtro padrão do
+   dashboard. A visão “Hoje + pendências” agora inclui também toda NF cujo
+   `entregue_em` pertence ao dia operacional atual.
+2. A migration 0024 fecha o romaneio, na mesma transação da entrega, assim que
+   não restar NF vinculada sem aceite. O bloqueio do romaneio serializa syncs
+   simultâneos e evita duas últimas entregas deixarem o status preso em `ativo`.
+   A migration 0025 ajusta a RLS para autorizar esse fechamento somente quando
+   o banco comprovar que não há NF vinculada em aberto.
+3. O backfill da migration fechou quatro romaneios confirmados já completos
+   (incluindo o atual de 2/2 aceitas e um romaneio vazio após devoluções).
+4. Validação: 25/25 migrations aplicadas; typecheck, lint, build, fila offline e
+   smoke completo de segurança/RLS aprovados.
+5. Importação: o botão em lote “Remover duplicadas” saiu do cabeçalho da grade e
+   foi para a barra inferior, na mesma linha do botão de enviar/importar NFs.
+6. Dashboard: novo filtro de data “Emissão no sistema”, baseado em `created_at`.
+   Ao ser preenchido, substitui o recorte operacional padrão e mostra todas as
+   NFs criadas/importadas naquele dia, inclusive as já aceitas. Validação direta:
+   o dia 27/08 retornou as 12 NFs esperadas.
 
 ## Correção do fluxo motorista/mobile e painel (2026-08-28)
 

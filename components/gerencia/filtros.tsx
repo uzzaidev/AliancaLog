@@ -49,7 +49,8 @@ export function Filtros({
     !!params.get("status") ||
     !!params.get("motorista") ||
     !!params.get("empresa") ||
-    !!params.get("periodo");
+    !!params.get("periodo") ||
+    !!params.get("emissao");
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -65,6 +66,17 @@ export function Filtros({
           </option>
         ))}
       </select>
+
+      <label className={selectCls(!!params.get("emissao"))}>
+        <span className="mr-2 text-xs font-medium">Emissão no sistema</span>
+        <input
+          type="date"
+          value={params.get("emissao") ?? ""}
+          onChange={(e) => setParam("emissao", e.target.value)}
+          aria-label="Filtrar pela data de emissão no sistema"
+          className="bg-transparent text-sm outline-none"
+        />
+      </label>
 
       <select
         className={selectCls(!!params.get("status"))}

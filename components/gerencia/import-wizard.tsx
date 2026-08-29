@@ -416,17 +416,6 @@ export function ImportWizard({
         <Card className="space-y-3 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Confira as NFs ({rows.length})</h2>
-            {duplicadas.size > 0 && (
-              <Button
-                variant="danger"
-                onClick={removerTodasDuplicadas}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs"
-              >
-                <IconTrash size={14} aria-hidden />
-                Remover {duplicadas.size} duplicada
-                {duplicadas.size > 1 ? "s" : ""}
-              </Button>
-            )}
           </div>
           <div className="space-y-3">
             {rows.map((r) => {
@@ -490,9 +479,23 @@ export function ImportWizard({
       )}
 
       {(rows !== null ? rows.length > 0 : headers.length > 0) && (
-        <Button onClick={confirmar} disabled={pending}>
-          {pending ? "Enviando…" : submitLabel}
-        </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button onClick={confirmar} disabled={pending}>
+            {pending ? "Enviando…" : submitLabel}
+          </Button>
+          {rows !== null && duplicadas.size > 0 && (
+            <Button
+              variant="danger"
+              onClick={removerTodasDuplicadas}
+              disabled={pending}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs"
+            >
+              <IconTrash size={14} aria-hidden />
+              Remover {duplicadas.size} duplicada
+              {duplicadas.size > 1 ? "s" : ""}
+            </Button>
+          )}
+        </div>
       )}
 
       {erro && (
