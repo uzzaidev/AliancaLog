@@ -26,6 +26,11 @@
    Ao ser preenchido, substitui o recorte operacional padrão e mostra todas as
    NFs criadas/importadas naquele dia, inclusive as já aceitas. Validação direta:
    o dia 27/08 retornou as 12 NFs esperadas.
+7. Validação manual encontrou duas divergências adicionais no Safari: romaneio
+   fechado reaparecia como “Em andamento” pelo cache local, e abrir a rota
+   dinâmica do canhoto sem rede falhava antes de chegar ao formulário. A lista
+   vazia do servidor agora limpa o cache, romaneio 100% é removido localmente e
+   o formulário abre inline na tela já carregada, sem navegação de rede.
 
 ## Correção do fluxo motorista/mobile e painel (2026-08-28)
 

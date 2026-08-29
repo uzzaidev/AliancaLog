@@ -56,9 +56,11 @@ const TIPOS = Object.keys(OCORRENCIA_LABEL) as OcorrenciaTipo[];
 export function CanhotoForm({
   nf: initialNf,
   nfId,
+  onVoltar,
 }: {
   nf?: NotaComRomaneio | null;
   nfId?: string;
+  onVoltar?: () => void;
 }) {
   const router = useRouter();
   const [nf, setNf] = useState<NotaComRomaneio | null>(initialNf ?? null);
@@ -236,7 +238,10 @@ export function CanhotoForm({
           {resultado.texto}
         </p>
         <p className="text-sm text-muted">NF {nf.numero_nf}</p>
-        <Button className="w-full" onClick={() => router.replace(voltar)}>
+        <Button
+          className="w-full"
+          onClick={() => (onVoltar ? onVoltar() : router.replace(voltar))}
+        >
           Voltar para a lista
         </Button>
         {resultado.falhou && (

@@ -21,15 +21,11 @@ export function EntregasView({
     let ativo = true;
 
     async function sincronizarCache() {
-      if (initialRomaneios && initialRomaneios.length > 0) {
-        await salvarRomaneiosCache(initialRomaneios);
-        if (ativo) setRomaneios(initialRomaneios);
-      } else {
-        const doCache = await obterRomaneiosCache();
-        if (ativo && doCache && doCache.length > 0) {
-          setRomaneios(doCache);
-        }
-      }
+      // A resposta vazia do servidor é autoritativa: significa que não há mais
+      // romaneio ativo. Antes ela era confundida com falha de rede e o cache
+      // ressuscitava um romaneio já fechado como “Em andamento”.
+      await salvarRomaneiosCache(initialRomaneios);
+      if (ativo) setRomaneios(initialRomaneios);
     }
 
     sincronizarCache();

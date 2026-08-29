@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   IconSearch,
   IconMapPin,
   IconCamera,
+  IconChevronLeft,
   IconChevronRight,
   IconNavigation,
 } from "@tabler/icons-react";
@@ -20,6 +20,7 @@ import {
 } from "@/lib/offline/cache";
 import { EVENTO_FILA } from "@/lib/offline/sync";
 import { listarPendentes, type CanhotoPendente } from "@/lib/offline/queue";
+import { CanhotoForm } from "./canhoto-form";
 
 export function RomaneioView({
   notas: initialNotas,
@@ -31,6 +32,7 @@ export function RomaneioView({
   const [notas, setNotas] = useState<NotaMotorista[]>(initialNotas);
   const [naFila, setNaFila] = useState<Map<string, CanhotoPendente>>(new Map());
   const [q, setQ] = useState("");
+  const [notaAbertaId, setNotaAbertaId] = useState<string | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -86,6 +88,29 @@ export function RomaneioView({
   const proximaId =
     notas.find((n) => !NF_STATUS_FINAIS.includes(n.status) && !naFila.has(n.id))?.id ?? null;
 
+  const notaAberta = notas.find((n) => n.id === notaAbertaId) ?? null;
+  if (notaAberta) {
+    return (
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setNotaAbertaId(null)}
+          className="inline-flex items-center gap-0.5 text-sm font-medium text-muted hover:text-ink"
+        >
+          <IconChevronLeft size={16} /> Voltar para as entregas
+        </button>
+        <h1 className="text-lg font-bold tracking-tight text-dark">
+          Registrar canhoto
+        </h1>
+        <CanhotoForm
+          nf={{ ...notaAberta, romaneio_id: romaneioId ?? null }}
+          nfId={notaAberta.id}
+          onVoltar={() => setNotaAbertaId(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <Card className="p-4">
@@ -124,13 +149,13 @@ export function RomaneioView({
               ativo ? "border-2 border-brand" : "border-line"
             }`}
           >
-            <Link
-              href={pendenteSync ? "#" : `/motorista/canhoto/${n.id}`}
-              onClick={(event) => {
-                if (pendenteSync) event.preventDefault();
+            <button
+              type="button"
+              onClick={() => {
+                if (!pendenteSync && !feito) setNotaAbertaId(n.id);
               }}
               aria-disabled={!!pendenteSync}
-              className={`block transition ${pendenteSync ? "cursor-not-allowed opacity-75" : "active:bg-canvas"}`}
+              className={`block w-full text-left transition ${pendenteSync || feito ? "cursor-default opacity-75" : "active:bg-canvas"}`}
             >
               <div className="flex items-start gap-3 p-4">
                 <div className="min-w-0 flex-1">
@@ -171,7 +196,7 @@ export function RomaneioView({
                   </span>
                 </div>
               )}
-            </Link>
+            </button>
 
             {!feito && (
               <a

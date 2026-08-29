@@ -170,9 +170,12 @@ export async function atualizarStatusNotaCache(
         const concluidas = notasRomaneio.filter((n) =>
           NF_STATUS_FINAIS.includes(n.status),
         ).length;
-        const atualizados = romaneios.map((r) =>
-          r.id === romaneioId ? { ...r, concluidas } : r,
-        );
+        const atualizados = romaneios
+          .map((r) => (r.id === romaneioId ? { ...r, concluidas } : r))
+          // O servidor fecha o romaneio na mesma transação da última aceita.
+          // Removê-lo também do cache evita mostrar 100% como “Em andamento”
+          // enquanto o refresh/realtime ainda não chegou.
+          .filter((r) => !(r.id === romaneioId && r.total > 0 && concluidas === r.total));
         await salvarRomaneiosCache(atualizados);
       }
     }

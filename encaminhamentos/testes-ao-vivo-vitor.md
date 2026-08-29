@@ -52,6 +52,9 @@ O risco de perda de dados que motivou o redesenho inteiro.
 > migration `0016` foi feita para eliminar. Testar antes de qualquer piloto.
 
 ### 1.2 📱 Fila offline não trava nem perde canhoto
+> **Rodada de 29/08:** o Safari falhou ao abrir a rota do canhoto já sem rede.
+> Corrigido para abrir o formulário dentro do romaneio carregado; requer novo
+> teste após deploy.
 1. Celular em **modo avião**, com o app já aberto.
 2. Registrar 2–3 canhotos (fotos + status).
 3. Confirmar o banner âmbar "sem conexão".
@@ -99,7 +102,8 @@ Foi reportado em uso real e corrigido; precisa de confirmação na tela.
   (antes aparecia só "uma das NFs…" sem dizer qual).
 - **O teste principal:** com 2 ou mais duplicadas marcadas, remover **uma**. As outras
   **têm que continuar marcadas** — era exatamente esse o bug.
-- Botão **"Remover N duplicadas"** no cabeçalho da grade limpa todas de uma vez.
+- Botão **"Remover N duplicadas"** no rodapé, na mesma linha do envio, limpa
+  todas de uma vez. **Validado visualmente em 29/08.**
 - Testar nos **dois perfis**. No portal do cliente há um caso extra: NF já cadastrada
   por outra empresa é invisível ao cliente (RLS), então a mensagem deve explicar que
   *"pode ter sido enviada antes pela transportadora"* — e ainda assim marcar a linha.
@@ -108,6 +112,8 @@ Foi reportado em uso real e corrigido; precisa de confirmação na tela.
 - Trocar o período e ver a lista mudar.
 - No padrão ("Hoje + pendências"), confirmar que uma NF de ontem ainda pendente
   **aparece**.
+- O filtro **"Emissão no sistema"** deve mostrar todas as NFs criadas/importadas
+  na data escolhida, inclusive as já aceitas. **Validado em 29/08.**
 
 ### 2.4 💻 Alerta de NF parada `A-008`
 - Uma NF em aberto há mais de 7 dias ganha o selo vermelho.
