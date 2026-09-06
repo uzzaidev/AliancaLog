@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Field, Input } from "@/components/ui";
-import { BarcodeScanner } from "@/components/gerencia/barcode-scanner";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 import { interpretarCodigoBipado } from "@/lib/nfe";
 import {
   buscarNf,

@@ -15,6 +15,7 @@ import {
   IconCopy,
   IconTrash,
   IconClockExclamation,
+  IconBarcode,
 } from "@tabler/icons-react";
 import { Button, Card, StatusBadge } from "@/components/ui";
 import { ComprovanteModal } from "@/components/comprovante-modal";
@@ -271,6 +272,14 @@ export function NotasList({
                           <span className="flex items-center gap-1.5 text-ink">
                             <span className="h-1.5 w-1.5 rounded-full bg-success" />
                             {nf.motorista_nome}
+                            {/* Atribuição veio do motorista (bipou), não da gerência. */}
+                            {nf.assumida_em && (
+                              <IconBarcode
+                                size={13}
+                                className="text-brand"
+                                aria-label="Assumida pelo motorista"
+                              />
+                            )}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1.5 text-gray-400">
@@ -411,6 +420,17 @@ function DetailPanel({
           label="Motorista"
           value={nf.motorista_nome ?? "Não atribuído"}
         />
+        {nf.assumida_em && (
+          <Linha
+            label="Atribuição"
+            value={
+              <span className="flex items-center gap-1 font-medium text-brand">
+                <IconBarcode size={13} />
+                Assumida pelo motorista (bipagem)
+              </span>
+            }
+          />
+        )}
         <Linha label="Status" value={<StatusBadge status={nf.status} />} />
         <Linha label="Data de entrega" value={nf.data_entrega} />
         {isNotaParada(nf) && (

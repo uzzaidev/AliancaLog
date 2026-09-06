@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { IconChevronRight, IconRoute } from "@tabler/icons-react";
+import { IconBarcode, IconChevronRight, IconRoute } from "@tabler/icons-react";
 import { Badge, Button, Card } from "@/components/ui";
 import { Progress } from "@/components/ui/progress";
 import { ConfirmarButton } from "@/components/motorista/confirmar-button";
@@ -49,6 +49,13 @@ export function EntregasView({
       <h1 className="text-lg font-bold tracking-tight text-dark">
         Minhas entregas
       </h1>
+
+      {/* Recebeu a nota na mão e ela não está aqui? Bipa e assume (migration 0026). */}
+      <Link href="/motorista/assumir" className="block">
+        <Button variant="secondary" className="w-full">
+          <IconBarcode size={18} /> Bipar nota que recebi
+        </Button>
+      </Link>
 
       {romaneios.length === 0 && (
         <Card className="flex flex-col items-center gap-2 p-8 text-center text-sm text-muted">

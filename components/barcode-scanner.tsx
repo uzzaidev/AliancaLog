@@ -3,6 +3,8 @@
 // Scanner de código de barras. Usa a API nativa BarcodeDetector quando disponível
 // (Chrome/Android — o caso do celular) e cai para @zxing/library nos demais.
 // Requer HTTPS e permissão de câmera. Dispara onResult com o texto lido.
+// Compartilhado: a gerência monta romaneio bipando (romaneio-builder) e o
+// motorista assume NF bipando (assumir-nf) — por isso mora na raiz de components.
 import { useEffect, useRef } from "react";
 
 type DetectedBarcode = { rawValue: string };

@@ -15,6 +15,18 @@ Divisão de tarefas dos encaminhamentos da ata de 12/08/2026, já com decisões 
 - [vitor-pirolli.md](./vitor-pirolli.md) — frontend/produto/comercial, com histórico técnico.
 - [fase-b-pendencias.md](./fase-b-pendencias.md) — escopo restante do MVP Completo.
 
+## 🔴 Novo em 06/09 — entrega ao cliente na semana de 08–12/09
+
+- O Vítor apresenta o sistema ao cliente para uso real. Os quatro bloqueios de infra do
+  Luis (Sentry, backup, logins reais, domínio) passam a ter **prazo**, não só ordem.
+  Detalhe em [luis-fernando-boff.md](./luis-fernando-boff.md).
+- **Pedido novo do PO:** o motorista assume a NF **bipando** o DANFE, sem a gerência
+  atribuir na mão. Implementado (migration `0026` + `/motorista/assumir`), **pendente de
+  revisão do Luis e de aplicação da migration** — mexe em RLS e no trigger
+  `nf_guard_motorista`.
+- Roteiro de testes do Vítor priorizado para a entrega:
+  [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md).
+
 ## ⚠️ Novo em 27/08
 
 - **Modelo de status refinado (migration `0022`)** — a NF passou a guardar o **desfecho

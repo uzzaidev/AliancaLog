@@ -20,6 +20,126 @@ rodando em paralelo desde já — seguida à risca.
 
 ---
 
+# 🔴 06/09 — Entrega ao cliente na semana que vem
+
+O Vítor vai até o cliente **na semana de 08–12/09** apresentar o sistema para eles
+começarem a usar. Isso transforma as pendências abaixo de "quando der" em
+**bloqueio de data**. Elas estão paradas desde 24/08.
+
+## 1. Bloqueios de infra — sem isso não se entrega para uso real
+
+Nenhum é código de produto: é configuração e validação. São os mesmos quatro de
+24/08, repetidos aqui porque agora têm prazo.
+
+| # | O que | Por que trava a entrega | Esforço |
+|---|---|---|---|
+| 1 | **Sentry na Vercel** — cadastrar `NEXT_PUBLIC_SENTRY_DSN`, provocar um erro controlado e confirmar o evento no painel | Sem isso, **falha em campo não avisa ninguém**. O cliente usando de verdade e a gente descobrindo por reclamação é o pior cenário possível. Validar especialmente o `area: offline-sync`, onde moram as falhas silenciosas | baixo |
+| 2 | **Backup automático** — `DATABASE_URL` em GitHub Secrets + rodar `workflow_dispatch` uma vez + confirmar artifact `.sql.gz` | O workflow existe mas **nunca rodou**. Entregar para o cliente inserir dado real sem backup validado é risco que não precisa existir | baixo |
+| 3 | **Logins reais** — 16 motoristas + ~20 empresas | O Vítor traz as listas com o Matheus. Decidir se vai no `/gerencia/cadastros` na mão ou por script de carga | médio, depende das listas |
+| 4 | **Domínio definitivo** | `alianca-log.vercel.app` serve para o piloto. Só decidir se o go-live exige domínio próprio — se exigir, tem propagação de DNS no caminho | decisão + baixo |
+
+> **Ordem sugerida:** 1 e 2 primeiro (são rápidos e são rede de proteção), depois 3
+> quando as listas chegarem. O 4 pode esperar o pós-piloto.
+
+## 2. Continua aberto de 27/08 — 500 permanente trava a fila inteira
+
+O item detalhado mais abaixo (§ "um erro 500 trava a fila offline inteira") **não foi
+mexido**. Com o cliente usando de verdade, o cenário fica concreto: motorista faz 10
+entregas, a terceira esbarra num 500 permanente, e **as sete seguintes nunca chegam ao
+painel** — para ele todas foram "registradas".
+
+A sugestão continua a mesma: contar falhas por `client_id` e, depois de 3–5 tentativas,
+**pular o item** em vez de parar a fila. O Sentry (item 1 acima) é o que te dá a
+frequência real para escolher o N — mais um motivo para ele vir primeiro.
+
+## 3. 🆕 Bipagem do motorista para assumir NF — implementado, **precisa da sua revisão**
+
+**Pedido novo do PO (Vítor, 06/09):** a gerência não quer mais atribuir nota a nota na
+mão. O motorista recebe a NF física e **assume bipando o DANFE**.
+
+Decisões do PO já fechadas (as quatro perguntas que estavam em aberto):
+
+1. A NF **já existe** no sistema — bipar não cria nota nova. Código desconhecido
+   devolve `nao_encontrada` e manda avisar a gerência.
+2. Vai para o **romaneio do dia dele** — reaproveita o `ativo` de hoje, senão cria um.
+3. **Entra na hora**, sem aprovação da gerência, mas fica **registrado** que a
+   atribuição veio do motorista.
+4. NF que já é de outro motorista: **pede confirmação explícita** ("essa nota é de
+   fulano, tem certeza?") antes de trocar.
+
+### O que já está escrito
+
+| Arquivo | O que faz |
+|---|---|
+| `supabase/migrations/0026_motorista_assume_nf.sql` | Colunas `assumida_em` / `assumida_de`, alteração do trigger `nf_guard_motorista` e a RPC `assumir_nf_motorista` |
+| `app/motorista/actions.ts` | Server action `assumirNf(codigo, confirmarTroca)` |
+| `components/motorista/assumir-nf.tsx` | Tela: câmera + digitação manual + diálogo de confirmação de troca |
+| `app/motorista/assumir/page.tsx` | Rota `/motorista/assumir` |
+| `components/barcode-scanner.tsx` | Movido de `components/gerencia/` — agora é compartilhado entre gerência e motorista |
+| `lib/data/gerencia.ts` + `components/gerencia/notas-list.tsx` | Selo de código de barras na coluna Motorista + linha "Assumida pelo motorista (bipagem)" no painel de detalhe |
+
+`typecheck`, `lint` e `build` verdes. **Migration ainda NÃO aplicada** (`db:status`
+mostra 25 aplicadas + a 0026 pendente).
+
+### Por que precisa especificamente de você — os três pontos sensíveis
+
+**(a) Tinha que ser `security definer`, e quero seu aval nisso.**
+`mot_nf_select` (sua migration `0021`) enxerga só "NF minha ou NF em que eu registrei
+canhoto". A NF que o motorista acabou de bipar é, por definição, **invisível para ele**
+— ou está sem dono, ou é de outro. Resolver isso por policy significaria deixar todo
+motorista **ler todas as NFs do sistema** só para conseguir achar a que bipou — que é
+exatamente o afrouxamento que a sua `0021` foi escrita para evitar. Por isso a busca
+mora numa função `security definer` que devolve **só a NF bipada**, com as regras
+aplicadas dentro. O alcance passa a ser "a nota que está na mão dele", não "todas".
+
+**(b) Precisei mexer no seu `nf_guard_motorista` (migration `0009`).**
+O trigger só deixa o motorista alterar `status`/`foto_url`/`entregue_em`/`observacao`.
+Assumir a NF mexe em `motorista_id` e `romaneio_id`, então **o trigger barrava a própria
+RPC** — ela roda com o JWT do motorista mesmo sendo `security definer`.
+
+A saída foi uma flag **transaction-local** (`set_config('app.assumindo_nf','on',true)`),
+setada só dentro da função e zerada logo depois. Meu raciocínio de que não é buraco:
+`set_config` vive em `pg_catalog`, que o PostgREST **não expõe** (ele só alcança funções
+do schema `public`), e mesmo que alcançasse, `mot_nf_update` continua barrando UPDATE em
+linha que não é dele. **É esse raciocínio que quero que você confira** — é o ponto onde
+eu erraria se fosse errar.
+
+**(c) Faltam testes no `smoke-seguranca.mjs`.**
+Não dava para rodar: a migration não está aplicada. Os casos que **precisam** entrar,
+seguindo o padrão dos seus T4/T8:
+
+```
+T9a  motorista assume NF sem dono → entra no romaneio do dia dele
+T9b  motorista assume NF de OUTRO → só com p_confirmar_troca = true
+T9c  primeira chamada sem confirmar devolve 'confirmar_troca' e NÃO move a NF
+T9d  NF já 'aceita' devolve 'finalizada' e não é reaberta
+T9e  a flag app.assumindo_nf NÃO deixa o motorista alterar destinatário/endereço
+T9f  romaneio de origem que ficou vazio é removido (não vira fantasma)
+```
+
+O **T9e é o mais importante** — é o teste que prova que (b) não abriu um buraco.
+
+### Para ativar (nesta ordem)
+
+```bash
+npm run db:backup     # antes de mexer, como sempre
+npm run db:migrate    # aplica a 0026
+npm run test:security # depois de escrever os T9*
+```
+
+E o deploy na Vercel (o Vítor precisa disso **antes** de ir ao cliente — a câmera exige
+HTTPS, então a bipagem não é testável em `localhost`).
+
+### O que ficou de fora, de propósito
+
+- **Não funciona offline.** Assumir NF é uma server action; sem rede, dá erro. Achei
+  aceitável porque ele bipa na carga, no pátio — mas é decisão que vale revisar com o
+  Vítor se o pátio da Serra não tiver sinal.
+- **`data_entrega` não é reescrita** ao assumir uma NF de dia anterior. Mudar isso
+  reescreveria histórico e bagunçaria a regra de "NF parada" do A-008.
+
+---
+
 ## ✅ Atualização — Luis (2026-08-24)
 
 Os bloqueios de infraestrutura que estavam no topo deste arquivo mudaram depois dos

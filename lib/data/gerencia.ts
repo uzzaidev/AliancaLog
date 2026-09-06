@@ -106,6 +106,8 @@ export type NotaRow = {
   empresa_nome: string | null;
   motorista_id: string | null;
   motorista_nome: string | null;
+  /** Preenchido quando foi o MOTORISTA que assumiu a NF bipando (migration 0026). */
+  assumida_em: string | null;
   // Data-alvo da entrega — base da regra de "NF parada" (lib/alertas.ts, A-008).
   data_entrega: string;
   updated_at: string;
@@ -134,7 +136,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
   let q = supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,data_entrega,updated_at,foto_url,motorista_id,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,data_entrega,updated_at,foto_url,motorista_id,assumida_em,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas(usuarios(nome))",
     )
     .order("updated_at", { ascending: false });
 
@@ -182,6 +184,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
       empresa_nome: empresa?.nome ?? null,
       motorista_id: (r.motorista_id as string) ?? null,
       motorista_nome: motorista?.usuarios?.nome ?? null,
+      assumida_em: (r.assumida_em as string) ?? null,
       lat: (r.lat as number) ?? null,
       lng: (r.lng as number) ?? null,
       geocode_status: (r.geocode_status as "ok" | "falhou") ?? null,
