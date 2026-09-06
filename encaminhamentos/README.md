@@ -21,9 +21,12 @@ Divisão de tarefas dos encaminhamentos da ata de 12/08/2026, já com decisões 
   Luis (Sentry, backup, logins reais, domínio) passam a ter **prazo**, não só ordem.
   Detalhe em [luis-fernando-boff.md](./luis-fernando-boff.md).
 - **Pedido novo do PO:** o motorista assume a NF **bipando** o DANFE, sem a gerência
-  atribuir na mão. Implementado (migration `0026` + `/motorista/assumir`), **pendente de
-  revisão do Luis e de aplicação da migration** — mexe em RLS e no trigger
-  `nf_guard_motorista`.
+  atribuir na mão. Implementado; migration `0026` **aplicada em produção** em 06/09
+  (26/26), `test:security` 23/23. **Pendente de revisão do Luis** — mexe no trigger
+  `nf_guard_motorista` — e dos testes T11a–T11f do caminho novo.
+- **Achado:** `npm run db:backup` não funciona na máquina do Vítor (pg_dump v12 contra
+  servidor v15+). Com o backup do GitHub Actions ainda não validado, hoje não há rota
+  de backup comprovada.
 - Roteiro de testes do Vítor priorizado para a entrega:
   [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md).
 

@@ -104,31 +104,43 @@ do schema `public`), e mesmo que alcançasse, `mot_nf_update` continua barrando 
 linha que não é dele. **É esse raciocínio que quero que você confira** — é o ponto onde
 eu erraria se fosse errar.
 
-**(c) Faltam testes no `smoke-seguranca.mjs`.**
-Não dava para rodar: a migration não está aplicada. Os casos que **precisam** entrar,
-seguindo o padrão dos seus T4/T8:
+**(c) Faltam testes específicos no `smoke-seguranca.mjs`.**
+A suíte atual (23 verificações) passa inteira depois da 0026 — inclusive T1
+(destinatário não muda pelo motorista), T3 (NF aceita imutável) e T4/T8 (reentrega),
+que são justamente os que a mudança no trigger poderia ter quebrado. Isso mostra que
+não houve regressão, mas **nenhum teste exercita o caminho novo**. Os que precisam
+entrar, seguindo o padrão dos seus T4/T8 (T9/T10 já estão ocupados — usar T11):
 
 ```
-T9a  motorista assume NF sem dono → entra no romaneio do dia dele
-T9b  motorista assume NF de OUTRO → só com p_confirmar_troca = true
-T9c  primeira chamada sem confirmar devolve 'confirmar_troca' e NÃO move a NF
-T9d  NF já 'aceita' devolve 'finalizada' e não é reaberta
-T9e  a flag app.assumindo_nf NÃO deixa o motorista alterar destinatário/endereço
-T9f  romaneio de origem que ficou vazio é removido (não vira fantasma)
+T11a  motorista assume NF sem dono → entra no romaneio do dia dele
+T11b  motorista assume NF de OUTRO → só com p_confirmar_troca = true
+T11c  1ª chamada sem confirmar devolve 'confirmar_troca' e NÃO move a NF
+T11d  NF já 'aceita' devolve 'finalizada' e não é reaberta
+T11e  a flag app.assumindo_nf NÃO deixa o motorista alterar destinatário/endereço
+T11f  romaneio de origem que ficou vazio é removido (não vira fantasma)
 ```
 
-O **T9e é o mais importante** — é o teste que prova que (b) não abriu um buraco.
+O **T11e é o mais importante** — é o teste que prova que (b) não abriu um buraco.
 
-### Para ativar (nesta ordem)
+### ⚠️ `npm run db:backup` está quebrado nesta máquina
 
-```bash
-npm run db:backup     # antes de mexer, como sempre
-npm run db:migrate    # aplica a 0026
-npm run test:security # depois de escrever os T9*
+Descoberto ao tentar rodar antes da 0026: o `pg_dump` instalado é da
+**PostgreSQL 12.15** (`C:\Program Files\PostgreSQL\12.15\bin`) e o Supabase roda 15+.
+O pg_dump recusa dumpar servidor mais novo que ele, então o script morre. Isso soma-se
+ao item 2 (validar o backup automático do GitHub Actions): hoje **nenhuma das duas
+rotas de backup está comprovadamente funcionando**. Instalar o client 15/16/17 resolve
+o local.
+
+### Estado atual
+
+```
+✓ Migration 0026 aplicada em produção (06/09, 26/26)
+✓ npm run test:security — 23/23
+✓ npm run test:offline — ok
+✓ typecheck · lint · build — verdes
 ```
 
-E o deploy na Vercel (o Vítor precisa disso **antes** de ir ao cliente — a câmera exige
-HTTPS, então a bipagem não é testável em `localhost`).
+Falta a sua revisão dos pontos (a) e (b) e os testes T11a–T11f.
 
 ### O que ficou de fora, de propósito
 
@@ -846,6 +858,8 @@ agora.
   B" antes do go-live com o cliente real.
 
 ### ✅ Feito (2026-08-14) — parcial, Playwright fica pra próxima sessão
+<!-- histórico abaixo; a pendência atual de QA está na seção 06/09 no topo -->
+
 
 - **Code review** rodado sobre todo o diff desta sessão (skill dedicada, nível
   alto, 6 agentes em paralelo cobrindo linha-a-linha, comportamento removido,
