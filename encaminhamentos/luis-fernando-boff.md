@@ -126,10 +126,12 @@ O **T11e é o mais importante** — é o teste que prova que (b) não abriu um b
 
 Descoberto ao tentar rodar antes da 0026: o `pg_dump` instalado é da
 **PostgreSQL 12.15** (`C:\Program Files\PostgreSQL\12.15\bin`) e o Supabase roda 15+.
-O pg_dump recusa dumpar servidor mais novo que ele, então o script morre. Isso soma-se
-ao item 2 (validar o backup automático do GitHub Actions): hoje **nenhuma das duas
-rotas de backup está comprovadamente funcionando**. Instalar o client 15/16/17 resolve
-o local.
+O pg_dump recusa dumpar servidor mais novo que ele, então o script morre.
+
+É o **mesmo problema** que você corrigiu no CI hoje (`6ed0731`, postgresql-client-17)
+— só que a máquina do Vítor continua com o client 12. Instalar o 17 lá resolve. Com o
+`workflow_dispatch` do item 2 ainda não rodado, no momento **nenhuma das duas rotas de
+backup foi vista funcionando de ponta a ponta**.
 
 ### Estado atual
 

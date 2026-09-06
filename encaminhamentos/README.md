@@ -25,8 +25,8 @@ Divisão de tarefas dos encaminhamentos da ata de 12/08/2026, já com decisões 
   (26/26), `test:security` 23/23. **Pendente de revisão do Luis** — mexe no trigger
   `nf_guard_motorista` — e dos testes T11a–T11f do caminho novo.
 - **Achado:** `npm run db:backup` não funciona na máquina do Vítor (pg_dump v12 contra
-  servidor v15+). Com o backup do GitHub Actions ainda não validado, hoje não há rota
-  de backup comprovada.
+  servidor v15+) — mesmo problema que o Luis corrigiu no CI em `6ed0731`. Falta
+  instalar o client 17 na máquina do Vítor e rodar o `workflow_dispatch` uma vez.
 - Roteiro de testes do Vítor priorizado para a entrega:
   [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md).
 
