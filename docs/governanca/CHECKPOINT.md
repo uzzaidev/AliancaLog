@@ -6,7 +6,7 @@
 **Última atualização:** 2026-08-29
 **Última atualização:** 2026-09-07
 
-## App Shell offline, resiliência da fila, validação de backup e testes 0026/0027 (2026-09-07)
+## Fechamento de Infraestrutura, CI, Carga em Lote e Diagnóstico Sentry (2026-09-07)
 
 1. **App Shell Offline (`/offline`) e PWA v4 (Item 0 do encaminhamento)**:
    - Resolvido o cold-open offline no iPhone/PWA (Safari): implementada a rota estática `○ /offline` com `components/motorista/offline-view.tsx`, precache e fallback Network-First no Service Worker v4 (`public/sw.js`).
@@ -23,9 +23,17 @@
 4. **Backup Automático do Banco no GitHub Actions Validado (Item 1 do encaminhamento)**:
    - Workflow `.github/workflows/db-backup.yml` atualizado para `postgresql-client-17`.
    - Disparado via `workflow_dispatch` (run 34145951010) e aprovado com sucesso: gerado artefato `db-backup-15.sql.gz` com retenção de 30 dias.
-5. **Validação Geral**:
+5. **Ferramenta de Diagnóstico e Validação do Sentry (`/gerencia/diagnostico`)**:
+   - Criada página operacional para a gerência testar disparos no servidor e no navegador com tags `area: offline-sync` e `piloto: true`, exibindo o status da DSN e o Event ID gerado.
+6. **Script de Importação em Lote de Usuários para o Piloto (`npm run importar:piloto`)**:
+   - Criado `scripts/importar-usuarios-piloto.mjs` com templates CSV para motoristas (com veículos) e empresas clientes (com acesso ao portal). Idempotente e seguro contra `auth.users`.
+7. **Pipeline de CI no GitHub Actions (`.github/workflows/ci.yml`)**:
+   - Automação completa rodando em push e pull requests para `main`: typecheck, lint, test:offline e build de produção.
+8. **Guia Completo de Variáveis e Carga do Piloto (`GUIA_CONFIGURACOES_PILOTO.md`)**:
+   - Documento cristalino em `docs/governanca/GUIA_CONFIGURACOES_PILOTO.md` cobrindo o cadastro da DSN do Sentry na Vercel, preenchimento dos CSVs e decisão de domínio.
+9. **Validação Técnica Geral**:
    - 27/27 migrations aplicadas no banco.
-   - `npm run typecheck`, `npm run lint`, `npm run test:offline`, `npm run test:security` e `npm run build` 100% verdes.
+   - `npm run typecheck`, `npm run lint`, `npm run test:offline`, `npm run test:security` (29/29) e `npm run build` (Turbopack) 100% verdes.
 
 ## Entregas aceitas visíveis e fechamento automático (2026-08-29)
 

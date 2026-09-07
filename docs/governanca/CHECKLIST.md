@@ -61,9 +61,9 @@
 - [x] Offline: fila de canhotos no IndexedDB (foto como blob) + sync idempotente
 - [x] Offline: sincronização → `POST /api/sync` idempotente (`client_id`) ao voltar a conexão
 - [x] Offline: banner "N aguardando sincronização"
-- [ ] Cache offline da LISTA do dia (leitura offline cold-open) — refinamento `→ Luis`
-      — confirmado como **não feito** em 14/08: `STORE_CACHE` existe mas nunca é
-      escrito nem lido; o motorista só vê a lista offline se a aba já estava aberta
+- [x] Cache offline da LISTA do dia (leitura offline cold-open) — ✅ **RESOLVIDO em 07/09 (Luis)**:
+      App Shell estático (`○ /offline`) com Network-First fallback no SW v4 e leitura
+      do `STORE_CACHE` (IndexedDB). Roda em modo avião mesmo abrindo direto da tela de início.
 - [x] ~~Imutabilidade forte do canhoto (bloquear re-registro)~~ — **item obsoleto**:
       o A-007 (migration `0016`) fez o oposto de propósito, removendo `uq_canhoto_nf`
       para permitir múltiplas tentativas por NF. A imutabilidade que permanece é a da
@@ -102,7 +102,9 @@
       `scripts/smoke-seguranca.mjs` via `npm run test:security`, **29/29 contra o banco real**
       (inclui T4a/b/c de múltiplas tentativas, T10a-d de isolamento cliente e T11a-f de bipagem/assumir NF).
       Cobertura completa do perfil `cliente_final` e auto-atribuição de motorista.
-- [ ] Monitoramento de erros (Sentry ou similar) antes do piloto `→ Luis`
+- [x] Monitoramento de erros (Sentry ou similar) antes do piloto `→ Luis` — ✅ **CONCLUÍDO em 07/09**:
+      integrado no App Router e fila offline com tags dedicadas (`area: offline-sync`),
+      painel e Server Action de teste criados em `/gerencia/diagnostico`, guia de DSN documentado.
 - [x] Backup automático do banco — **workflow GitHub Actions** `.github/workflows/db-backup.yml`
       testado e validado com sucesso via `workflow_dispatch` (run 34145951010, artefato `db-backup-15.sql.gz`
       gerado com `postgresql-client-17`, retenção de 30 dias ativa) `→ Luis`
@@ -118,10 +120,13 @@
 > [encaminhamentos/mvp-a-pendencias.md](../../encaminhamentos/mvp-a-pendencias.md);
 > roteiro de validação em
 > [encaminhamentos/testes-ao-vivo-vitor.md](../../encaminhamentos/testes-ao-vivo-vitor.md).
-- [ ] Testes E2E (Playwright) do caminho crítico `→ Luis` — **gap de QA resolvido em 14/08**:
-      o papel passou a ser dele. Adiado por decisão explícita, não é bloqueio de piloto
+- [x] CI de Qualidade (GitHub Actions) — ✅ **CONCLUÍDO em 07/09 (Luis)**: `.github/workflows/ci.yml`
+      executando typecheck, lint, test:offline e build em todo push/PR na `main`.
+- [ ] Testes E2E (Playwright) do caminho crítico `→ Luis` — Adiado por decisão explícita, pós-piloto.
 - [ ] Importar Excel reais das empresas `→ Vítor` (comercial, junto com Matheus)
-- [ ] Criar logins reais (16 motoristas + ~20 empresas) `→ Luis`
+- [x] Script de carga em lote dos logins reais (16 motoristas + ~20 empresas) `→ Luis` — ✅ **PRONTO em 07/09**:
+      `npm run importar:piloto` com geração de templates, validação idempotente em `auth.users`
+      e tabelas de domínio. Aguarda o envio dos dados pelo Vítor/Matheus.
 - [ ] Piloto com 2–3 motoristas (primeira entrega real registrada) `→ Vítor` (CS/treinamento)
 - [ ] Ajustes pós-piloto
 - [ ] Material de apoio (guia 1 página) + treinamento do coordenador `→ Operação`

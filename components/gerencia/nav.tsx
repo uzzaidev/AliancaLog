@@ -11,6 +11,7 @@ import {
   IconFileInvoice,
   IconUpload,
   IconUsers,
+  IconActivity,
 } from "@tabler/icons-react";
 
 const LINKS = [
@@ -18,6 +19,7 @@ const LINKS = [
   { href: "/gerencia/romaneios", label: "Romaneios", icon: IconFileInvoice },
   { href: "/gerencia/importar", label: "Importar NFs", icon: IconUpload },
   { href: "/gerencia/cadastros", label: "Cadastros", icon: IconUsers },
+  { href: "/gerencia/diagnostico", label: "Diagnóstico", icon: IconActivity },
 ];
 
 export function GerenciaNav() {

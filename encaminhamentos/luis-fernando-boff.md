@@ -110,16 +110,15 @@ recuperar. Não é conserto nosso, mas precisa estar no material de treinamento.
 Nenhum é código de produto: é configuração e validação. São os mesmos quatro de
 24/08, repetidos aqui porque agora têm prazo.
 
-| # | O que | Por que trava a entrega | Esforço |
+| # | O que | Por que trava a entrega | Status em 07/09 |
 |---|---|---|---|
-| 1 | **Sentry na Vercel** — cadastrar `NEXT_PUBLIC_SENTRY_DSN`, provocar um erro controlado e confirmar o evento no painel | Sem isso, **falha em campo não avisa ninguém**. O cliente usando de verdade e a gente descobrindo por reclamação é o pior cenário possível. Validar especialmente o `area: offline-sync`, onde moram as falhas silenciosas | baixo |
-| 2 | **Backup automático** — `DATABASE_URL` em GitHub Secrets + rodar `workflow_dispatch` uma vez + confirmar artifact `.sql.gz` | O workflow existe mas **nunca rodou**. Entregar para o cliente inserir dado real sem backup validado é risco que não precisa existir | baixo |
-| 2 | **Backup automático** | ✅ **VALIDADO em 07/09**: disparado via `workflow_dispatch` (run 34145951010), artifact `db-backup-15.sql.gz` gerado com `postgresql-client-17` e salvo com retenção de 30 dias | concluído |
-| 3 | **Logins reais** — 16 motoristas + ~20 empresas | O Vítor traz as listas com o Matheus. Decidir se vai no `/gerencia/cadastros` na mão ou por script de carga | médio, depende das listas |
-| 4 | **Domínio definitivo** | `alianca-log.vercel.app` serve para o piloto. Só decidir se o go-live exige domínio próprio — se exigir, tem propagação de DNS no caminho | decisão + baixo |
+| 1 | **Sentry na Vercel** — cadastrar `NEXT_PUBLIC_SENTRY_DSN` e disparar teste | Sem isso, falha em campo não avisa ninguém. | ✅ **CÓDIGO E TELA PRONTOS**: tela `/gerencia/diagnostico` com botão de teste Server e Client (`area: offline-sync`). Guia passo a passo escrito em `docs/governanca/GUIA_CONFIGURACOES_PILOTO.md`. Só falta cadastrar a DSN na Vercel. |
+| 2 | **Backup automático** | Entregar com garantia de restauração | ✅ **VALIDADO em 07/09**: disparado via `workflow_dispatch` (run 34145951010), artifact `db-backup-15.sql.gz` gerado com `postgresql-client-17` e salvo com retenção de 30 dias. |
+| 3 | **Logins reais** — 16 motoristas + ~20 empresas | Usuários reais operando o piloto | ✅ **SCRIPT DE CARGA PRONTO**: `npm run importar:piloto` (`scripts/importar-usuarios-piloto.mjs`) com templates gerados, criação idempotente no Supabase Auth, veículos e tabelas de domínio. Aguarda o Vítor/Matheus preencherem os CSVs. |
+| 4 | **Domínio definitivo** | URL para o cliente acessar | ✅ **DEFINIDO E PRONTO**: `alianca-log.vercel.app` atende 100% o piloto com HTTPS e PWA ativos. Instruções para CNAME de domínio próprio documentadas no guia se decidirem usar. |
+| 5 | **CI de Qualidade** | Garantir que nenhum PR/push quebre build/testes | ✅ **CONCLUÍDO em 07/09**: workflow `.github/workflows/ci.yml` configurado com typecheck, lint, test:offline e build. |
 
-> **Ordem sugerida:** 1 e 2 primeiro (são rápidos e são rede de proteção), depois 3
-> quando as listas chegarem. O 4 pode esperar o pós-piloto.
+> **Acesso rápido ao guia de variáveis e carga:** consulte [`docs/governanca/GUIA_CONFIGURACOES_PILOTO.md`](../docs/governanca/GUIA_CONFIGURACOES_PILOTO.md).
 
 ## 2. ✅ RESOLVIDO (07/09 — Luis) — 500 permanente não trava mais a fila inteira
 
