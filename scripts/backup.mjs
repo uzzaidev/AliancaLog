@@ -43,10 +43,14 @@ function findPgDump() {
     ...["18", "17", "16", "15"].map(
       (v) => `C:\\Program Files\\PostgreSQL\\${v}\\bin\\pg_dump.exe`,
     ),
+    ...["18", "17", "16", "15"].map(
+      (v) => `/usr/lib/postgresql/${v}/bin/pg_dump`,
+    ),
     path.join(homedir(), "scoop", "apps", "postgresql", "current", "bin", "pg_dump.exe"),
     path.join(homedir(), "scoop", "shims", "pg_dump.exe"),
     "pg_dump", // fallback: deixa o PATH resolver
   ];
+
   let best = null;
   let bestMajor = 0;
   for (const exe of candidates) {
