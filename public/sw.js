@@ -7,12 +7,41 @@
 // aparelho. Só cacheamos assets estáticos (versionados, sem dados). O cache e a
 // fila também são limpos no logout (LogoutButton). v2 = purga qualquer cache
 // antigo que ainda tenha páginas autenticadas.
-const CACHE = "alianca-log-v3";
+const CACHE = "alianca-log-v4";
 const DB_NAME = "alianca-log";
 const DB_VERSION = 1;
 const STORE_FILA = "fila_canhotos";
+const OFFLINE_URL = "/offline";
 
-self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE);
+        // Precache do App Shell offline estático
+        const res = await fetch(OFFLINE_URL);
+        if (res.ok) {
+          await cache.put(OFFLINE_URL, res.clone());
+          // Extrai scripts e stylesheets linkados no HTML do App Shell para precache
+          const text = await res.text();
+          const matches = text.matchAll(/(?:href|src)="(\/_next\/static\/[^"]+)"/g);
+          const urls = Array.from(matches, (m) => m[1]);
+          await Promise.all(
+            urls.map(async (u) => {
+              try {
+                const assetRes = await fetch(u);
+                if (assetRes.ok) await cache.put(u, assetRes);
+              } catch {}
+            }),
+          );
+        }
+      } catch {
+        // Best-effort no precache: se falhar na instalação, continuará tentando nos próximos acessos
+      }
+      await self.skipWaiting();
+    })(),
+  );
+});
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
@@ -33,14 +62,36 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return; // não intercepta Supabase/externos
   if (url.pathname.startsWith("/api/")) return; // nunca cacheia API
 
-  // Navegações (páginas autenticadas): SÓ rede, nunca grava no cache.
-  // Sem rede, deixa o navegador exibir seu próprio estado offline — não
-  // servimos página de outro usuário a partir do cache.
-  if (req.mode === "navigate") return;
+  // Navegações (páginas autenticadas): Network-First.
+  // Se online: busca direto na rede (SSR fresco com autenticação). Nunca grava no cache
+  // para não vazar dados para o próximo login no mesmo aparelho.
+  // Se offline (modo avião, sem sinal, timeout): serve o App Shell estático (/offline)
+  // do cache, que lê os dados seguros locais do IndexedDB (STORE_CACHE).
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req).catch(async () => {
+        const cache = await caches.open(CACHE);
+        const cachedOffline = await cache.match(OFFLINE_URL);
+        if (cachedOffline) return cachedOffline;
+        return new Response(
+          "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Aliança Log — Offline</title></head><body style='font-family:system-ui;padding:2rem;text-align:center;background:#1e1e1e;color:#fff;'><h2>Sem conexão</h2><p style='color:#aaa;'>Não foi possível conectar ao servidor.</p><button onclick='location.reload()' style='background:#f37312;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-weight:bold;margin-top:1rem;cursor:pointer;'>Tentar novamente</button></body></html>",
+          {
+            status: 503,
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          },
+        );
+      }),
+    );
+    return;
+  }
 
   // Estáticos (versionados, sem dados do usuário): cache primeiro.
   if (
     url.pathname.startsWith("/_next/") ||
+    url.pathname === "/manifest.webmanifest" ||
+    url.pathname.endsWith(".ico") ||
+    url.pathname.endsWith(".png") ||
+    url.pathname.endsWith(".svg") ||
     ["style", "script", "image", "font"].includes(req.destination)
   ) {
     event.respondWith(

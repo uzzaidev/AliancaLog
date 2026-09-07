@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { SwRegister } from "@/components/motorista/sw-register";
 import "./globals.css";
 
 // Uma única fonte para os 3 perfis (gerência, motorista, cliente).
@@ -33,7 +34,10 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SwRegister />
+        {children}
+      </body>
     </html>
   );
 }

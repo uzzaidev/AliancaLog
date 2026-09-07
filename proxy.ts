@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 import { ROLE_AREA, ROLE_HOME, type Role } from "@/lib/types";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+const PUBLIC_PATHS = ["/login", "/auth", "/offline"];
 
 function isPublic(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));

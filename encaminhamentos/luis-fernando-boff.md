@@ -26,14 +26,14 @@ O Vítor vai até o cliente **na semana de 08–12/09** apresentar o sistema par
 começarem a usar. Isso transforma as pendências abaixo de "quando der" em
 **bloqueio de data**. Elas estão paradas desde 24/08.
 
-## 0. 🔴🔴 NOVO E MAIS GRAVE — o app NÃO abre offline no iPhone
+## 0. ✅ RESOLVIDO (07/09 — Luis) — App Shell offline e cold-open no iPhone
 
-**Achado no teste 1.2 do roteiro, em 06/09, no aparelho real do Vítor** (PWA instalado
-na tela de início, iOS/Safari). Ao ativar o modo avião e abrir o app:
+Implementado o App Shell estático (`/offline`) com `components/motorista/offline-view.tsx`,
+precache de scripts/CSS e Network-First navigation fallback no `public/sw.js` (v4),
+registro global do SW no `app/layout.tsx` e liberação pública no `proxy.ts`.
+Validado com `npm run build` (rota estática `○ /offline`), `typecheck` e `npm run test:security` (23/23).
 
-> "O Safari não pode abrir a página porque o iPhone não está conectado à internet"
-
-Não é limitação do iOS nem de ser PWA. É uma decisão explícita do nosso Service Worker.
+### Achado original no teste 1.2 do roteiro (06/09)
 
 ### Causa
 
