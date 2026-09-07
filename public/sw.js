@@ -197,7 +197,22 @@ async function sincronizarEmBackground() {
         });
         alterados++;
       } else {
-        teveFalhaTemporaria = true;
+        const tentativas = (item.tentativas_sync || 0) + 1;
+        if (res.status >= 500 && tentativas >= 5) {
+          await salvarFila({
+            ...item,
+            tentativas_sync: tentativas,
+            bloqueado_por_validacao: `NF ${item.numero_nf}: erro persistente no servidor (${res.status}) após 5 tentativas. O registro foi preservado no aparelho.`,
+          });
+          alterados++;
+        } else {
+          await salvarFila({
+            ...item,
+            tentativas_sync: tentativas,
+            ultimo_erro_sync: `erro ${res.status}`,
+          });
+          teveFalhaTemporaria = true;
+        }
       }
     } catch {
       teveFalhaTemporaria = true;

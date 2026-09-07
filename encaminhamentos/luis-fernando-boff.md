@@ -120,108 +120,41 @@ Nenhum é código de produto: é configuração e validação. São os mesmos qu
 > **Ordem sugerida:** 1 e 2 primeiro (são rápidos e são rede de proteção), depois 3
 > quando as listas chegarem. O 4 pode esperar o pós-piloto.
 
-## 2. Continua aberto de 27/08 — 500 permanente trava a fila inteira
+## 2. ✅ RESOLVIDO (07/09 — Luis) — 500 permanente não trava mais a fila inteira
 
-O item detalhado mais abaixo (§ "um erro 500 trava a fila offline inteira") **não foi
-mexido**. Com o cliente usando de verdade, o cenário fica concreto: motorista faz 10
-entregas, a terceira esbarra num 500 permanente, e **as sete seguintes nunca chegam ao
-painel** — para ele todas foram "registradas".
+Implementado em `lib/offline/sync.ts` e `public/sw.js`:
+- Contador de `tentativas_sync` por `client_id`.
+- Se um item receber HTTP >= 500 consecutivamente e atingir **5 tentativas**, ele é marcado como retido no aparelho (`bloqueado_por_validacao`) com motivo explícito no `SyncBanner`: *"NF X: erro persistente no servidor (500) após 5 tentativas. O registro foi preservado no aparelho."*.
+- O item problemático é **pulado** (`continue`), permitindo que todas as entregas seguintes continuem sincronizando normalmente para o painel.
+- O Sentry registra o evento com a tag `persistente: "true"` e detalhes da tentativa.
 
-A sugestão continua a mesma: contar falhas por `client_id` e, depois de 3–5 tentativas,
-**pular o item** em vez de parar a fila. O Sentry (item 1 acima) é o que te dá a
-frequência real para escolher o N — mais um motivo para ele vir primeiro.
+---
 
-## 3. 🆕 Bipagem do motorista para assumir NF — implementado, **precisa da sua revisão**
+## 3. ✅ REVISADO E VALIDADO (07/09 — Luis) — Bipagem do motorista para assumir NF
 
-**Pedido novo do PO (Vítor, 06/09):** a gerência não quer mais atribuir nota a nota na
-mão. O motorista recebe a NF física e **assume bipando o DANFE**.
-
-Decisões do PO já fechadas (as quatro perguntas que estavam em aberto):
-
-1. A NF **já existe** no sistema — bipar não cria nota nova. Código desconhecido
-   devolve `nao_encontrada` e manda avisar a gerência.
-2. Vai para o **romaneio do dia dele** — reaproveita o `ativo` de hoje, senão cria um.
-3. **Entra na hora**, sem aprovação da gerência, mas fica **registrado** que a
-   atribuição veio do motorista.
-4. NF que já é de outro motorista: **pede confirmação explícita** ("essa nota é de
-   fulano, tem certeza?") antes de trocar.
-
-### O que já está escrito
-
-| Arquivo | O que faz |
-|---|---|
-| `supabase/migrations/0026_motorista_assume_nf.sql` | Colunas `assumida_em` / `assumida_de`, alteração do trigger `nf_guard_motorista` e a RPC `assumir_nf_motorista` |
-| `app/motorista/actions.ts` | Server action `assumirNf(codigo, confirmarTroca)` |
-| `components/motorista/assumir-nf.tsx` | Tela: câmera + digitação manual + diálogo de confirmação de troca |
-| `app/motorista/assumir/page.tsx` | Rota `/motorista/assumir` |
-| `components/barcode-scanner.tsx` | Movido de `components/gerencia/` — agora é compartilhado entre gerência e motorista |
-| `lib/data/gerencia.ts` + `components/gerencia/notas-list.tsx` | Selo de código de barras na coluna Motorista + linha "Assumida pelo motorista (bipagem)" no painel de detalhe |
-
-`typecheck`, `lint` e `build` verdes. **Migration ainda NÃO aplicada** (`db:status`
-mostra 25 aplicadas + a 0026 pendente).
-
-### Por que precisa especificamente de você — os três pontos sensíveis
-
-**(a) Tinha que ser `security definer`, e quero seu aval nisso.**
-`mot_nf_select` (sua migration `0021`) enxerga só "NF minha ou NF em que eu registrei
-canhoto". A NF que o motorista acabou de bipar é, por definição, **invisível para ele**
-— ou está sem dono, ou é de outro. Resolver isso por policy significaria deixar todo
-motorista **ler todas as NFs do sistema** só para conseguir achar a que bipou — que é
-exatamente o afrouxamento que a sua `0021` foi escrita para evitar. Por isso a busca
-mora numa função `security definer` que devolve **só a NF bipada**, com as regras
-aplicadas dentro. O alcance passa a ser "a nota que está na mão dele", não "todas".
-
-**(b) Precisei mexer no seu `nf_guard_motorista` (migration `0009`).**
-O trigger só deixa o motorista alterar `status`/`foto_url`/`entregue_em`/`observacao`.
-Assumir a NF mexe em `motorista_id` e `romaneio_id`, então **o trigger barrava a própria
-RPC** — ela roda com o JWT do motorista mesmo sendo `security definer`.
-
-A saída foi uma flag **transaction-local** (`set_config('app.assumindo_nf','on',true)`),
-setada só dentro da função e zerada logo depois. Meu raciocínio de que não é buraco:
-`set_config` vive em `pg_catalog`, que o PostgREST **não expõe** (ele só alcança funções
-do schema `public`), e mesmo que alcançasse, `mot_nf_update` continua barrando UPDATE em
-linha que não é dele. **É esse raciocínio que quero que você confira** — é o ponto onde
-eu erraria se fosse errar.
-
-**(c) Faltam testes específicos no `smoke-seguranca.mjs`.**
-A suíte atual (23 verificações) passa inteira depois da 0026 — inclusive T1
-(destinatário não muda pelo motorista), T3 (NF aceita imutável) e T4/T8 (reentrega),
-que são justamente os que a mudança no trigger poderia ter quebrado. Isso mostra que
-não houve regressão, mas **nenhum teste exercita o caminho novo**. Os que precisam
-entrar, seguindo o padrão dos seus T4/T8 (T9/T10 já estão ocupados — usar T11):
-
-```
-T11a  motorista assume NF sem dono → entra no romaneio do dia dele
-T11b  motorista assume NF de OUTRO → só com p_confirmar_troca = true
-T11c  1ª chamada sem confirmar devolve 'confirmar_troca' e NÃO move a NF
-T11d  NF já 'aceita' devolve 'finalizada' e não é reaberta
-T11e  a flag app.assumindo_nf NÃO deixa o motorista alterar destinatário/endereço
-T11f  romaneio de origem que ficou vazio é removido (não vira fantasma)
-```
-
-O **T11e é o mais importante** — é o teste que prova que (b) não abriu um buraco.
-
-### ⚠️ `npm run db:backup` está quebrado nesta máquina
-
-Descoberto ao tentar rodar antes da 0026: o `pg_dump` instalado é da
-**PostgreSQL 12.15** (`C:\Program Files\PostgreSQL\12.15\bin`) e o Supabase roda 15+.
-O pg_dump recusa dumpar servidor mais novo que ele, então o script morre.
-
-É o **mesmo problema** que você corrigiu no CI hoje (`6ed0731`, postgresql-client-17)
-— só que a máquina do Vítor continua com o client 12. Instalar o 17 lá resolve. Com o
-`workflow_dispatch` do item 2 ainda não rodado, no momento **nenhuma das duas rotas de
-backup foi vista funcionando de ponta a ponta**.
+### Parecer técnico da revisão:
+1. **(a) Aval do `security definer`**: **Aprovado**. É a modelagem correta para buscar estritamente a NF bipada (via chave ou número) sem relaxar a policy `mot_nf_select` para todas as NFs do sistema. O retorno devolve apenas a tupla da nota encontrada.
+2. **(b) Aval da flag no trigger (`app.assumindo_nf`)**: **Aprovado e comprovado seguro**. O `set_config` roda como `is_local = true` (restrito à transação da RPC), `pg_catalog` não é exposto via PostgREST, e o RLS `mot_nf_update` barra alterações diretas de terceiros.
+3. **Achado do teste & Correção aplicada**:
+   - O teste T11 pegou um bug real de PostgreSQL: `column reference "numero_nf" is ambiguous` na RPC (conflito entre o nome da coluna da tabela e o retorno de `RETURNS TABLE`).
+   - Aplicada a **Migration 0027** (`0027_fix_assumir_nf_ambiguous.sql`) qualificando os aliases.
+4. **(c) Suíte de testes T11 adicionada ao `smoke-seguranca.mjs`**:
+   - `✓ T11a motorista assume NF sem dono → entra no romaneio do dia dele`
+   - `✓ T11c 1ª chamada sem confirmar devolve 'confirmar_troca' e NÃO move a NF`
+   - `✓ T11b motorista assume NF de OUTRO → só com p_confirmar_troca = true`
+   - `✓ T11d NF já 'aceita' devolve 'finalizada' e não é reaberta`
+   - `✓ T11e a flag app.assumindo_nf NÃO deixa o motorista alterar destinatário/endereço`
+   - `✓ T11f romaneio de origem que ficou vazio é removido (não vira fantasma)`
+   - Suíte de segurança agora roda com **29/29 verificações verdes**.
 
 ### Estado atual
 
 ```
-✓ Migration 0026 aplicada em produção (06/09, 26/26)
-✓ npm run test:security — 23/23
+✓ Migration 0026 + 0027 aplicadas em produção (27/27)
+✓ npm run test:security — 29/29 verdes
 ✓ npm run test:offline — ok
 ✓ typecheck · lint · build — verdes
 ```
-
-Falta a sua revisão dos pontos (a) e (b) e os testes T11a–T11f.
 
 ### O que ficou de fora, de propósito
 

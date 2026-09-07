@@ -27,4 +27,8 @@ assert.doesNotMatch(rejeitada, /Registrado/);
 const auth = mensagemRespostaSync("123", 401);
 assert.match(auth, /Entre novamente/);
 
+const msg500 = mensagemRespostaSync("999", 500, "Internal Server Error");
+assert.match(msg500, /erro 500/);
+assert.match(msg500, /Internal Server Error/);
+
 console.log("✓ fila offline: respostas classificadas sem transformar rejeição em sucesso");

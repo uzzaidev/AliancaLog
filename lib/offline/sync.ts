@@ -126,15 +126,28 @@ export async function flushFila(): Promise<ResultadoFlush> {
           });
         } else {
           const detalhe = await detalheResposta(res);
-          ultimoErro = mensagemRespostaSync(c.numero_nf, res.status, detalhe);
-          await registrarFalhaNaFila(c, ultimoErro);
-          falhas.push({ client_id: c.client_id, mensagem: ultimoErro, permanente: false });
-          if (res.status >= 500) {
-            Sentry.captureMessage(`Erro de servidor (${res.status}) no sync da NF ${c.numero_nf}`, {
+          const tentativas = (c.tentativas_sync ?? 0) + 1;
+          const limiteAtingido = res.status >= 500 && tentativas >= 5;
+          if (limiteAtingido) {
+            ultimoErro = `NF ${c.numero_nf}: erro persistente no servidor (${res.status}) após ${tentativas} tentativas. O registro foi preservado no aparelho.`;
+            await registrarFalhaNaFila(c, ultimoErro, true);
+            falhas.push({ client_id: c.client_id, mensagem: ultimoErro, permanente: true });
+            Sentry.captureMessage(`Erro persistente de servidor (${res.status}) após ${tentativas} tentativas no sync da NF ${c.numero_nf}`, {
               level: "error",
-              tags: { area: "offline-sync", http_status: String(res.status) },
-              extra: { client_id: c.client_id, nf_id: c.nf_id, detalhe },
+              tags: { area: "offline-sync", http_status: String(res.status), persistente: "true" },
+              extra: { client_id: c.client_id, nf_id: c.nf_id, detalhe, tentativas },
             });
+          } else {
+            ultimoErro = mensagemRespostaSync(c.numero_nf, res.status, detalhe);
+            await registrarFalhaNaFila(c, ultimoErro, false);
+            falhas.push({ client_id: c.client_id, mensagem: ultimoErro, permanente: false });
+            if (res.status >= 500) {
+              Sentry.captureMessage(`Erro de servidor (${res.status}) no sync da NF ${c.numero_nf} (tentativa ${tentativas}/5)`, {
+                level: "error",
+                tags: { area: "offline-sync", http_status: String(res.status) },
+                extra: { client_id: c.client_id, nf_id: c.nf_id, detalhe, tentativas },
+              });
+            }
           }
           // Um item com erro de servidor não impede as entregas seguintes.
           if (disposicao === "autenticacao") break;

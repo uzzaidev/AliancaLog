@@ -360,6 +360,72 @@ async function main() {
     }
   }
 
+  // ── T11 — Bipagem para assumir NF (migration 0026, RPC assumir_nf_motorista) ──
+  {
+    // T11a: motorista assume NF sem dono → entra no romaneio do dia dele
+    const nfSemDonoId = await mkNf(null, null, "pendente");
+    const { data: nfSemDonoData } = await admin.from("notas_fiscais").select("numero_nf").eq("id", nfSemDonoId).single();
+    const resA = await cli.rpc("assumir_nf_motorista", { p_numero: nfSemDonoData.numero_nf });
+    const rA = resA.data?.[0];
+    const { data: nfAposA } = await admin.from("notas_fiscais").select("motorista_id,status,romaneio_id,assumida_em").eq("id", nfSemDonoId).single();
+    if (rA?.romaneio_id) criados.romaneios.push(rA.romaneio_id);
+    ok(
+      rA?.resultado === "assumida" && nfAposA?.motorista_id === joaoId && nfAposA?.status === "em_rota" && !!nfAposA?.assumida_em,
+      "T11a motorista assume NF sem dono → entra no romaneio do dia dele",
+    );
+
+    // T11c: 1ª chamada sem confirmar devolve 'confirmar_troca' e NÃO move a NF
+    const romCarlosT11 = await mkRomaneio(carlosId, "ativo");
+    const nfCarlosId = await mkNf(carlosId, romCarlosT11, "em_rota");
+    const { data: nfCarlosData } = await admin.from("notas_fiscais").select("numero_nf").eq("id", nfCarlosId).single();
+    const resC = await cli.rpc("assumir_nf_motorista", { p_numero: nfCarlosData.numero_nf, p_confirmar_troca: false });
+    const rC = resC.data?.[0];
+    const { data: nfAposC } = await admin.from("notas_fiscais").select("motorista_id").eq("id", nfCarlosId).single();
+    ok(
+      rC?.resultado === "confirmar_troca" && nfAposC?.motorista_id === carlosId,
+      "T11c 1ª chamada sem confirmar devolve 'confirmar_troca' e NÃO move a NF",
+    );
+
+    // T11b: motorista assume NF de OUTRO → só com p_confirmar_troca = true
+    const resB = await cli.rpc("assumir_nf_motorista", { p_numero: nfCarlosData.numero_nf, p_confirmar_troca: true });
+    const rB = resB.data?.[0];
+    const { data: nfAposB } = await admin.from("notas_fiscais").select("motorista_id,assumida_de").eq("id", nfCarlosId).single();
+    ok(
+      rB?.resultado === "assumida" && nfAposB?.motorista_id === joaoId && nfAposB?.assumida_de === carlosId,
+      "T11b motorista assume NF de OUTRO → só com p_confirmar_troca = true",
+    );
+
+    // T11d: NF já 'aceita' devolve 'finalizada' e não é reaberta
+    const nfAceitaId = await mkNf(carlosId, romCarlos, "aceita");
+    const { data: nfAceitaData } = await admin.from("notas_fiscais").select("numero_nf").eq("id", nfAceitaId).single();
+    const resD = await cli.rpc("assumir_nf_motorista", { p_numero: nfAceitaData.numero_nf, p_confirmar_troca: true });
+    const rD = resD.data?.[0];
+    const { data: nfAposD } = await admin.from("notas_fiscais").select("status,motorista_id").eq("id", nfAceitaId).single();
+    ok(
+      rD?.resultado === "finalizada" && nfAposD?.status === "aceita" && nfAposD?.motorista_id === carlosId,
+      "T11d NF já 'aceita' devolve 'finalizada' e não é reaberta",
+    );
+
+    // T11e: a flag app.assumindo_nf NÃO deixa o motorista alterar destinatário/endereço
+    const { error: errE } = await cli.from("notas_fiscais").update({ destinatario_nome: "HACK_NOME", destinatario_endereco: "HACK_END" }).eq("id", nfSemDonoId);
+    const { data: nfAposE } = await admin.from("notas_fiscais").select("destinatario_nome").eq("id", nfSemDonoId).single();
+    ok(
+      (!!errE || nfAposE?.destinatario_nome === "Alvo") && nfAposE?.destinatario_nome !== "HACK_NOME",
+      "T11e a flag app.assumindo_nf NÃO deixa o motorista alterar destinatário/endereço",
+    );
+
+    // T11f: romaneio de origem que ficou vazio é removido (não vira fantasma)
+    const romCarlosFantasma = await mkRomaneio(carlosId, "ativo");
+    const nfUnicaId = await mkNf(carlosId, romCarlosFantasma, "em_rota");
+    const { data: nfUnicaData } = await admin.from("notas_fiscais").select("numero_nf").eq("id", nfUnicaId).single();
+    await cli.rpc("assumir_nf_motorista", { p_numero: nfUnicaData.numero_nf, p_confirmar_troca: true });
+    const { data: romExiste } = await admin.from("romaneios").select("id").eq("id", romCarlosFantasma).maybeSingle();
+    ok(
+      !romExiste,
+      "T11f romaneio de origem que ficou vazio é removido (não vira fantasma)",
+    );
+  }
+
   console.log("\n" + (falhas === 0 ? "✓✓✓ SEGURANÇA OK — todos os controles ativos" : `✗ ${falhas} falha(s)`));
   return falhas;
 }

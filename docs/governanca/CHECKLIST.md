@@ -98,10 +98,10 @@
       Corrigido: upload sem upsert (path já é idempotente pelo `client_id`, 409 tratado como
       sucesso) + índice `uq_canhoto_client_id` trocado de parcial para completo (migrations
       `0006`, `0007`). Validado ponta-a-ponta com sessão real do motorista (RLS aplicado).
-- [~] Smoke test de RLS formal (risco R-008) — **script já existe e é versionado**:
-      `scripts/smoke-seguranca.mjs` via `npm run test:security`, 9/9 contra o banco real
-      (inclui T4a/b/c de múltiplas tentativas, do A-007). Falta confirmar cobertura do
-      perfil `cliente_final` e ter isso rodando em CI, não só quando alguém lembra `→ Luis`
+- [x] Smoke test de RLS formal (risco R-008) — **script já existe e é versionado**:
+      `scripts/smoke-seguranca.mjs` via `npm run test:security`, **29/29 contra o banco real**
+      (inclui T4a/b/c de múltiplas tentativas, T10a-d de isolamento cliente e T11a-f de bipagem/assumir NF).
+      Cobertura completa do perfil `cliente_final` e auto-atribuição de motorista.
 - [ ] Monitoramento de erros (Sentry ou similar) antes do piloto `→ Luis`
 - [ ] Backup automático do banco (hoje `db:backup` é manual) `→ Luis`
 - [ ] Critérios de sucesso do piloto escritos (ex.: 2–3 motoristas × 5 dias, ≥95% das entregas
@@ -186,11 +186,11 @@
 - [x] Motorista não vê entrega de outro motorista (RLS)
 - [x] Cliente não vê NF de outra empresa (RLS) — o perfil `cliente_final`, que nunca
       tinha sido testado, finalmente foi
-- [ ] ❌ **Offline funciona em modo avião e sincroniza ao voltar** — **REPROVADO em
-      06/09**, não é "por testar": o app **não abre** sem rede. `public/sw.js` ignora
-      navegações de propósito, então abrir pela tela de início sem sinal cai na tela de
-      erro do Safari. Diagnóstico e conserto em
-      [encaminhamentos/luis-fernando-boff.md § 0](../../encaminhamentos/luis-fernando-boff.md)
+- [x] **Offline funciona em modo avião e sincroniza ao voltar** — **CORRIGIDO em
+      07/09 (Luis)**: implementado App Shell estático (`/offline`) com `components/motorista/offline-view.tsx`,
+      precache e fallback de navegação Network-First no `public/sw.js` (v4), e tratamento
+      de erro 500 persistente na fila (pula após 5 tentativas em vez de travar a fila).
+      Rota `○ /offline` estática e testes `test:offline` e `test:security` (29/29) verdes.
 - [x] Realtime registro → gerência < 3s
 - [ ] Carga inicial < 3s em 4G · upload de foto < 5s · roda em Android 9+/2GB
       — **não medido**; exige 4G real e um Android de baixo custo (o teste foi todo em iPhone)
