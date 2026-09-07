@@ -11,6 +11,62 @@
 > `node --env-file-if-exists=.env scripts/reset-operacional.mjs --confirmar --fotos`
 > (sem `--confirmar` ele só conta e faz backup).
 
+## 📋 Resultados da rodada de 06/09
+
+Aparelho: iPhone, PWA instalado na tela de início (Safari), contra
+`alianca-log.vercel.app`.
+
+> ⚠️ **A numeração deste arquivo NÃO bate com a do PDF** que o Vítor usa em campo
+> (`Roteiro-de-testes-Alianca-Log.pdf`): 1.3/1.4 estão trocados e todo o bloco 2.x está
+> deslocado. Por isso a tabela abaixo registra **pelo nome do teste**, não pelo número.
+> Reconciliar as duas numerações é dívida a pagar antes da próxima bateria.
+
+| Teste | Resultado |
+|---|---|
+| Segunda tentativa de entrega não perde a foto (`A-007`) | ✅ **PASSOU** |
+| Cliente não vê NF de outra empresa (`R-008`, `cliente_final`) | ✅ **PASSOU** — o perfil que nunca tinha sido testado |
+| Motorista no mapa em tempo real (`A-006`) | ✅ **PASSOU** — marcador aparece |
+| Upload de `.zip` com XMLs (`A-003`) | ✅ **PASSOU** |
+| Duplicatas na importação | ✅ **PASSOU** |
+| Foto de chegada em 2 passos (`A-010`) | ✅ **PASSOU** |
+| KPIs do topo batem com a tabela | ✅ **PASSOU** |
+| App do motorista sob condição real | ✅ **PASSOU** |
+| Layout em telas reais | ✅ **PASSOU** |
+| **Fila offline / modo avião** | ❌ **FALHOU** — o app **não abre** sem rede |
+| **Cold-open offline** | ❌ **falha pela mesma causa** — não precisa testar |
+
+### Ainda não rodados
+
+| Teste | Por quê importa |
+|---|---|
+| **Motorista assume a nota bipando** | 🔴 Código **novo**, no ar desde 06/09, **nunca exercitado**. É o pedido que originou a mudança |
+| Bipagem de NF de dia anterior (`A-001`) | Era o bug que originou a reunião de 12/08 |
+| Filtro de período e alerta de NF parada (`A-002`, `A-008`) | |
+| Troca de motorista e exclusão protegida (`A-005`, `A-004`) | A trava de não excluir NF com canhoto é prova de entrega |
+| Legibilidade da foto do canhoto | Decide o valor probatório do produto |
+
+### O que a falha do offline revelou
+
+Em modo avião o Safari mostra *"não pode abrir a página porque o iPhone não está
+conectado à internet"* — o app nem carrega, então não dá nem para chegar na fila.
+
+**Causa:** `public/sw.js` ignora navegações de propósito
+(`if (req.mode === "navigate") return;`). Abrir o app pela tela de início é uma
+navegação, então sem rede ela falha e o Safari mostra a tela de erro dele.
+
+O `STORE_CACHE` (24/08) guarda os *dados* no IndexedDB, mas sem a casca HTML o motorista
+nunca chega à tela para lê-los. O offline só funciona hoje com a **aba já aberta**,
+navegando por dentro do app — que foi o caminho testado em 29/08, e por isso passou.
+
+Diagnóstico completo e conserto proposto (app shell) em
+[luis-fernando-boff.md § 0](./luis-fernando-boff.md). **Encaminhado ao Luis em 06/09.**
+
+> ⚠️ Enquanto isso não for corrigido, a promessa central do produto — "registra offline,
+> sobe depois" — não está de pé para um motorista que fecha o app ou tem ele descartado
+> da memória pelo iOS.
+
+---
+
 ## Por que isso está todo concentrado aqui
 
 O código do MVP A inteiro **compila e passa em typecheck, lint, build e no smoke test

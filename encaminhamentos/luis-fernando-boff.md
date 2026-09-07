@@ -26,6 +26,85 @@ O Vítor vai até o cliente **na semana de 08–12/09** apresentar o sistema par
 começarem a usar. Isso transforma as pendências abaixo de "quando der" em
 **bloqueio de data**. Elas estão paradas desde 24/08.
 
+## 0. 🔴🔴 NOVO E MAIS GRAVE — o app NÃO abre offline no iPhone
+
+**Achado no teste 1.2 do roteiro, em 06/09, no aparelho real do Vítor** (PWA instalado
+na tela de início, iOS/Safari). Ao ativar o modo avião e abrir o app:
+
+> "O Safari não pode abrir a página porque o iPhone não está conectado à internet"
+
+Não é limitação do iOS nem de ser PWA. É uma decisão explícita do nosso Service Worker.
+
+### Causa
+
+`public/sw.js`, no handler de fetch:
+
+```js
+// Navegações (páginas autenticadas): SÓ rede, nunca grava no cache.
+if (req.mode === "navigate") return;
+```
+
+Abrir o app pela tela de início **é uma navegação**. O SW devolve o controle ao
+navegador, a requisição vai para a rede, falha, e o Safari mostra a tela de erro dele.
+
+A razão documentada no cabeçalho do arquivo é legítima e eu não a desfiz: cachear página
+autenticada vazaria dados de um motorista para o próximo login no mesmo aparelho.
+
+Três coisas se somam:
+
+| # | Problema | Onde |
+|---|---|---|
+| 1 | SW ignora toda navegação | `public/sw.js` (handler de fetch) |
+| 2 | `start_url: "/"` e `/` é um redirect server-side — o próprio ponto de entrada exige rede | `app/manifest.ts` + `app/page.tsx` |
+| 3 | O `install` não faz precache de nada (só `skipWaiting`) — assets entram no cache só depois de já terem sido baixados uma vez | `public/sw.js` |
+
+### O que isso corrige no nosso próprio registro
+
+O [CHECKPOINT.md](../docs/governanca/CHECKPOINT.md) de 24/08 dá o cold-open offline como
+resolvido pelo `STORE_CACHE`. **Resolveu metade.** O `STORE_CACHE` guarda os *dados*
+(romaneios e NFs) no IndexedDB, mas sem a casca HTML o motorista nunca chega à tela para
+ler esses dados. O cache está lá, inalcançável.
+
+O que funciona hoje é só o caso "aba já aberta, navegação pelo roteador do Next, sem ida
+à rede". Foi exatamente esse o caminho exercitado em 29/08, e por isso o teste passou.
+
+**Consequência:** o item 3.3 do [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md)
+(cold-open offline) falha pelo mesmo motivo — não precisa ser testado para saber.
+
+### Por que é bloqueio de piloto
+
+O iOS descarta PWA da memória de forma agressiva. Motorista em área sem sinal que troca
+para o WhatsApp e volta cai numa navegação nova → tela de erro → **não consegue registrar
+a entrega**. É precisamente o cenário que justifica o produto existir (Serra com sinal
+fraco, o problema central no PLAN.md).
+
+Some-se a isso o item 2 abaixo (500 permanente trava a fila): as duas falhas juntas
+significam que a promessa central do produto — "registra offline, sobe depois" — não está
+comprovadamente de pé em campo.
+
+### Conserto sugerido — app shell, preservando a sua decisão de segurança
+
+Não implementei porque é o seu território e mexe no arquivo mais sensível do produto.
+
+1. Uma rota **estática, sem nenhum dado de usuário no HTML**.
+2. SW faz precache dela no `install` (junto com o JS/CSS mínimo do app).
+3. Navegação que falha → serve essa casca em vez de deixar passar.
+4. A casca lê o IndexedDB (`STORE_CACHE`, que já tem romaneios e NFs) e renderiza no
+   cliente.
+5. `start_url` apontando para algo cacheável, não para o redirect de `/`.
+
+**A segurança fica intacta** — é o ponto principal: o HTML servido do cache não carrega
+dado nenhum. Os dados vêm do IndexedDB, que já é por aparelho e já é purgado no logout
+(`components/logout-button.tsx` limpa `caches` e o IndexedDB).
+
+### Detalhe do iOS que vale para o piloto
+
+O iOS apaga dados de site (IndexedDB + Cache Storage) após **~7 dias sem uso**. Motorista
+que passe uma semana sem abrir o app perde o cache e vai precisar de rede uma vez para
+recuperar. Não é conserto nosso, mas precisa estar no material de treinamento.
+
+---
+
 ## 1. Bloqueios de infra — sem isso não se entrega para uso real
 
 Nenhum é código de produto: é configuração e validação. São os mesmos quatro de

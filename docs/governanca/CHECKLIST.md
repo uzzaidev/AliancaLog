@@ -177,10 +177,26 @@
 - [ ] Definição de prazo mínimo de contrato (crítico na modalidade só-recorrência)
 
 ## Definition of Done (transversal — checar antes de cada go-live)
-- [ ] Cada role loga, é redirecionado e **não acessa** área de outro role
-- [ ] Motorista não vê entrega de outro motorista (RLS)
-- [ ] Cliente não vê NF de outra empresa (RLS)
-- [ ] Offline funciona em modo avião e sincroniza ao voltar
-- [ ] Realtime registro → gerência < 3s
+
+> Status da bateria de testes de **06/09/2026** no aparelho real do Vítor (iPhone, PWA
+> instalado). Detalhe teste a teste em
+> [encaminhamentos/testes-ao-vivo-vitor.md](../../encaminhamentos/testes-ao-vivo-vitor.md).
+
+- [x] Cada role loga, é redirecionado e **não acessa** área de outro role
+- [x] Motorista não vê entrega de outro motorista (RLS)
+- [x] Cliente não vê NF de outra empresa (RLS) — o perfil `cliente_final`, que nunca
+      tinha sido testado, finalmente foi
+- [ ] ❌ **Offline funciona em modo avião e sincroniza ao voltar** — **REPROVADO em
+      06/09**, não é "por testar": o app **não abre** sem rede. `public/sw.js` ignora
+      navegações de propósito, então abrir pela tela de início sem sinal cai na tela de
+      erro do Safari. Diagnóstico e conserto em
+      [encaminhamentos/luis-fernando-boff.md § 0](../../encaminhamentos/luis-fernando-boff.md)
+- [x] Realtime registro → gerência < 3s
 - [ ] Carga inicial < 3s em 4G · upload de foto < 5s · roda em Android 9+/2GB
-- [ ] Tudo HTTPS · fotos só por URL assinada (não indexável) · sem dado sensível em localStorage
+      — **não medido**; exige 4G real e um Android de baixo custo (o teste foi todo em iPhone)
+- [~] Tudo HTTPS · fotos só por URL assinada (não indexável) · sem dado sensível em
+      localStorage — **verificado por código em 06/09**, falta a conferência no browser:
+      produção responde em HTTPS; bucket `canhotos` criado como privado
+      (`0003_storage.sql`); fotos servidas por `createSignedUrl` com TTL de 1h
+      (`lib/data/comprovante.ts`), nunca `getPublicUrl`; **zero** ocorrências de
+      `localStorage`/`sessionStorage` em `app/`, `components/` e `lib/`

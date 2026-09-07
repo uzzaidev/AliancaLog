@@ -27,6 +27,10 @@ Divisão de tarefas dos encaminhamentos da ata de 12/08/2026, já com decisões 
 - **Achado:** `npm run db:backup` não funciona na máquina do Vítor (pg_dump v12 contra
   servidor v15+) — mesmo problema que o Luis corrigiu no CI em `6ed0731`. Falta
   instalar o client 17 na máquina do Vítor e rodar o `workflow_dispatch` uma vez.
+- 🔴 **O app não abre offline no iPhone** (achado na rodada de testes de 06/09): o
+  Service Worker ignora navegações de propósito, então em modo avião o Safari mostra a
+  própria tela de erro e o app nem carrega. O cache de dados existe, mas é inalcançável.
+  Diagnóstico e conserto proposto em [luis-fernando-boff.md § 0](./luis-fernando-boff.md).
 - Roteiro de testes do Vítor priorizado para a entrega:
   [testes-ao-vivo-vitor.md](./testes-ao-vivo-vitor.md).
 
