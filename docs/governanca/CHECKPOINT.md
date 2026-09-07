@@ -4,6 +4,28 @@
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
 **Última atualização:** 2026-08-29
+**Última atualização:** 2026-09-07
+
+## App Shell offline, resiliência da fila, validação de backup e testes 0026/0027 (2026-09-07)
+
+1. **App Shell Offline (`/offline`) e PWA v4 (Item 0 do encaminhamento)**:
+   - Resolvido o cold-open offline no iPhone/PWA (Safari): implementada a rota estática `○ /offline` com `components/motorista/offline-view.tsx`, precache e fallback Network-First no Service Worker v4 (`public/sw.js`).
+   - Leitura de romaneios e NFs diretamente do IndexedDB local (`STORE_CACHE`), permitindo visualizar entregas e registrar canhotos/ocorrências offline em `STORE_FILA`.
+   - `proxy.ts` libera `/offline` publicamente e `app/layout.tsx` registra o SW globalmente.
+2. **Resiliência da Fila Offline contra 500 persistente (Item 2 do encaminhamento)**:
+   - Itens que falham com HTTP >= 500 são contabilizados por `client_id`.
+   - Ao atingir 5 tentativas, o item é preservado no aparelho com aviso explícito no `SyncBanner` e **pulado** (`continue`), destravando o envio de todas as entregas seguintes.
+   - Sentry registra o evento com a tag `persistente: "true"`.
+3. **Revisão e Testes da Migration 0026 & Migration 0027 (Item 3 do encaminhamento)**:
+   - Aval técnico aprovado para a RPC `assumir_nf_motorista` (`security definer`) e para a flag transaction-local do trigger (`app.assumindo_nf`).
+   - Identificado e corrigido bug de ambiguidade de coluna no Postgres (`numero_nf` ambíguo) via **Migration 0027** (`0027_fix_assumir_nf_ambiguous.sql`).
+   - Suíte de testes `T11a` a `T11f` implementada no `scripts/smoke-seguranca.mjs`, elevando a suíte para **29/29 verificações verdes**.
+4. **Backup Automático do Banco no GitHub Actions Validado (Item 1 do encaminhamento)**:
+   - Workflow `.github/workflows/db-backup.yml` atualizado para `postgresql-client-17`.
+   - Disparado via `workflow_dispatch` (run 34145951010) e aprovado com sucesso: gerado artefato `db-backup-15.sql.gz` com retenção de 30 dias.
+5. **Validação Geral**:
+   - 27/27 migrations aplicadas no banco.
+   - `npm run typecheck`, `npm run lint`, `npm run test:offline`, `npm run test:security` e `npm run build` 100% verdes.
 
 ## Entregas aceitas visíveis e fechamento automático (2026-08-29)
 

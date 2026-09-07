@@ -114,6 +114,7 @@ Nenhum é código de produto: é configuração e validação. São os mesmos qu
 |---|---|---|---|
 | 1 | **Sentry na Vercel** — cadastrar `NEXT_PUBLIC_SENTRY_DSN`, provocar um erro controlado e confirmar o evento no painel | Sem isso, **falha em campo não avisa ninguém**. O cliente usando de verdade e a gente descobrindo por reclamação é o pior cenário possível. Validar especialmente o `area: offline-sync`, onde moram as falhas silenciosas | baixo |
 | 2 | **Backup automático** — `DATABASE_URL` em GitHub Secrets + rodar `workflow_dispatch` uma vez + confirmar artifact `.sql.gz` | O workflow existe mas **nunca rodou**. Entregar para o cliente inserir dado real sem backup validado é risco que não precisa existir | baixo |
+| 2 | **Backup automático** | ✅ **VALIDADO em 07/09**: disparado via `workflow_dispatch` (run 34145951010), artifact `db-backup-15.sql.gz` gerado com `postgresql-client-17` e salvo com retenção de 30 dias | concluído |
 | 3 | **Logins reais** — 16 motoristas + ~20 empresas | O Vítor traz as listas com o Matheus. Decidir se vai no `/gerencia/cadastros` na mão ou por script de carga | médio, depende das listas |
 | 4 | **Domínio definitivo** | `alianca-log.vercel.app` serve para o piloto. Só decidir se o go-live exige domínio próprio — se exigir, tem propagação de DNS no caminho | decisão + baixo |
 

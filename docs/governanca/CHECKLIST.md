@@ -103,7 +103,9 @@
       (inclui T4a/b/c de múltiplas tentativas, T10a-d de isolamento cliente e T11a-f de bipagem/assumir NF).
       Cobertura completa do perfil `cliente_final` e auto-atribuição de motorista.
 - [ ] Monitoramento de erros (Sentry ou similar) antes do piloto `→ Luis`
-- [ ] Backup automático do banco (hoje `db:backup` é manual) `→ Luis`
+- [x] Backup automático do banco — **workflow GitHub Actions** `.github/workflows/db-backup.yml`
+      testado e validado com sucesso via `workflow_dispatch` (run 34145951010, artefato `db-backup-15.sql.gz`
+      gerado com `postgresql-client-17`, retenção de 30 dias ativa) `→ Luis`
 - [ ] Critérios de sucesso do piloto escritos (ex.: 2–3 motoristas × 5 dias, ≥95% das entregas
       pelo app, zero perda no sync, Matheus abrindo o dashboard sem ser lembrado) `→ Vítor`
 - [ ] Testar foto 1280px com canhotos reais em luz ruim (validar legibilidade) `→ Vítor` (piloto)
