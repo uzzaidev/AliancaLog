@@ -7,7 +7,7 @@
 // aparelho. Só cacheamos assets estáticos (versionados, sem dados). O cache e a
 // fila também são limpos no logout (LogoutButton). v2 = purga qualquer cache
 // antigo que ainda tenha páginas autenticadas.
-const CACHE = "alianca-log-v4";
+const CACHE = "alianca-log-v5";
 const DB_NAME = "alianca-log";
 const DB_VERSION = 1;
 const STORE_FILA = "fila_canhotos";
@@ -86,8 +86,12 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Estáticos (versionados, sem dados do usuário): cache primeiro.
+  // `/wasm/` é o decodificador de código de barras (ZXing-C++, ~1 MB). Precisa
+  // entrar aqui explicitamente: requisição de .wasm tem `destination` vazio e
+  // não cairia na lista abaixo — e sem ele o motorista sem sinal não bipa.
   if (
     url.pathname.startsWith("/_next/") ||
+    url.pathname.startsWith("/wasm/") ||
     url.pathname === "/manifest.webmanifest" ||
     url.pathname.endsWith(".ico") ||
     url.pathname.endsWith(".png") ||
