@@ -16,21 +16,28 @@ export async function getComprovante(
 ): Promise<ComprovanteDetalhe | null> {
   const supabase = await createClient();
 
-  const { data: nf } = await supabase
+  const { data: nf, error: erroNf } = await supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,created_at,entregue_em,foto_url,observacao,empresas_clientes(nome),motoristas(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,created_at,entregue_em,foto_url,observacao,empresas_clientes(nome),motoristas!motorista_id(usuarios(nome))",
     )
     .eq("id", nfId)
     .maybeSingle();
 
+  // Falha de query e "não tem permissão" produzem o mesmo `nf` nulo na tela
+  // ("Detalhes indisponíveis"), então o erro precisa aparecer no log — foi
+  // assim que o embed ambíguo da 0026 passou despercebido.
+  if (erroNf) console.error("[getComprovante] query da NF falhou:", erroNf.message);
   if (!nf) return null; // não existe OU RLS bloqueou — tratamos igual (404)
 
-  const { data: ocorrencias } = await supabase
+  const { data: ocorrencias, error: erroGetComprovante } = await supabase
     .from("ocorrencias")
     .select("tipo,descricao,created_at")
     .eq("nota_fiscal_id", nfId)
     .order("created_at", { ascending: true });
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroGetComprovante) console.error("[getComprovante] ocorrencias falharam:", erroGetComprovante.message);
 
   // Daqui pra baixo o admin só é usado DEPOIS do RLS ter confirmado (acima)
   // que este usuário pode ver esta NF — mesmo padrão para foto e GPS.
@@ -48,13 +55,17 @@ export async function getComprovante(
 
   // Todas as tentativas de entrega desta NF, em ordem — desde A-007 uma NF pode
   // ter mais de uma (recusada/ocorrência volta pro painel para nova tentativa).
-  const { data: canhotos } = await admin
+  const { data: canhotos, error: erroCanhotos } = await admin
     .from("canhotos")
     .select(
       "status,registrado_em,foto_url,foto_chegada_url,observacao,lat,lng,motoristas(usuarios(nome))",
     )
     .eq("nota_fiscal_id", nfId)
     .order("registrado_em", { ascending: true });
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroCanhotos)
+    console.error("[getComprovante] tentativas falharam:", erroCanhotos.message);
 
   const tentativas = await Promise.all(
     ((canhotos ?? []) as Record<string, unknown>[]).map(async (c) => {

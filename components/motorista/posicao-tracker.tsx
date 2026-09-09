@@ -65,7 +65,13 @@ export function PosicaoTracker({
             { motorista_id: motoristaId, lat: atual.lat, lng: atual.lng },
             { onConflict: "motorista_id" },
           )
-          .then(() => {});
+          .then(({ error }) => {
+            // Descartar este erro em silencio escondeu por semanas que a tabela
+            // estava vazia: faltava policy de SELECT para o proprio motorista, e
+            // sem ela o upsert nao conseguia resolver o ON CONFLICT (migration
+            // 0028). Posicao continua descartavel — so nao pode falhar calada.
+            if (error) console.error("[PosicaoTracker] envio falhou:", error.message);
+          });
       },
       () => {
         // GPS negado/indisponível — segue sem rastrear, nunca bloqueia o app.

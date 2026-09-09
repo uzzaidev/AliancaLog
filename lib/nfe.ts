@@ -25,15 +25,38 @@ export function extrairNumeroNf(chave: string): string {
 /**
  * Interpreta o texto lido pelo scanner (ou digitado):
  * - chave de acesso válida (44 dígitos) → retorna a chave + o número extraído dela;
+ * - chave válida escondida no meio de ruído do leitor → mesma coisa;
  * - qualquer outra coisa → trata como número de NF digitado.
  */
 export function interpretarCodigoBipado(texto: string): {
   numero: string;
   chave?: string;
 } {
-  const limpo = texto.replace(/\s+/g, "");
+  const limpo = texto.replace(/s+/g, "");
   if (validarChave(limpo)) {
     return { numero: extrairNumeroNf(limpo), chave: limpo };
   }
+
+  // Leitor nem sempre devolve só os 44 dígitos. Vem junto o identificador AIM
+  // do Code-128 (`]C1`), pontuação impressa no DANFE, ou lixo de borda do
+  // quadro. Antes de desistir, procura uma chave válida dentro do que foi lido
+  // — era isso que fazia a bipagem dizer "não existe" numa nota que existe.
+  const digitos = texto.replace(/D/g, "");
+  for (let i = 0; i + 44 <= digitos.length; i++) {
+    const candidata = digitos.slice(i, i + 44);
+    if (validarChave(candidata)) {
+      return { numero: extrairNumeroNf(candidata), chave: candidata };
+    }
+  }
+
+  // 44 dígitos cujo DV não fecha = leitura provavelmente errada em algum dígito.
+  // Ainda assim aproveita o trecho do número da NF (posições 26–34): a nota
+  // continua tendo que existir no sistema para ser assumida, então isso não cria
+  // match falso — só evita jogar fora uma leitura quase boa.
+  if (digitos.length === 44) {
+    const numero = extrairNumeroNf(digitos);
+    if (numero !== "0") return { numero };
+  }
+
   return { numero: texto.trim() };
 }

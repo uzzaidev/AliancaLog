@@ -19,7 +19,8 @@
     "db:status": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-status.mjs",
     "db:backup": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/backup.mjs",
     "db:setup-sql": "node scripts/gen-setup-sql.mjs",
-    "importar:piloto": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/importar-usuarios-piloto.mjs"
+    "importar:piloto": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/importar-usuarios-piloto.mjs",
+    "db:reconciliar": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-reconciliar.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

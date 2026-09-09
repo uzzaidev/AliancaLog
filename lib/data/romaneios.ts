@@ -13,11 +13,14 @@ export type RomaneioRow = {
 
 export async function listRomaneios(): Promise<RomaneioRow[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error: erro } = await supabase
     .from("romaneios")
     .select("id,data,status,motoristas(usuarios(nome)),notas_fiscais(count)")
     .order("data", { ascending: false })
     .limit(50);
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erro) console.error("[listRomaneios] query falhou:", erro.message);
 
   return ((data ?? []) as Record<string, unknown>[]).map((r) => {
     const mot = r.motoristas as { usuarios?: { nome?: string } } | null;
@@ -49,13 +52,16 @@ export type RomaneioDetalhe = {
 
 export async function getRomaneio(id: string): Promise<RomaneioDetalhe | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error: erro } = await supabase
     .from("romaneios")
     .select(
       "id,data,status,confirmado_em,motoristas(usuarios(nome)),notas_fiscais(id,numero_nf,status,destinatario_nome,empresas_clientes(nome))",
     )
     .eq("id", id)
     .maybeSingle();
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erro) console.error("[getRomaneio] query falhou:", erro.message);
 
   if (!data) return null;
   const r = data as Record<string, unknown>;

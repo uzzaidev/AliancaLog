@@ -65,9 +65,17 @@ export function BarcodeScanner({
           const { BrowserMultiFormatReader } = await import("@zxing/library");
           const reader = new BrowserMultiFormatReader();
           zxingReset = () => reader.reset();
-          await reader.decodeFromVideoDevice(null, video, (result) => {
-            if (!stopped && result) onResult(result.getText());
-          });
+          // Este é o caminho do iOS: o Safari não implementa BarcodeDetector.
+          // `decodeFromVideoDevice(null, ...)` pega a câmera PADRÃO, que no
+          // iPhone costuma ser a frontal — o motorista aponta o DANFE e o
+          // leitor está olhando para o rosto dele. Constraint explícita.
+          await reader.decodeFromConstraints(
+            { video: { facingMode: { ideal: "environment" } } },
+            video,
+            (result) => {
+              if (!stopped && result) onResult(result.getText());
+            },
+          );
         }
       } catch {
         onError?.(

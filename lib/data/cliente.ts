@@ -47,6 +47,7 @@ export async function getNotasCliente(f: ClienteFiltro): Promise<NotaCliente[]> 
     if (termo) q = q.or(`numero_nf.ilike.%${termo}%,cidade.ilike.%${termo}%`);
   }
 
-  const { data } = await q;
+  const { data, error } = await q;
+  if (error) console.error("[getNotasCliente] query falhou:", error.message);
   return (data ?? []) as NotaCliente[];
 }

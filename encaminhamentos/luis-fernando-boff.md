@@ -26,6 +26,119 @@ O Vítor vai até o cliente **na semana de 08–12/09** apresentar o sistema par
 começarem a usar. Isso transforma as pendências abaixo de "quando der" em
 **bloqueio de data**. Elas estão paradas desde 24/08.
 
+## 🔧 09/09 (Vítor) — 4 bugs de validação + ledger de migrations reconciliado
+
+Bateria de validação de 09/09 achou quatro defeitos. **Dois eram a mesma regressão
+minha da 0026**, um era do GPS e um era do scanner. Todos corrigidos e verificados
+contra o banco real; `typecheck`, `lint`, `build`, `test:security` (23 + T11a–f) e
+`test:offline` verdes.
+
+### 1 e 3 — FK dupla da 0026 quebrou dois embeds (regressão minha)
+
+A `0026` adicionou `notas_fiscais.assumida_de` referenciando `motoristas`. Com isso
+passaram a existir **duas** FKs de `notas_fiscais → motoristas`, e o PostgREST parou de
+resolver `motoristas(usuarios(nome))`:
+
+```
+HTTP 300 — Could not embed because more than one relationship was found
+           for 'notas_fiscais' and 'motoristas'
+```
+
+Duas telas quebraram **sem dar erro**, porque as duas queries descartavam a falha:
+
+| Sintoma em produção | Onde |
+|---|---|
+| Dashboard da gerência com a tabela vazia ("Nenhuma NF encontrada"), enquanto o painel de cima mostrava 40 NFs | `lib/data/gerencia.ts` — o painel não embeda motoristas, por isso continuava certo |
+| "Detalhes indisponíveis" no comprovante (gerência e portal do cliente) numa NF aceita | `lib/data/comprovante.ts` — query falha → `nf` nulo → cai na mesma tela de "sem permissão" |
+
+Corrigido com hint explícito de FK: `motoristas!motorista_id(usuarios(nome))`. Validado
+por HTTP 200 contra a API real.
+
+**Auditei todas as FKs para `motoristas`:** só `notas_fiscais` tem duas.
+`canhotos`, `romaneios` e `motorista_posicao` têm uma cada — os embeds delas seguem
+válidos. Qualquer embed NOVO de motoristas a partir de `notas_fiscais` precisa do hint.
+
+### 4 — GPS nunca gravou uma única posição (migration 0028)
+
+`motorista_posicao` estava com **zero linhas** desde que a `0017` subiu; o mapa mostrava
+"Motoristas (0)" e ninguém percebeu.
+
+**Mesma classe de bug da sua `0020`.** A `0017` criou policies de INSERT e UPDATE para o
+motorista, mas nenhuma de SELECT. O `PosicaoTracker` grava com `upsert`
+(`ON CONFLICT DO UPDATE`), e resolver o ON CONFLICT exige LER a linha em conflito. Sem
+policy de SELECT o Postgres nega a leitura e reporta como violação **na inserção**.
+
+Comprovado com sessão real do motorista, antes da correção:
+
+```
+INSERT puro                        → OK
+upsert (mesma linha, ON CONFLICT)  → new row violates row-level security policy
+```
+
+`0028` adiciona `mot_posicao_select` (motorista lê só a própria linha). Revalidado
+depois: os dois upserts passam e o motorista continua sem ver posição de terceiro.
+
+> **Ao testar:** o mapa só mostra motorista com romaneio **ativo E confirmado hoje**.
+> Com todos os romaneios de hoje fechados, "Motoristas (0)" é o comportamento correto.
+
+### 2 — Bipagem: backend OK, o defeito era no cliente
+
+Testei a RPC `assumir_nf_motorista` em transação revertida com chave real e com número
+real: **os dois caminhos retornam `assumida`**. Sua `0027` já tinha corrigido a
+ambiguidade de coluna. O problema é o que o leitor entrega:
+
+1. **Câmera errada no iOS.** Safari não implementa `BarcodeDetector`, então cai no
+   fallback ZXing — que usava `decodeFromVideoDevice(null, …)`, ou seja, a câmera
+   **padrão**, normalmente a **frontal** no iPhone. Agora usa `decodeFromConstraints`
+   com `facingMode: environment`.
+2. **Parsing tolerante a ruído.** Leitores devolvem o identificador AIM do Code-128
+   (`]C1`) e lixo de borda junto dos 44 dígitos. `interpretarCodigoBipado` agora procura
+   uma chave válida *dentro* do que foi lido antes de desistir.
+3. **Mostra o código lido** na tela de "não encontrada" — sem isso, uma bipagem que não
+   casa é indiagnosticável à distância.
+
+### Erros de query que falhavam calados
+
+As três telas acima falharam em silêncio pelo mesmo motivo: `const { data } = await q`
+descarta o erro, e erro de query fica indistinguível de "não há dados". Agora
+`getNotasDoDia`, `getNotasCliente`, `getComprovante` e o `PosicaoTracker` registram a
+falha no log do servidor. **Não lançam** — sem error boundary no projeto, lançar
+derrubaria a tela; o objetivo aqui é só parar de esconder.
+
+---
+
+## ⚠️ Ledger de migrations — reconciliado, mas vale seu olhar
+
+Sua `0027` estava com **hash divergente**: o conteúdo aplicado no banco não batia com o
+arquivo commitado, em nenhuma normalização de fim de linha. Provavelmente o arquivo foi
+editado (comentário/formatação) depois de aplicado.
+
+Isso **travava o `npm run db:migrate` para todo mundo** — o runner aborta a fila inteira
+quando encontra qualquer divergência, então nem a minha 0028 entrava.
+
+**Antes de reconciliar, confirmei que era benigno:** comparei `pg_get_functiondef` da
+`assumir_nf_motorista` no banco com o que o arquivo produz, dentro de transação
+revertida. **A única diferença eram os `\r`** do checkout Windows — o SQL efetivo é
+idêntico. Por isso reconciliei o registro em vez de reaplicar: reaplicar só gravaria
+`\r` dentro do corpo da função, sem ganho nenhum.
+
+Criei `scripts/migrate-reconciliar.mjs` (`npm run db:reconciliar`), no padrão do
+`reset-operacional.mjs`:
+
+- **dry-run por padrão** — só diagnostica; escreve apenas com `--confirmar`;
+- mexe **somente** na coluna `hash`; nunca executa SQL de migration, nunca toca schema;
+- salva os hashes antigos em `backups/ledger_antes_*.json` antes de escrever;
+- o UPDATE casa também pelo hash antigo, então corrida com outra pessoa aborta tudo;
+- também aponta migrations **órfãs** (aplicadas sem arquivo local), sem removê-las.
+
+Estado agora: `28 locais · 28 aplicadas · 0 pendentes · 0 divergentes · 0 órfãs`.
+
+**O que fica com você:** confirmar que o conteúdo commitado da `0027` é mesmo o que você
+queria versionar. Eu verifiquei equivalência com o que está *rodando*, não que seja o que
+você *pretendia*.
+
+---
+
 ## 0. ✅ RESOLVIDO (07/09 — Luis) — App Shell offline e cold-open no iPhone
 
 Implementado o App Shell estático (`/offline`) com `components/motorista/offline-view.tsx`,

@@ -1,0 +1,48 @@
+-- 0028 — Dois defeitos encontrados na validação de 09/09, ambos silenciosos.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 1. GPS do motorista nunca gravou uma única posição
+-- ─────────────────────────────────────────────────────────────────────────────
+-- `motorista_posicao` estava com ZERO linhas desde que a 0017 subiu. O mapa da
+-- gerência mostrava "Motoristas (0)" e ninguém percebeu, porque o
+-- `PosicaoTracker` descarta o resultado do envio (`.then(() => {})`).
+--
+-- CAUSA — a mesma da 0020, em outra tabela. A 0017 criou policies de INSERT e
+-- UPDATE para o motorista, mas NENHUMA de SELECT. O tracker grava com `upsert`
+-- (`ON CONFLICT (motorista_id) DO UPDATE`), e resolver o ON CONFLICT exige LER
+-- a linha em conflito pelo índice único. Sem policy de SELECT o Postgres nega
+-- essa leitura e reporta como violação NA INSERÇÃO:
+--
+--     new row violates row-level security policy for table "motorista_posicao"
+--
+-- Comprovado com sessão real do motorista antes desta migration:
+--     INSERT puro                → OK
+--     upsert (mesma linha, ON CONFLICT) → FALHOU
+--
+-- Não afrouxa nada: o motorista passa a ver apenas a PRÓPRIA posição, que é um
+-- dado que ele mesmo acabou de produzir. A gerência já lia todas (ger_posicao_select).
+create policy mot_posicao_select on public.motorista_posicao for select
+  using (public.jwt_role() = 'motorista' and motorista_id = auth.uid());
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 2. Registro do que a 0026 quebrou (correção é no app, não aqui)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- A 0026 adicionou `notas_fiscais.assumida_de` referenciando `motoristas`. Com
+-- isso passaram a existir DUAS FKs de notas_fiscais → motoristas
+-- (`motorista_id` e `assumida_de`), e o PostgREST deixou de conseguir resolver
+-- o embed `motoristas(usuarios(nome))`:
+--
+--     HTTP 300 — Could not embed because more than one relationship was found
+--                for 'notas_fiscais' and 'motoristas'
+--
+-- Efeito em produção, invisível porque as duas queries descartavam o erro:
+--   • dashboard da gerência: tabela vazia ("Nenhuma NF encontrada para o filtro
+--     atual") mesmo com 40 NFs no painel de cima — o painel não embeda motoristas
+--     e por isso continuava certo;
+--   • comprovante (gerência e portal do cliente): "Detalhes indisponíveis" numa
+--     NF aceita, com as fotos do canhoto no lugar.
+--
+-- Corrigido em `lib/data/gerencia.ts` e `lib/data/comprovante.ts` com hint
+-- explícito de FK: `motoristas!motorista_id(usuarios(nome))`. A FK
+-- `assumida_de` é mantida — a integridade referencial é desejável, e qualquer
+-- embed novo de motoristas a partir de notas_fiscais precisa do hint.

@@ -23,6 +23,9 @@ export function AssumirNf() {
   const [manual, setManual] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [res, setRes] = useState<NfAssumida | null>(null);
+  // Guarda o texto cru que o leitor devolveu. Sem isso, uma bipagem que nao casa
+  // vira "nota nao encontrada" sem dizer o que foi lido — indiagnosticavel.
+  const [lido, setLido] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   // Guarda o código da NF que espera confirmação de troca, para rechamar com o
@@ -33,6 +36,7 @@ export function AssumirNf() {
   const ocupadoRef = useRef(false);
 
   const enviar = useCallback((codigo: string, confirmarTroca: boolean) => {
+    setLido(codigo);
     ocupadoRef.current = true;
     start(async () => {
       setErro(null);
@@ -133,7 +137,7 @@ export function AssumirNf() {
         </p>
       )}
 
-      {res && <Resultado dados={res} onLimpar={limpar} pending={pending}
+      {res && <Resultado dados={res} onLimpar={limpar} pending={pending} codigoLido={lido}
         onConfirmarTroca={() => {
           const codigo = pendenteRef.current;
           if (codigo) enviar(codigo, true);
@@ -168,11 +172,13 @@ function DadosNf({ dados }: { dados: NfAssumida }) {
 
 function Resultado({
   dados,
+  codigoLido,
   onLimpar,
   onConfirmarTroca,
   pending,
 }: {
   dados: NfAssumida;
+  codigoLido: string | null;
   onLimpar: () => void;
   onConfirmarTroca: () => void;
   pending: boolean;
@@ -188,6 +194,12 @@ function Resultado({
           Essa NF ainda não foi importada no sistema. Avise a gerência antes de
           sair com ela.
         </p>
+        {codigoLido && (
+          <div className="rounded-lg bg-canvas px-3 py-2 text-left">
+            <div className="text-[11px] font-medium text-gray-400">Código lido</div>
+            <div className="break-all font-mono text-xs text-ink">{codigoLido}</div>
+          </div>
+        )}
         <Button variant="secondary" className="w-full" onClick={onLimpar}>
           Bipar outra
         </Button>

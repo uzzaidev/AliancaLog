@@ -33,7 +33,10 @@ export async function getDestinosGeocodificados(data?: string): Promise<PontoDes
   q = data
     ? q.eq("data_entrega", data)
     : q.or(`data_entrega.eq.${dia},status.in.(${NF_STATUS_ABERTOS.join(",")})`);
-  const { data: rows } = await q;
+  const { data: rows, error: erroGetDestinosGeocodificados } = await q;
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroGetDestinosGeocodificados) console.error("[getDestinosGeocodificados] query falhou:", erroGetDestinosGeocodificados.message);
 
   return ((rows ?? []) as Record<string, unknown>[]).map((r) => ({
     id: r.id as string,
@@ -78,7 +81,7 @@ export async function getEntreguesComGps(data?: string): Promise<PontoEntregue[]
   // data_entrega alvo da NF: desde A-007 uma NF pode ser entregue dias depois
   // do previsto (nova tentativa após recusa/ocorrência), e o mapa "de hoje"
   // precisa mostrar a ação de hoje, não o planejamento antigo.
-  const { data: rows } = await supabase
+  const { data: rows, error: erroGetEntreguesComGps } = await supabase
     .from("canhotos")
     .select(
       "registrado_em,status,lat,lng,notas_fiscais!inner(id,numero_nf,destinatario_nome)",
@@ -87,6 +90,9 @@ export async function getEntreguesComGps(data?: string): Promise<PontoEntregue[]
     .lt("registrado_em", inicioDiaSP(diaSeguinte(dia)))
     .not("lat", "is", null)
     .not("lng", "is", null);
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroGetEntreguesComGps) console.error("[getEntreguesComGps] query falhou:", erroGetEntreguesComGps.message);
 
   return ((rows ?? []) as Record<string, unknown>[]).map((r) => {
     const nf = r.notas_fiscais as {
@@ -119,11 +125,14 @@ export type PosicaoMotorista = {
 export async function getPosicoesMotoristas(): Promise<PosicaoMotorista[]> {
   const supabase = await createClient();
 
-  const { data: ativos } = await supabase
+  const { data: ativos, error: erroGetPosicoesMotoristas } = await supabase
     .from("romaneios")
     .select("motorista_id")
     .eq("status", "ativo")
     .not("confirmado_em", "is", null);
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroGetPosicoesMotoristas) console.error("[getPosicoesMotoristas] romaneios ativos falharam:", erroGetPosicoesMotoristas.message);
   const motoristaIds = Array.from(
     new Set(
       (ativos ?? [])
@@ -133,10 +142,13 @@ export async function getPosicoesMotoristas(): Promise<PosicaoMotorista[]> {
   );
   if (motoristaIds.length === 0) return [];
 
-  const { data: rows } = await supabase
+  const { data: rows, error: erro } = await supabase
     .from("motorista_posicao")
     .select("motorista_id,lat,lng,atualizado_em,motoristas(usuarios(nome))")
     .in("motorista_id", motoristaIds);
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erro) console.error("[getPosicoesMotoristas] query falhou:", erro.message);
 
   return ((rows ?? []) as Record<string, unknown>[]).map((r) => {
     const motorista = r.motoristas as { usuarios?: { nome?: string } } | null;

@@ -136,7 +136,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
   let q = supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,data_entrega,updated_at,foto_url,motorista_id,assumida_em,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,data_entrega,updated_at,foto_url,motorista_id,assumida_em,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas!motorista_id(usuarios(nome))",
     )
     .order("updated_at", { ascending: false });
 
@@ -166,7 +166,10 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
   if (f.empresa) q = q.eq("empresa_cliente_id", f.empresa);
   if (f.motorista) q = q.eq("motorista_id", f.motorista);
 
-  const { data } = await q;
+  const { data, error } = await q;
+  // Erro de query NAO e "nenhuma NF": descarta-lo em silencio ja escondeu
+  // uma tabela vazia causada por embed ambiguo (FK nova da migration 0026).
+  if (error) console.error("[getNotasDoDia] query falhou:", error.message);
   // PostgREST devolve embeds como objeto/array; tipamos solto aqui.
   return ((data ?? []) as Record<string, unknown>[]).map((r) => {
     const empresa = r.empresas_clientes as { nome?: string } | null;
@@ -228,7 +231,10 @@ export async function getPainelClientes(
   q = data
     ? q.eq("data_entrega", data)
     : q.or(`data_entrega.eq.${hojeISO()},status.in.(${NF_STATUS_ABERTOS.join(",")})`);
-  const { data: rows } = await q;
+  const { data: rows, error: erro } = await q;
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erro) console.error("[getPainelClientes] query falhou:", erro.message);
 
   const porEmpresa = new Map<string, EmpresaPainel>();
   for (const r of (rows ?? []) as Record<string, unknown>[]) {
@@ -273,10 +279,13 @@ export async function getPainelClientes(
 export type EmpresaItem = { id: string; nome: string; ativo: boolean };
 export async function listEmpresas(): Promise<EmpresaItem[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error: erroListEmpresas } = await supabase
     .from("empresas_clientes")
     .select("id,nome,ativo")
     .order("nome");
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroListEmpresas) console.error("[listEmpresas] query falhou:", erroListEmpresas.message);
   return (data ?? []) as EmpresaItem[];
 }
 
@@ -290,9 +299,12 @@ export type MotoristaItem = {
 };
 export async function listMotoristas(): Promise<MotoristaItem[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error: erroListMotoristas } = await supabase
     .from("motoristas")
     .select("id,telefone,veiculo_id,usuarios(nome,email,ativo)");
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroListMotoristas) console.error("[listMotoristas] query falhou:", erroListMotoristas.message);
   return ((data ?? []) as Record<string, unknown>[]).map((m) => {
     const u = m.usuarios as
       | { nome?: string; email?: string; ativo?: boolean }
@@ -316,9 +328,12 @@ export type VeiculoItem = {
 };
 export async function listVeiculos(): Promise<VeiculoItem[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error: erroListVeiculos } = await supabase
     .from("veiculos")
     .select("id,placa,tipo,ativo")
     .order("placa");
+  // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
+  // precisa aparecer no log (ver o embed ambiguo da 0026, invisivel por 3 dias).
+  if (erroListVeiculos) console.error("[listVeiculos] query falhou:", erroListVeiculos.message);
   return (data ?? []) as VeiculoItem[];
 }
