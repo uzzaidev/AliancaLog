@@ -3,8 +3,21 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-08-29
-**Última atualização:** 2026-09-07
+**Última atualização:** 2026-09-09
+
+## Scanner DANFE — correções locais e validação (2026-09-09)
+
+- Corrigida entrega de WASM e sw.js pelo proxy e cache do SW (v6); carga do
+  decoder agora tem timeout, erros visíveis e retry.
+- Câmera não reinicia em renders do pai. Prévia e recorte usam os mesmos pixels,
+  preservando largura e alternando quadro completo. Somente chave completa e
+  validada pode disparar bipagem; número manual continua separado.
+- Adicionadas leitura por foto e opções de câmera/diagnóstico.
+- Testes: decoder real, vídeo sintético no Chromium, foto no WebKit, typecheck,
+  lint, build e HTTP dos assets. Não validado com câmera física de iPhone.
+- Alterações ainda locais, sem commit/push/publicação nesta sessão.
+- Evidências, limites e roteiro de aceite:
+  [SCANNER-VALIDACAO-2026-09-09.md](../auxilio/SCANNER-VALIDACAO-2026-09-09.md).
 
 ## Fechamento de Infraestrutura, CI, Carga em Lote e Diagnóstico Sentry (2026-09-07)
 

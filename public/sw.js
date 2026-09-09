@@ -7,7 +7,7 @@
 // aparelho. Só cacheamos assets estáticos (versionados, sem dados). O cache e a
 // fila também são limpos no logout (LogoutButton). v2 = purga qualquer cache
 // antigo que ainda tenha páginas autenticadas.
-const CACHE = "alianca-log-v5";
+const CACHE = "alianca-log-v6";
 const DB_NAME = "alianca-log";
 const DB_VERSION = 1;
 const STORE_FILA = "fila_canhotos";
@@ -103,8 +103,12 @@ self.addEventListener("fetch", (event) => {
         (cached) =>
           cached ||
           fetch(req).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
+            // Nunca guardar redirect/login ou erro como se fosse um asset.
+            const isWasm = url.pathname.startsWith("/wasm/");
+            if (res.ok && !res.redirected && (!isWasm || res.headers.get("content-type")?.includes("application/wasm"))) {
+              const copy = res.clone();
+              event.waitUntil(caches.open(CACHE).then((c) => c.put(req, copy)));
+            }
             return res;
           }),
       ),

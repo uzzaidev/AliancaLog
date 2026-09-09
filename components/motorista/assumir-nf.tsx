@@ -15,7 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { Button, Card, Input } from "@/components/ui";
-import { interpretarCodigoBipado } from "@/lib/nfe";
+import { extrairChaveDaCamera } from "@/lib/nfe";
 import { assumirNf, type NfAssumida } from "@/app/motorista/actions";
 
 export function AssumirNf() {
@@ -24,40 +24,40 @@ export function AssumirNf() {
   const [manual, setManual] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [res, setRes] = useState<NfAssumida | null>(null);
-  // Guarda o texto cru que o leitor devolveu. Sem isso, uma bipagem que nao casa
-  // vira "nota nao encontrada" sem dizer o que foi lido — indiagnosticavel.
+  // Guarda o valor consultado (chave validada da câmera ou entrada manual).
   const [lido, setLido] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   // Guarda o código da NF que espera confirmação de troca, para rechamar com o
   // mesmo código depois do "tenho certeza".
   const pendenteRef = useRef<string | null>(null);
-  // Dedupe do scanner: o BarcodeDetector dispara a cada frame lido.
+  // Dedupe do scanner: a mesma nota aparece em vários quadros.
   const ultimoRef = useRef<{ codigo: string; t: number }>({ codigo: "", t: 0 });
   const ocupadoRef = useRef(false);
-  // Leitura sem chave válida precisa aparecer duas vezes seguidas para ser
-  // aceita — ver `onScan`.
-  const candidatoRef = useRef<string | null>(null);
 
   const enviar = useCallback((codigo: string, confirmarTroca: boolean) => {
+    if (ocupadoRef.current) return;
     setLido(codigo);
     ocupadoRef.current = true;
+    setScanning(false);
     start(async () => {
       setErro(null);
-      const r = await assumirNf(codigo, confirmarTroca);
-      ocupadoRef.current = false;
-      if (r.error) {
-        setErro(r.error);
-        return;
+      try {
+        const r = await assumirNf(codigo, confirmarTroca);
+        if (r.error) {
+          setErro(r.error);
+          return;
+        }
+        if (!r.dados) return;
+        if (r.dados.resultado === "confirmar_troca") pendenteRef.current = codigo;
+        else pendenteRef.current = null;
+        setRes(r.dados);
+        if (r.dados.resultado === "assumida") router.refresh();
+      } catch {
+        setErro("Não foi possível consultar a nota. Verifique a conexão e tente novamente.");
+      } finally {
+        ocupadoRef.current = false;
       }
-      if (!r.dados) return;
-      if (r.dados.resultado === "confirmar_troca") pendenteRef.current = codigo;
-      else pendenteRef.current = null;
-      setRes(r.dados);
-      // Fecha a câmera assim que alguma coisa acontece — a tela passa a ser o
-      // resultado, e manter o vídeo rodando por baixo só gasta bateria.
-      setScanning(false);
-      if (r.dados.resultado === "assumida") router.refresh();
     });
   }, [router]);
 
@@ -68,23 +68,10 @@ export function AssumirNf() {
       if (texto === ultimoRef.current.codigo && agora - ultimoRef.current.t < 2500)
         return;
 
-      // Leitura de código de barras é instável: o primeiro quadro decodificado
-      // costuma vir parcial (em 09/09, um DANFE devolveu "505584" — 6 dígitos de
-      // uma chave de 44). Aceitar esse primeiro quadro vira "nota não encontrada"
-      // numa nota que existe.
-      //
-      // Quando o texto vira uma chave de acesso válida, o dígito verificador já
-      // atesta a leitura e vale entrar na hora. Sem isso, exige ver o MESMO texto
-      // duas vezes seguidas antes de consultar o servidor.
-      const { chave } = interpretarCodigoBipado(texto);
-      if (!chave && candidatoRef.current !== texto) {
-        candidatoRef.current = texto;
-        return;
-      }
-
-      candidatoRef.current = null;
+      const chave = extrairChaveDaCamera(texto);
+      if (!chave) return;
       ultimoRef.current = { codigo: texto, t: agora };
-      enviar(texto, false);
+      enviar(chave, false);
     },
     [enviar],
   );
@@ -93,7 +80,6 @@ export function AssumirNf() {
     setRes(null);
     setErro(null);
     pendenteRef.current = null;
-    candidatoRef.current = null;
     ultimoRef.current = { codigo: "", t: 0 };
   }
 
@@ -103,6 +89,7 @@ export function AssumirNf() {
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold text-dark">Bipar nota</h2>
           <Button
+            disabled={pending}
             variant={scanning ? "secondary" : "primary"}
             onClick={() => {
               limpar();
@@ -115,7 +102,7 @@ export function AssumirNf() {
         </div>
 
         {scanning && (
-          <BarcodeScanner onResult={onScan} onError={(m) => setErro(m)} />
+          <BarcodeScanner onResult={onScan} />
         )}
 
         <p className="text-xs text-muted">
@@ -222,15 +209,6 @@ function Resultado({
               {/^\d+$/.test(codigoLido) ? "só dígitos" : "com outros caracteres"}
             </div>
             <div className="break-all font-mono text-xs text-ink">{codigoLido}</div>
-            {/* Uma chave de acesso tem 44 dígitos. Leitura curta é quadro
-                parcial: o motorista precisa saber que é para tentar de novo,
-                não que a nota está faltando no sistema. */}
-            {[...codigoLido].length < 44 && (
-              <div className="mt-1 text-[11px] text-warning">
-                Leitura incompleta — a chave do DANFE tem 44 dígitos. Tente
-                bipar de novo, com a câmera mais firme e o código bem iluminado.
-              </div>
-            )}
           </div>
         )}
         <Button variant="secondary" className="w-full" onClick={onLimpar}>

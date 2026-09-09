@@ -21,7 +21,8 @@
     "db:setup-sql": "node scripts/gen-setup-sql.mjs",
     "importar:piloto": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/importar-usuarios-piloto.mjs",
     "db:reconciliar": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-reconciliar.mjs",
-    "test:scanner": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --experimental-strip-types scripts/test-nfe-scanner.mjs"
+    "test:scanner": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --experimental-strip-types scripts/test-nfe-scanner.mjs",
+    "test:scanner:browser": "node scripts/test-scanner-browser.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",
@@ -41,11 +42,13 @@
     "zxing-wasm": "^3.1.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Field, Input } from "@/components/ui";
 import { BarcodeScanner } from "@/components/barcode-scanner";
-import { interpretarCodigoBipado } from "@/lib/nfe";
+import { extrairChaveDaCamera, interpretarCodigoBipado } from "@/lib/nfe";
 import {
   buscarNf,
   criarRomaneio,
@@ -56,6 +56,7 @@ export function RomaneioBuilder({
   const chavesRef = useRef<Record<string, string>>({});
 
   const handleScan = useCallback(async (text: string) => {
+    if (!extrairChaveDaCamera(text)) return;
     // O DANFE codifica a chave de acesso (44 dígitos), não o número da NF.
     const { numero, chave } = interpretarCodigoBipado(text);
     if (!numero) return;
@@ -197,7 +198,7 @@ export function RomaneioBuilder({
           </Button>
         </div>
         {scanning && (
-          <BarcodeScanner onResult={handleScan} onError={(m) => setErro(m)} />
+          <BarcodeScanner onResult={handleScan} />
         )}
         <p className="text-xs text-muted">
           A câmera lê o código de barras da NF e casa com a importação. Sem

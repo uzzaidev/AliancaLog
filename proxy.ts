@@ -57,6 +57,6 @@ export const config = {
   // Roda em tudo, exceto assets estáticos e /api (as rotas de API tratam auth
   // internamente e devem responder JSON, nunca redirect).
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webmanifest)$).*)",
+    "/((?!api|_next/static|_next/image|wasm/|sw\\.js$|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webmanifest)$).*)",
   ],
 };
