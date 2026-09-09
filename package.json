@@ -13,14 +13,15 @@
     "typecheck": "tsc --noEmit",
     "test:security": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-seguranca.mjs",
     "test:offline": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/test-offline-sync.mjs",
-    "test": "npm run typecheck && npm run lint && npm run test:offline && npm run test:security",
+    "test": "npm run typecheck && npm run lint && npm run test:offline && npm run test:scanner && npm run test:security",
     "seed": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/seed.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate.mjs",
     "db:status": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-status.mjs",
     "db:backup": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/backup.mjs",
     "db:setup-sql": "node scripts/gen-setup-sql.mjs",
     "importar:piloto": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/importar-usuarios-piloto.mjs",
-    "db:reconciliar": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-reconciliar.mjs"
+    "db:reconciliar": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-reconciliar.mjs",
+    "test:scanner": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --experimental-strip-types scripts/test-nfe-scanner.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

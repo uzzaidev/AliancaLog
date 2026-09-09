@@ -15,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { Button, Card, Input } from "@/components/ui";
+import { interpretarCodigoBipado } from "@/lib/nfe";
 import { assumirNf, type NfAssumida } from "@/app/motorista/actions";
 
 export function AssumirNf() {
@@ -34,6 +35,9 @@ export function AssumirNf() {
   // Dedupe do scanner: o BarcodeDetector dispara a cada frame lido.
   const ultimoRef = useRef<{ codigo: string; t: number }>({ codigo: "", t: 0 });
   const ocupadoRef = useRef(false);
+  // Leitura sem chave válida precisa aparecer duas vezes seguidas para ser
+  // aceita — ver `onScan`.
+  const candidatoRef = useRef<string | null>(null);
 
   const enviar = useCallback((codigo: string, confirmarTroca: boolean) => {
     setLido(codigo);
@@ -63,6 +67,22 @@ export function AssumirNf() {
       if (ocupadoRef.current) return;
       if (texto === ultimoRef.current.codigo && agora - ultimoRef.current.t < 2500)
         return;
+
+      // Leitura de código de barras é instável: o primeiro quadro decodificado
+      // costuma vir parcial (em 09/09, um DANFE devolveu "505584" — 6 dígitos de
+      // uma chave de 44). Aceitar esse primeiro quadro vira "nota não encontrada"
+      // numa nota que existe.
+      //
+      // Quando o texto vira uma chave de acesso válida, o dígito verificador já
+      // atesta a leitura e vale entrar na hora. Sem isso, exige ver o MESMO texto
+      // duas vezes seguidas antes de consultar o servidor.
+      const { chave } = interpretarCodigoBipado(texto);
+      if (!chave && candidatoRef.current !== texto) {
+        candidatoRef.current = texto;
+        return;
+      }
+
+      candidatoRef.current = null;
       ultimoRef.current = { codigo: texto, t: agora };
       enviar(texto, false);
     },
@@ -73,6 +93,7 @@ export function AssumirNf() {
     setRes(null);
     setErro(null);
     pendenteRef.current = null;
+    candidatoRef.current = null;
     ultimoRef.current = { codigo: "", t: 0 };
   }
 
@@ -196,8 +217,20 @@ function Resultado({
         </p>
         {codigoLido && (
           <div className="rounded-lg bg-canvas px-3 py-2 text-left">
-            <div className="text-[11px] font-medium text-gray-400">Código lido</div>
+            <div className="text-[11px] font-medium text-gray-400">
+              Código lido · {[...codigoLido].length} caracteres ·{" "}
+              {/^\d+$/.test(codigoLido) ? "só dígitos" : "com outros caracteres"}
+            </div>
             <div className="break-all font-mono text-xs text-ink">{codigoLido}</div>
+            {/* Uma chave de acesso tem 44 dígitos. Leitura curta é quadro
+                parcial: o motorista precisa saber que é para tentar de novo,
+                não que a nota está faltando no sistema. */}
+            {[...codigoLido].length < 44 && (
+              <div className="mt-1 text-[11px] text-warning">
+                Leitura incompleta — a chave do DANFE tem 44 dígitos. Tente
+                bipar de novo, com a câmera mais firme e o código bem iluminado.
+              </div>
+            )}
           </div>
         )}
         <Button variant="secondary" className="w-full" onClick={onLimpar}>
