@@ -23,20 +23,20 @@
 | Linguagem | TypeScript | `tsconfig.json` |
 | Framework | Next.js 16.2.9 (App Router) | [package.json](../../package.json) |
 | UI | React 19.2.4 + Tailwind v4 | [package.json](../../package.json) |
-| Package manager | pnpm 10 no deploy; npm também suportado localmente | `pnpm-lock.yaml`, `package-lock.json`, configuração da Vercel |
+| Package manager | npm em desenvolvimento, CI e deploy (correção de 10/09/2026) | `package-lock.json`, `vercel.json` |
 | Node exigido | ≥24 | [package.json](../../package.json) `engines`, [.nvmrc](../../.nvmrc) |
 | Database | PostgreSQL via Supabase, região `sa-east-1` | `supabase/migrations/`, [README.md](../../README.md) |
 | ORM | Nenhum — SQL puro em migrations + `@supabase/supabase-js`/`pg` direto | `lib/supabase/*.ts`, `scripts/migrate.mjs` |
 | Auth | Supabase Auth (JWT) + `@supabase/ssr` | `lib/supabase/{client,server,proxy,admin}.ts` |
 | Build tool | Turbopack (padrão do Next 16) | implícito no `next build` |
 | Test runner | Script Node próprio (sem framework) | `scripts/smoke-seguranca.mjs` |
-| Deploy | Vercel (inferido — HTTPS exigido por câmera/SW, sem `vercel.json` pois usa zero-config) | [CHECKPOINT.md](../governanca/CHECKPOINT.md), ausência de config = padrão Vercel para Next.js |
+| Deploy | Vercel; instalação/build explícitos desde 10/09/2026 | `vercel.json`, [CHECKPOINT.md](../governanca/CHECKPOINT.md) |
 | Observabilidade | Sentry (`@sentry/nextjs`) | `sentry.*.config.ts`, `instrumentation.ts` |
 | PWA | Service Worker próprio (cache estático + Background Sync) + manifest via App Router | `public/sw.js`, `app/manifest.ts` |
 
-**Nota sobre lockfiles:** a Vercel detecta e usa `pnpm-lock.yaml` com instalação
-congelada; ele precisa acompanhar toda mudança de dependências no `package.json`.
-Os scripts também funcionam via npm no ambiente local.
+**Nota sobre lockfiles (atualizada em 10/09/2026):** a autodetecção do lockfile
+pnpm desatualizado bloqueou dois deploys do scanner. Ele foi removido; usar
+somente npm/package-lock.json. `vercel.json` determina `npm ci`.
 
 ---
 

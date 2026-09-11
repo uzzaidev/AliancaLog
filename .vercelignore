@@ -1,0 +1,9 @@
+# A CLI da Vercel não usa .gitignore como lista completa de exclusões.
+# Credenciais vêm das variáveis configuradas no projeto Vercel.
+.env*
+.tmp/
+backups/
+material_estudo/
+material_estudo.zip
+test-results/
+playwright-report/

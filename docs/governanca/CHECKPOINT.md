@@ -3,7 +3,25 @@
 > **Onde estamos agora.** Atualize a cada sessão de trabalho.
 > Plano: [PLAN.md](./PLAN.md) · Lista marcável: [CHECKLIST.md](./CHECKLIST.md).
 
-**Última atualização:** 2026-09-09
+**Última atualização:** 2026-09-10
+
+## Scanner — bloqueio de publicação identificado (2026-09-10)
+
+- Usuário reportou que ainda não lê; correções foram commitadas e enviadas em
+  76a1dc6. Status público confirma falha da publicação na Vercel.
+- A publicação anterior 4aacc82 (troca para WASM) também falhou; último sucesso
+  verificado: 766eef3. O domínio não recebeu as duas rodadas de correção.
+- CI do GitHub passou. Log obtido após login Vercel confirmou
+  `ERR_PNPM_OUTDATED_LOCKFILE`: pnpm-lock.yaml não acompanhou as dependências.
+- Correção local: removido lockfile pnpm obsoleto; `vercel.json` fixa instalação
+  em `npm ci` e build em `npm run build`, usando package-lock.json como no CI.
+- Não houve nova alteração do algoritmo do scanner ou dados nesta sessão.
+- Validação: instalação limpa `npm ci` e 13 verificações de decoder passaram.
+  Prévia Vercel `dpl_HPUqThihz3z6eVns5nLh3McjvQqf` ficou READY usando as
+  variáveis do projeto; WASM 200 com hash idêntico ao testado e sw.js 200/v6.
+- `.vercelignore` exclui .env e arquivos locais das publicações pela CLI.
+  Commit/push autorizados pelo usuário; conferir READY e assets no domínio de
+  produção após o envio (prévia validada, aceite físico do iPhone pendente).
 
 ## Scanner DANFE — correções locais e validação (2026-09-09)
 

@@ -1,5 +1,47 @@
 ﻿# Scanner DANFE — diagnóstico e validação (09/09/2026)
 
+## Atualização de produção (10/09/2026)
+
+O relato de que ainda não lê foi investigado antes de nova alteração no decoder.
+Os status públicos do GitHub confirmaram:
+
+| Commit | Alteração | Publicação Vercel |
+| --- | --- | --- |
+| 766eef3 | Versão anterior à troca para WASM | Sucesso |
+| 4aacc82 | Troca para WASM | Falha |
+| 76a1dc6 | Correções desta investigação, commitadas pelo usuário | Falha |
+
+Em produção, /wasm/zxing_reader.wasm e /sw.js ainda redirecionam ao login sem
+sessão. Não há evidência de que o usuário tenha testado a versão corrigida no
+domínio de produção. O vídeo sem mira é compatível com a versão anterior às
+duas publicações que falharam.
+
+O check de qualidade/build do GitHub Actions do commit 76a1dc6 passou. Após login
+na CLI, o log privado do deployment
+[4XnH4FsGPjou3ASGTYGm8phzr3z4](https://vercel.com/uzzais-projects-caedcfa2/alianca-log/4XnH4FsGPjou3ASGTYGm8phzr3z4)
+confirmou `ERR_PNPM_OUTDATED_LOCKFILE`: Vercel escolheu pnpm 10 por encontrar
+`pnpm-lock.yaml`, que ainda continha @zxing/library e não tinha zxing-wasm,
+@playwright/test nem esbuild. A falha ocorreu na instalação, antes do build.
+
+Correção preparada: removido o lockfile pnpm obsoleto e criado `vercel.json`
+com `installCommand: npm ci` e `buildCommand: npm run build`. npm e
+package-lock.json passam a ser a única fonte de instalação, como no CI.
+Adicionado `.vercelignore` para a CLI excluir arquivos .env, backups e material
+local; a prévia utiliza as variáveis já configuradas no projeto Vercel.
+Isso corrige a causa comprovada da falha de publicação; o desempenho da câmera
+ainda precisa ser validado depois que o deploy estiver pronto.
+
+Validação desta correção: `npm ci` limpo e os 13 testes do decoder passaram.
+A [prévia validada](https://alianca-5o78fxzhs-uzzais-projects-caedcfa2.vercel.app)
+ficou READY na Vercel, deployment `dpl_HPUqThihz3z6eVns5nLh3McjvQqf`, usando
+as variáveis do projeto e sem arquivos .env locais. Após o build, GET do WASM
+respondeu 200 application/wasm e o SHA-256 correspondeu ao binário testado;
+sw.js respondeu 200 JavaScript com cache v6. Esses GETs usaram a autenticação
+da CLI para a proteção da prévia, sem sessão do app/Supabase.
+Commit/push da configuração autorizados pelo usuário; após o envio, verificar
+READY e os assets no domínio de produção. A prévia inicial de verificação foi
+removida, ficando a acima. Aceite da câmera física segue pendente.
+
 ## Evidências
 
 - Vídeo recebido: 116,85 segundos, gravação de tela de 384×832 pixels. O DANFE é

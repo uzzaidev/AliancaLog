@@ -38,8 +38,13 @@ Detalhe de cada papel em [PLAN.md § Time e responsabilidades](./docs/governanca
 
 ## Setup
 
+Use **npm** em desenvolvimento, CI e Vercel. O lockfile do projeto é
+`package-lock.json`; a Vercel executa `npm ci`, conforme `vercel.json`.
+Não adicione um segundo lockfile: um `pnpm-lock.yaml` desatualizado impediu
+a publicação das correções do scanner em setembro/2026.
+
 ### 1. Pré-requisitos
-- Node 24+ (exigido pelo `@zxing/library`; ver `.nvmrc`)
+- Node 24+ (ver `.nvmrc` e `engines` em `package.json`)
 - Um projeto Supabase (crie em https://supabase.com, **região South America / São Paulo**)
 
 ### 2. Variáveis de ambiente
