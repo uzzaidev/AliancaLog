@@ -60,9 +60,9 @@ const ITEMS: {
 
 export function StatCards({ resumo }: { resumo: ResumoDia }) {
   return (
-    <div className="flex divide-x divide-line overflow-x-auto rounded-xl border border-line bg-surface shadow-sm">
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:divide-x sm:divide-line sm:gap-0 sm:overflow-x-auto sm:rounded-xl sm:border sm:border-line sm:bg-surface sm:shadow-sm">
       {ITEMS.map((it) => (
-        <div key={it.key} className="min-w-[136px] flex-1">
+        <div key={it.key} className="min-w-0 rounded-xl border border-line bg-surface shadow-sm sm:min-w-[136px] sm:flex-1 sm:rounded-none sm:border-0 sm:shadow-none">
           <Kpi
             icon={it.icon}
             value={resumo[it.key]}

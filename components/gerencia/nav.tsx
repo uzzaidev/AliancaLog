@@ -51,19 +51,20 @@ export function GerenciaNav() {
 export function GerenciaBottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-dark-3 bg-dark pb-[env(safe-area-inset-bottom)] sm:hidden">
-      {LINKS.map((l) => {
+    <nav aria-label="Navegação da gerência" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-dark-3 bg-dark pb-[env(safe-area-inset-bottom)] sm:hidden">
+      {LINKS.filter((l) => l.href !== "/gerencia/diagnostico").map((l) => {
         const active = pathname.startsWith(l.href);
         const Icon = l.icon;
         return (
           <Link
             key={l.href}
             href={l.href}
-            className={`flex flex-1 touch-target flex-col items-center justify-center gap-0.5 pt-1.5 text-[10px] font-medium ${
+            aria-current={active ? "page" : undefined}
+            className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 pt-1.5 text-[11px] font-medium ${
               active ? "text-brand" : "text-gray-400"
             }`}
           >
-            <Icon size={20} stroke={2} />
+            <Icon size={22} stroke={2} />
             {l.label === "Importar NFs" ? "Importar" : l.label}
           </Link>
         );

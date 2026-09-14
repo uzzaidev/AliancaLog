@@ -3,6 +3,8 @@
 // Barra de filtros do dashboard. Escreve os filtros na URL (searchParams) e o
 // Server Component relê os dados filtrados.
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { IconAdjustmentsHorizontal, IconChevronDown } from "@tabler/icons-react";
 import { NOTA_STATUS_META, type NotaStatus } from "@/lib/types";
 import type { EmpresaItem, MotoristaItem } from "@/lib/data/gerencia";
 
@@ -28,6 +30,7 @@ export function Filtros({
 }) {
   const router = useRouter();
   const params = useSearchParams();
+  const [aberto, setAberto] = useState(false);
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
@@ -38,22 +41,40 @@ export function Filtros({
 
   // Chip de filtro: borda cinza; quando um valor está selecionado, fica laranja.
   function selectCls(ativo: boolean) {
-    return `cursor-pointer rounded-md border bg-surface px-2.5 py-2 text-sm outline-none transition-colors focus:border-brand ${
+    return `min-h-12 w-full cursor-pointer rounded-md border bg-surface px-3 py-2 text-base outline-none transition-colors focus:border-brand sm:min-h-0 sm:w-auto sm:px-2.5 sm:text-sm ${
       ativo
         ? "border-brand bg-brand-50 text-brand"
         : "border-line text-gray-700"
     }`;
   }
 
-  const temFiltro =
-    !!params.get("status") ||
-    !!params.get("motorista") ||
-    !!params.get("empresa") ||
-    !!params.get("periodo") ||
-    !!params.get("emissao");
+  const totalFiltros = ["status", "motorista", "empresa", "periodo", "emissao"]
+    .filter((key) => !!params.get(key)).length;
+  const temFiltro = totalFiltros > 0;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div>
+      <button
+        type="button"
+        onClick={() => setAberto((atual) => !atual)}
+        aria-expanded={aberto}
+        aria-controls="filtros-gerencia"
+        className="flex min-h-12 w-full items-center justify-between rounded-xl border border-line bg-surface px-3 text-sm font-semibold text-ink shadow-sm sm:hidden"
+      >
+        <span className="flex items-center gap-2">
+          <IconAdjustmentsHorizontal size={19} /> Filtrar notas
+          {temFiltro && (
+            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand">
+              {totalFiltros}
+            </span>
+          )}
+        </span>
+        <IconChevronDown size={18} className={aberto ? "rotate-180" : ""} />
+      </button>
+      <div
+        id="filtros-gerencia"
+        className={`${aberto ? "grid" : "hidden"} mt-2 grid-cols-1 gap-2 rounded-xl border border-line bg-surface p-3 sm:mt-0 sm:flex sm:flex-wrap sm:items-center sm:border-0 sm:bg-transparent sm:p-0`}
+      >
       <select
         className={selectCls(!!params.get("periodo"))}
         value={params.get("periodo") ?? ""}
@@ -68,13 +89,13 @@ export function Filtros({
       </select>
 
       <label className={selectCls(!!params.get("emissao"))}>
-        <span className="mr-2 text-xs font-medium">Emissão no sistema</span>
+        <span className="mr-2 block text-xs font-medium sm:inline">Emissão no sistema</span>
         <input
           type="date"
           value={params.get("emissao") ?? ""}
           onChange={(e) => setParam("emissao", e.target.value)}
           aria-label="Filtrar pela data de emissão no sistema"
-          className="bg-transparent text-sm outline-none"
+          className="w-full bg-transparent text-base outline-none sm:w-auto sm:text-sm"
         />
       </label>
 
@@ -82,6 +103,7 @@ export function Filtros({
         className={selectCls(!!params.get("status"))}
         value={params.get("status") ?? ""}
         onChange={(e) => setParam("status", e.target.value)}
+        aria-label="Status"
       >
         <option value="">Todos os status</option>
         {(Object.keys(NOTA_STATUS_META) as NotaStatus[]).map((s) => (
@@ -95,6 +117,7 @@ export function Filtros({
         className={selectCls(!!params.get("motorista"))}
         value={params.get("motorista") ?? ""}
         onChange={(e) => setParam("motorista", e.target.value)}
+        aria-label="Motorista"
       >
         <option value="">Todos os motoristas</option>
         {motoristas.map((m) => (
@@ -108,6 +131,7 @@ export function Filtros({
         className={selectCls(!!params.get("empresa"))}
         value={params.get("empresa") ?? ""}
         onChange={(e) => setParam("empresa", e.target.value)}
+        aria-label="Empresa"
       >
         <option value="">Todas as empresas</option>
         {empresas.map((em) => (
@@ -120,11 +144,12 @@ export function Filtros({
       {temFiltro && (
         <button
           onClick={() => router.push("/gerencia/dashboard")}
-          className="text-sm font-medium text-brand hover:underline"
+          className="min-h-11 text-sm font-medium text-brand hover:underline sm:min-h-0"
         >
           Limpar
         </button>
       )}
+      </div>
     </div>
   );
 }

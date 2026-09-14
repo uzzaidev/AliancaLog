@@ -16,6 +16,7 @@ import {
   IconTrash,
   IconClockExclamation,
   IconBarcode,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { Button, Card, StatusBadge } from "@/components/ui";
 import { ComprovanteModal } from "@/components/comprovante-modal";
@@ -129,7 +130,7 @@ export function NotasList({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative max-w-xs flex-1">
+        <div className="relative w-full flex-1 sm:max-w-xs">
           <IconSearch
             size={15}
             className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
@@ -138,7 +139,7 @@ export function NotasList({
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por NF, cliente, endereço…"
-            className="w-full rounded-md border border-line bg-gray-50 py-2 pl-8 pr-3 text-sm text-ink outline-none focus:border-brand focus:bg-surface"
+            className="min-h-12 w-full rounded-md border border-line bg-gray-50 py-2 pl-8 pr-3 text-base text-ink outline-none focus:border-brand focus:bg-surface sm:min-h-0 sm:text-sm"
           />
         </div>
 
@@ -169,7 +170,7 @@ export function NotasList({
         )}
 
         {selecionadas.size > 0 && (
-          <div className="flex items-center gap-2 rounded-md border border-line bg-gray-50 px-2.5 py-1.5">
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-md border border-line bg-gray-50 px-2.5 py-1.5 sm:w-auto">
             <span className="text-xs font-medium text-ink">
               {selecionadas.size} selecionada(s)
             </span>
@@ -201,7 +202,86 @@ export function NotasList({
           Nenhuma NF encontrada para o filtro atual.
         </Card>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-line bg-surface shadow-sm">
+        <>
+          <div className="space-y-2 sm:hidden" aria-label="Notas fiscais">
+            {filtradas.map((nf) => {
+              const aberto = expandida === nf.id;
+              return (
+                <article
+                  key={nf.id}
+                  className="overflow-hidden rounded-xl border border-line bg-surface shadow-sm"
+                >
+                  <div className="flex items-start gap-2 p-3">
+                    <button
+                      type="button"
+                      onClick={() => setExpandida(aberto ? null : nf.id)}
+                      aria-expanded={aberto}
+                      aria-label={`Detalhes da NF ${nf.numero_nf}`}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className={`text-base font-bold ${idsDuplicados.has(nf.id) ? "text-warning" : "text-dark"}`}>
+                          NF {nf.numero_nf}
+                          {idsDuplicados.has(nf.id) && <IconCopy size={14} className="ml-1 inline" aria-label="Número repetido" />}
+                        </span>
+                        <StatusBadge status={nf.status} />
+                        {idsParadas.has(nf.id) && (
+                          <span className="rounded-full bg-danger-50 px-2 py-0.5 text-xs font-semibold text-danger">
+                            {diasParada(nf.data_entrega)}d parada
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-2 block break-words text-sm font-semibold leading-snug text-ink">
+                        {nf.destinatario_nome}
+                      </span>
+                      {nf.empresa_nome && (
+                        <span className="mt-0.5 block break-words text-xs text-info">{nf.empresa_nome}</span>
+                      )}
+                      <span className="mt-2 flex items-start gap-1 text-xs text-muted">
+                        <IconMapPin size={14} className="mt-0.5 shrink-0" />
+                        <span className="line-clamp-2 break-words">
+                          {nf.destinatario_endereco}{nf.cidade ? `, ${nf.cidade}` : ""}
+                        </span>
+                      </span>
+                      <span className="mt-2 flex flex-wrap items-center justify-between gap-x-2 text-xs text-muted">
+                        <span>{nf.motorista_nome ?? "Não atribuído"}{nf.assumida_em && " · bipada"}</span>
+                        <span>{hora(nf.updated_at)}</span>
+                      </span>
+                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand">
+                        {aberto ? "Ocultar detalhes" : "Ver detalhes"}
+                        <IconChevronDown size={14} className={aberto ? "rotate-180" : ""} />
+                      </span>
+                    </button>
+                    <label className="flex min-h-11 min-w-11 items-start justify-end pt-1">
+                      <input
+                        type="checkbox"
+                        checked={selecionadas.has(nf.id)}
+                        onChange={() => toggleSelecao(nf.id)}
+                        className="h-5 w-5 accent-brand"
+                        aria-label={`Selecionar NF ${nf.numero_nf}`}
+                      />
+                    </label>
+                  </div>
+                  {nf.foto_url && (
+                    <button
+                      type="button"
+                      onClick={() => setAberta(nf.id)}
+                      className="flex min-h-11 w-full items-center gap-2 border-t border-line px-3 text-sm font-medium text-brand"
+                    >
+                      <IconPhoto size={17} /> Ver comprovante
+                    </button>
+                  )}
+                  {aberto && (
+                    <div className="border-t border-line">
+                      <DetailPanel nf={nf} motoristas={motoristas} onVerFoto={() => setAberta(nf.id)} />
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+            <p className="px-1 text-xs text-muted">{filtradas.length} de {notas.length} notas exibidas</p>
+          </div>
+        <div className="hidden overflow-x-auto rounded-xl border border-line bg-surface shadow-sm sm:block">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b-2 border-line bg-gray-50 text-left">
@@ -353,6 +433,7 @@ export function NotasList({
             </tfoot>
           </table>
         </div>
+        </>
       )}
 
       <ComprovanteModal
@@ -367,8 +448,8 @@ export function NotasList({
 function Linha({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-2">
-      <span className="w-28 shrink-0 text-[11px] text-gray-400">{label}</span>
-      <span className="text-xs font-medium text-gray-800">{value}</span>
+      <span className="w-24 shrink-0 text-[11px] text-gray-400 sm:w-28">{label}</span>
+      <span className="min-w-0 break-words text-xs font-medium text-gray-800">{value}</span>
     </div>
   );
 }
@@ -402,7 +483,7 @@ function DetailPanel({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-5 sm:flex-row">
+    <div className="flex flex-col gap-4 p-3 sm:flex-row sm:gap-6 sm:p-5">
       <div className="flex-1 space-y-1.5">
         <div className="mb-2.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-brand">
           <IconUser size={13} /> Detalhes da entrega
@@ -452,7 +533,7 @@ function DetailPanel({
             <select
               value={motoristaId}
               onChange={(e) => setMotoristaId(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs text-ink outline-none focus:border-brand"
+              className="min-h-11 min-w-0 max-w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-base text-ink outline-none focus:border-brand sm:min-h-0 sm:text-xs"
             >
               <option value="">— trocar motorista —</option>
               {motoristas
@@ -466,7 +547,7 @@ function DetailPanel({
             <Button
               onClick={trocar}
               disabled={!motoristaId || pending}
-              className="px-2.5 py-1.5 text-xs"
+              className="min-h-11 px-2.5 py-1.5 text-xs sm:min-h-0"
             >
               {pending ? "Trocando…" : "Confirmar troca"}
             </Button>
@@ -538,7 +619,7 @@ function LocalizacaoBlock({ nf }: { nf: NotaRow }) {
 
   return (
     <div className="mt-3 border-t border-line pt-3 text-xs">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
         {nf.geocode_status === "ok" ? (
           <span className="flex items-center gap-1.5 text-muted">
             <IconMapPin size={14} className="text-brand" /> Localização no mapa OK
@@ -568,26 +649,26 @@ function LocalizacaoBlock({ nf }: { nf: NotaRow }) {
               value={endereco}
               onChange={(e) => setEndereco(e.target.value)}
               placeholder="Endereço"
-              className="w-full rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+              className="min-h-11 w-full min-w-0 rounded-md border border-line bg-surface px-2 py-1.5 text-base outline-none focus:border-brand sm:min-h-0 sm:text-xs"
             />
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5 sm:flex-nowrap">
               <input
                 value={cidade}
                 onChange={(e) => setCidade(e.target.value)}
                 placeholder="Cidade"
-                className="w-full rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+                className="min-h-11 w-full min-w-0 flex-1 rounded-md border border-line bg-surface px-2 py-1.5 text-base outline-none focus:border-brand sm:min-h-0 sm:text-xs"
               />
               <Button
                 onClick={tentarEndereco}
                 disabled={pending || !endereco.trim()}
-                className="shrink-0 px-2.5 py-1.5 text-xs"
+                className="min-h-11 shrink-0 px-2.5 py-1.5 text-xs sm:min-h-0"
               >
                 Tentar geocodificar
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 border-t border-line pt-2.5">
+          <div className="flex flex-wrap items-center gap-1.5 border-t border-line pt-2.5 sm:flex-nowrap">
             <span className="shrink-0 text-[11px] text-gray-400">
               ou coordenada manual:
             </span>
@@ -596,19 +677,19 @@ function LocalizacaoBlock({ nf }: { nf: NotaRow }) {
               onChange={(e) => setLat(e.target.value)}
               placeholder="lat"
               inputMode="decimal"
-              className="w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+              className="min-h-11 w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-base outline-none focus:border-brand sm:min-h-0 sm:text-xs"
             />
             <input
               value={lng}
               onChange={(e) => setLng(e.target.value)}
               placeholder="lng"
               inputMode="decimal"
-              className="w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-xs outline-none focus:border-brand"
+              className="min-h-11 w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-base outline-none focus:border-brand sm:min-h-0 sm:text-xs"
             />
             <Button
               onClick={salvarManual}
               disabled={pending || !lat.trim() || !lng.trim()}
-              className="shrink-0 px-2.5 py-1.5 text-xs"
+              className="min-h-11 shrink-0 px-2.5 py-1.5 text-xs sm:min-h-0"
             >
               Salvar
             </Button>

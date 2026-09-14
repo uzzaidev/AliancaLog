@@ -37,9 +37,9 @@ export function Kpi({
 }) {
   const t = TONES[tone];
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
+    <div className="flex items-center gap-3 px-3 py-3.5 sm:px-4">
       <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${t.box}`}
+        className={`hidden h-9 w-9 shrink-0 items-center justify-center rounded-md sm:flex ${t.box}`}
       >
         <Icon size={20} className={t.icon} stroke={2} />
       </span>
@@ -49,7 +49,7 @@ export function Kpi({
         >
           {value}
         </span>
-        <span className="mt-1 block truncate text-xs text-muted">{label}</span>
+        <span className="mt-1 block text-xs leading-snug text-muted sm:truncate">{label}</span>
         {hint && (
           <span className="mt-0.5 block truncate text-[10px] text-gray-400">
             {hint}

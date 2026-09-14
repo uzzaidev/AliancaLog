@@ -11,7 +11,7 @@ export default async function GerenciaLayout({
   return (
     <div className="min-h-full">
       <GerenciaTopbar email={user.email} />
-      <main className="mx-auto max-w-[1400px] px-4 py-5 pb-20 sm:pb-5">
+      <main className="mx-auto max-w-[1400px] px-3 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-5 sm:pb-5">
         {children}
       </main>
       <GerenciaBottomNav />
