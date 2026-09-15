@@ -22,7 +22,6 @@
     "importar:piloto": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/importar-usuarios-piloto.mjs",
     "db:reconciliar": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate-reconciliar.mjs",
     "test:scanner": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --experimental-strip-types scripts/test-nfe-scanner.mjs",
-    "test:scanner:browser": "node scripts/test-scanner-browser.mjs"
     "test:scanner:browser": "node scripts/test-scanner-browser.mjs",
     "test:sentry": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/test-sentry.mjs"
   },
