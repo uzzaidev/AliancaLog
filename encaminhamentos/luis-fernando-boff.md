@@ -225,6 +225,7 @@ Nenhum é código de produto: é configuração e validação. São os mesmos qu
 
 | # | O que | Por que trava a entrega | Status em 07/09 |
 |---|---|---|---|
+| 1 | **Sentry na Vercel** — cadastrar `NEXT_PUBLIC_SENTRY_DSN` e disparar teste | Sem isso, falha em campo não avisa ninguém. | ✅ **CÓDIGO E TELA PRONTOS**: tela `/gerencia/diagnostico` com botão de teste Server e Client (`area: offline-sync`). Guia passo a passo escrito em `docs/governanca/GUIA_CONFIGURACOES_PILOTO.md`. Só falta cadastrar a DSN na Vercel. |
 | 1 | **Sentry na Vercel** — cadastrar `NEXT_PUBLIC_SENTRY_DSN` e disparar teste | Sem isso, falha em campo não avisa ninguém. | ✅ **100% CONCLUÍDO E VALIDADO em 15/09**: DSN cadastrada na Vercel e no `.env.local`. Evento de teste disparado com sucesso (HTTP 200 OK, Event ID: `9e47fb58a78b0d4e3126c84a5acf0cb0`, tags `area: offline-sync` e `piloto: true`). |
 | 2 | **Backup automático** | Entregar com garantia de restauração | ✅ **VALIDADO em 07/09**: disparado via `workflow_dispatch` (run 34145951010), artifact `db-backup-15.sql.gz` gerado com `postgresql-client-17` e salvo com retenção de 30 dias. |
 | 3 | **Logins reais** — 16 motoristas + ~20 empresas | Usuários reais operando o piloto | ✅ **SCRIPT DE CARGA PRONTO**: `npm run importar:piloto` (`scripts/importar-usuarios-piloto.mjs`) com templates gerados, criação idempotente no Supabase Auth, veículos e tabelas de domínio. Aguarda o Vítor/Matheus preencherem os CSVs. |
