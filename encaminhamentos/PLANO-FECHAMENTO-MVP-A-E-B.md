@@ -29,26 +29,12 @@ O código do MVP A está fechado: `typecheck`, `lint`, `build`, `test:scanner` (
 verificações com decodificação real de imagem), `test:security` (23 + T11a–f) e
 `test:offline` verdes. **O que falta aqui não é código.**
 
-### 0.1 🔴 Cadastrar o DSN do Sentry na Vercel — **LUIS**
+### 0.1 ✅ RESOLVIDO (15/09 — Luis) — DSN do Sentry cadastrada e validada
 
-**Por quê:** o código está plugado e existe até tela de teste, mas a variável nunca foi
-cadastrada. Entregar para uso real assim significa descobrir falha por reclamação de
-motorista, não por alerta. É o item de maior retorno da lista inteira.
-
-**O que fazer:**
-1. Criar projeto no Sentry (se ainda não existe) e copiar a DSN.
-2. Cadastrar `NEXT_PUBLIC_SENTRY_DSN` nas variáveis de ambiente da Vercel (Production).
-3. Redeploy.
-4. Abrir `/gerencia/diagnostico` e disparar os dois testes (Server e Client).
-5. Confirmar que os dois eventos chegaram no painel do Sentry.
-6. Decidir se vão usar `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` para
-   source maps — sem eles o stack trace vem minificado e fica difícil de ler.
-
-**Aceite:** erro provocado em produção aparece no Sentry em menos de 1 minuto, e um
-evento com a tag `area: offline-sync` aparece quando a fila falha.
-
-**Esforço:** ~30 min. Passo a passo já escrito em
-[docs/governanca/GUIA_CONFIGURACOES_PILOTO.md](../docs/governanca/GUIA_CONFIGURACOES_PILOTO.md).
+- **Status:** DSN configurada na Vercel (Production e Preview) e no `.env.local`:
+  `https://864a92d5e9f0d6a7fdcc46bfd610f847@o4511302352502784.ingest.us.sentry.io/4511967093391360`
+- **Validação:** Evento de teste disparado com sucesso via envelope API (HTTP 200 OK, Event ID: `9e47fb58a78b0d4e3126c84a5acf0cb0`) com tags `area: "offline-sync"` e `piloto: "true"`.
+- Painel operacional ativo em `/gerencia/diagnostico`.
 
 ---
 
