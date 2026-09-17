@@ -71,7 +71,7 @@ export function CanhotoForm({
   const [foto, setFoto] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [status, setStatus] = useState<CanhotoStatus | null>(null);
-  const [tipo, setTipo] = useState<OcorrenciaTipo>("item_faltando");
+  const [tipo, setTipo] = useState<OcorrenciaTipo>("canhoto_retido");
   const [desc, setDesc] = useState("");
   // Observação livre (opcional) para aceita/recusada.
   const [obs, setObs] = useState("");

@@ -12,11 +12,13 @@ import {
   IconUpload,
   IconUsers,
   IconActivity,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
 
 const LINKS = [
   { href: "/gerencia/dashboard", label: "Painel", icon: IconLayoutDashboard },
   { href: "/gerencia/romaneios", label: "Romaneios", icon: IconFileInvoice },
+  { href: "/gerencia/ocorrencias", label: "Ocorrências", icon: IconAlertTriangle },
   { href: "/gerencia/importar", label: "Importar NFs", icon: IconUpload },
   { href: "/gerencia/cadastros", label: "Cadastros", icon: IconUsers },
   { href: "/gerencia/diagnostico", label: "Diagnóstico", icon: IconActivity },

@@ -170,7 +170,7 @@ async function main() {
       p_foto_chegada_url: "smoke/chegada.jpg",
       p_lat: null, p_lng: null, p_gps_precisao: null,
       p_observacao: null,
-      p_ocorrencia_tipo: "avaria",
+      p_ocorrencia_tipo: "cliente_ausente",
       p_ocorrencia_desc: "smoke retry",
     };
 
@@ -349,7 +349,7 @@ async function main() {
         const cidAlheio = tag + "-oc-alheia";
         criados.ocorrencias.push(cidAlheio);
         await admin.from("ocorrencias").insert({
-          nota_fiscal_id: nfOutraEmp, tipo: "avaria", descricao: "de outra empresa",
+          nota_fiscal_id: nfOutraEmp, tipo: "nota_devolucao", descricao: "de outra empresa",
           client_id: cidAlheio,
         });
         naoVeNada(

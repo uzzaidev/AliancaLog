@@ -8,6 +8,7 @@ import {
   IconCircleCheck,
   IconCircleX,
   IconAlertTriangle,
+  IconDownload,
   IconClock,
   IconPhoto,
   IconEye,
@@ -34,6 +35,13 @@ const ICONE: Record<
   aceita: { icon: IconCircleCheck, box: "bg-success-50", fg: "text-success" },
   recusada: { icon: IconCircleX, box: "bg-danger-50", fg: "text-danger" },
   ocorrencia: {
+    icon: IconAlertTriangle,
+    box: "bg-warning-50",
+    fg: "text-warning",
+  },
+  // Entregue com pendência administrativa aberta (0030): visual de atenção,
+  // não de erro — a entrega aconteceu, falta resolver o documento.
+  pendencia: {
     icon: IconAlertTriangle,
     box: "bg-warning-50",
     fg: "text-warning",
@@ -82,7 +90,9 @@ function montarTimeline(c: ComprovanteDetalhe): TimelineStep[] {
 export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
   const [expandida, setExpandida] = useState<string | null>(null);
   const [cache, setCache] = useState<Record<string, CacheVal>>({});
-  const [lightbox, setLightbox] = useState<string | null>(null);
+  // Guarda a URL e o nome do arquivo: a Carol arquiva os canhotos por NF, então
+  // o download precisa sair nomeado, não como "download.jpg".
+  const [lightbox, setLightbox] = useState<{ url: string; nome: string } | null>(null);
 
   async function toggle(id: string) {
     if (expandida === id) return setExpandida(null);
@@ -137,6 +147,23 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
                   {nf.destinatario_nome}
                   {nf.cidade ? ` — ${nf.cidade}` : ""}
                 </div>
+                {/* O que aconteceu, direto na lista. Antes só existia o selo de
+                    status: o cliente via "ocorrência" e precisava abrir NF por NF
+                    para descobrir o motivo. */}
+                {nf.ocorrencia && (
+                  <div className="mt-1 flex items-start gap-1 text-xs font-medium text-danger">
+                    <IconAlertTriangle size={13} className="mt-0.5 shrink-0" />
+                    <span className="min-w-0">
+                      {OCORRENCIA_LABEL[nf.ocorrencia.tipo]}
+                      {nf.ocorrencia.descricao && (
+                        <span className="font-normal text-gray-600">
+                          {" "}
+                          — {nf.ocorrencia.descricao}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
               <IconChevronDown
                 size={18}
@@ -172,7 +199,7 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
                           </div>
                         </div>
                         <button
-                          onClick={() => setLightbox(comp.foto_chegada_url)}
+                          onClick={() => setLightbox({ url: comp.foto_chegada_url!, nome: `NF-${nf.numero_nf}-chegada.jpg` })}
                           className="flex items-center gap-1 text-sm font-bold text-brand"
                         >
                           <IconEye size={15} /> Ver
@@ -195,7 +222,7 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
                           )}
                         </div>
                         <button
-                          onClick={() => setLightbox(comp.foto_url)}
+                          onClick={() => setLightbox({ url: comp.foto_url!, nome: `NF-${nf.numero_nf}-canhoto.jpg` })}
                           className="flex items-center gap-1 text-sm font-bold text-brand"
                         >
                           <IconEye size={15} /> Ver
@@ -217,12 +244,24 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
         title="Foto do canhoto"
       >
         {lightbox && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={lightbox}
-            alt="Canhoto"
-            className="max-h-[70vh] w-full rounded-lg bg-black object-contain"
-          />
+          <div className="space-y-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={lightbox.url}
+              alt="Canhoto"
+              className="max-h-[70vh] w-full rounded-lg bg-black object-contain"
+            />
+            {/* O parâmetro `download` faz o Storage responder com
+                Content-Disposition: attachment. Sem ele o navegador só abre a
+                imagem numa aba, e quem arquiva canhoto teria que salvar no
+                botão direito, arquivo por arquivo. */}
+            <a
+              href={`${lightbox.url}&download=${encodeURIComponent(lightbox.nome)}`}
+              className="flex touch-target w-full items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-white hover:bg-brand-700"
+            >
+              <IconDownload size={17} /> Baixar foto
+            </a>
+          </div>
         )}
       </Modal>
     </>

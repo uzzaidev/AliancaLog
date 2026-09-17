@@ -12,7 +12,8 @@ export type NotaStatus =
   | "em_rota"
   | "aceita"
   | "recusada"
-  | "ocorrencia";
+  | "ocorrencia"
+  | "pendencia";
 
 // Status final possível registrado pelo motorista no canhoto.
 export type CanhotoStatus = "aceita" | "recusada" | "ocorrencia";
@@ -45,11 +46,10 @@ export const NF_STATUS_ABERTOS: NotaStatus[] = [
 ];
 
 export type OcorrenciaTipo =
-  | "item_faltando"
+  | "canhoto_retido"
+  | "nota_devolucao"
   | "endereco_nao_encontrado"
   | "cliente_ausente"
-  | "avaria"
-  | "canhoto_retido"
   | "outro";
 
 // NF na visão do motorista (compartilhada entre data layer e componentes client).
@@ -97,16 +97,31 @@ export const NOTA_STATUS_META: Record<
   aceita: { label: "Aceita", tone: "success" },
   recusada: { label: "Recusada", tone: "danger" },
   ocorrencia: { label: "Ocorrência", tone: "warning" },
+  // Entregue, mas com pendência administrativa aberta (migration 0030) —
+  // canhoto retido ou nota de devolução. Não é "a fazer" nem "concluída".
+  pendencia: { label: "Pendência", tone: "warning" },
 };
 
+// Ordem importa: é a ordem dos botões na tela do motorista. Os dois primeiros
+// geram PENDÊNCIA (não voltam para a fila de entrega — ver 0030).
 export const OCORRENCIA_LABEL: Record<OcorrenciaTipo, string> = {
-  item_faltando: "Item faltando",
+  canhoto_retido: "Canhoto retido",
+  nota_devolucao: "Nota de devolução",
   endereco_nao_encontrado: "Endereço não encontrado",
   cliente_ausente: "Cliente ausente",
-  avaria: "Avaria",
-  canhoto_retido: "Canhoto retido",
   outro: "Outro",
 };
+
+/**
+ * Tipos que deixam a NF em PENDÊNCIA administrativa em vez de devolvê-la à
+ * fila de entrega. Espelha `ocorrencia_gera_pendencia()` no banco (0030) —
+ * a regra real é a do Postgres; esta cópia existe só para a UI antecipar o
+ * texto de ajuda ao motorista.
+ */
+export const OCORRENCIA_PENDENCIA: OcorrenciaTipo[] = [
+  "canhoto_retido",
+  "nota_devolucao",
+];
 
 // Detalhe do comprovante de entrega (modal da gerência e do cliente).
 // foto_url já vem como URL assinada temporária (não o caminho cru do bucket).
