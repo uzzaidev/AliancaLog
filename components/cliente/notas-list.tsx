@@ -18,7 +18,10 @@ import { Card } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { Timeline, type TimelineStep } from "@/components/ui/timeline";
 import { getComprovanteCliente } from "@/app/cliente/notas/actions";
+import { EncerrarNota } from "@/components/cliente/encerrar-nota";
 import {
+  NF_STATUS_ENCERRADAS,
+  NF_STATUS_FINAIS,
   OCORRENCIA_LABEL,
   type ComprovanteDetalhe,
   type NotaStatus,
@@ -48,6 +51,10 @@ const ICONE: Record<
   },
   em_rota: { icon: IconClock, box: "bg-info-50", fg: "text-info" },
   pendente: { icon: IconClock, box: "bg-gray-100", fg: "text-gray-400" },
+  // Encerradas sem entrega (0031): cinza apagado, como a operação pediu —
+  // ficam visíveis no histórico sem competir com as entregas ativas.
+  substituida: { icon: IconCircleX, box: "bg-gray-100", fg: "text-gray-400" },
+  cancelada: { icon: IconCircleX, box: "bg-gray-100", fg: "text-gray-400" },
 };
 
 // Fuso fixo da operação — ver o porquê em lib/date.ts (hidratação + hora correta).
@@ -172,6 +179,13 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
                 }`}
               />
             </button>
+
+            {/* Refaturar/cancelar só faz sentido no que ainda não foi entregue —
+                a mesma regra que `nf_pode_encerrar()` aplica no banco (0031).
+                Aqui é só para não oferecer o botão que a RPC recusaria. */}
+            {!NF_STATUS_FINAIS.includes(nf.status) &&
+              !NF_STATUS_ENCERRADAS.includes(nf.status) &&
+              nf.status !== "pendencia" && <EncerrarNota nf={nf} />}
 
             {aberto && (
               <div className="border-t border-gray-100 bg-gray-50">

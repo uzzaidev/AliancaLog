@@ -30,7 +30,7 @@ import {
   definirCoordenadaManual,
 } from "@/app/gerencia/dashboard/geocode-actions";
 import type { MotoristaItem, NotaRow } from "@/lib/data/gerencia";
-import { NF_STATUS_FINAIS } from "@/lib/types";
+import { NF_STATUS_ENCERRADAS, NF_STATUS_FINAIS } from "@/lib/types";
 import { DIAS_PARA_ALERTA, diasParada, isNotaParada } from "@/lib/alertas";
 import { horaSP } from "@/lib/date";
 
@@ -206,10 +206,14 @@ export function NotasList({
           <div className="space-y-2 sm:hidden" aria-label="Notas fiscais">
             {filtradas.map((nf) => {
               const aberto = expandida === nf.id;
+              // Substituída/cancelada continua no histórico, mas apagada e
+              // riscada — a operação pediu "cinza apagadinho" para não competir
+              // com as entregas ativas.
+              const encerrada = NF_STATUS_ENCERRADAS.includes(nf.status);
               return (
                 <article
                   key={nf.id}
-                  className="overflow-hidden rounded-xl border border-line bg-surface shadow-sm"
+                  className={`overflow-hidden rounded-xl border border-line bg-surface shadow-sm ${encerrada ? "opacity-60" : ""}`}
                 >
                   <div className="flex items-start gap-2 p-3">
                     <button
@@ -221,10 +225,17 @@ export function NotasList({
                     >
                       <span className="flex flex-wrap items-center gap-2">
                         <span className={`text-base font-bold ${idsDuplicados.has(nf.id) ? "text-warning" : "text-dark"}`}>
-                          NF {nf.numero_nf}
+                          <span className={encerrada ? "line-through" : ""}>
+                            NF {nf.numero_nf}
+                          </span>
                           {idsDuplicados.has(nf.id) && <IconCopy size={14} className="ml-1 inline" aria-label="Número repetido" />}
                         </span>
                         <StatusBadge status={nf.status} />
+                        {nf.substituida_por_numero && (
+                          <span className="text-xs font-medium text-info">
+                            → NF {nf.substituida_por_numero}
+                          </span>
+                        )}
                         {idsParadas.has(nf.id) && (
                           <span className="rounded-full bg-danger-50 px-2 py-0.5 text-xs font-semibold text-danger">
                             {diasParada(nf.data_entrega)}d parada

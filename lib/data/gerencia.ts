@@ -108,6 +108,10 @@ export type NotaRow = {
   motorista_nome: string | null;
   /** Preenchido quando foi o MOTORISTA que assumiu a NF bipando (migration 0026). */
   assumida_em: string | null;
+  /** Refaturamento (0031): número da NF que tomou o lugar desta. */
+  substituida_por_numero: string | null;
+  /** Por que foi substituída/cancelada — texto do embarcador. */
+  motivo_encerramento: string | null;
   // Data-alvo da entrega — base da regra de "NF parada" (lib/alertas.ts, A-008).
   data_entrega: string;
   updated_at: string;
@@ -136,7 +140,7 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
   let q = supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,data_entrega,updated_at,foto_url,motorista_id,assumida_em,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas!motorista_id(usuarios(nome))",
+      "id,numero_nf,status,destinatario_nome,destinatario_endereco,cidade,data_entrega,updated_at,foto_url,motorista_id,assumida_em,motivo_encerramento,lat,lng,geocode_status,geocode_erro,empresas_clientes(nome),motoristas!motorista_id(usuarios(nome)),substituta:notas_fiscais!substituida_por(numero_nf)",
     )
     .order("updated_at", { ascending: false });
 
@@ -188,6 +192,9 @@ export async function getNotasDoDia(f: NotaFiltro): Promise<NotaRow[]> {
       motorista_id: (r.motorista_id as string) ?? null,
       motorista_nome: motorista?.usuarios?.nome ?? null,
       assumida_em: (r.assumida_em as string) ?? null,
+      substituida_por_numero:
+        (r.substituta as { numero_nf?: string } | null)?.numero_nf ?? null,
+      motivo_encerramento: (r.motivo_encerramento as string) ?? null,
       lat: (r.lat as number) ?? null,
       lng: (r.lng as number) ?? null,
       geocode_status: (r.geocode_status as "ok" | "falhou") ?? null,

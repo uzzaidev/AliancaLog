@@ -13,7 +13,9 @@ export type NotaStatus =
   | "aceita"
   | "recusada"
   | "ocorrencia"
-  | "pendencia";
+  | "pendencia"
+  | "substituida"
+  | "cancelada";
 
 // Status final possível registrado pelo motorista no canhoto.
 export type CanhotoStatus = "aceita" | "recusada" | "ocorrencia";
@@ -38,6 +40,12 @@ export const NF_STATUS_FINAIS: NotaStatus[] = ["aceita"];
 //   ocorrencia → tentada, deu problema  ─┐ ambas voltaram ao painel
 //   recusada   → tentada, cliente recusou ┘ (sem romaneio nem motorista)
 // Só `aceita` encerra (ver NF_STATUS_FINAIS).
+/**
+ * Encerradas sem entrega (0031): saíram de circulação e não voltam para a
+ * fila. Espelha `nf_pode_encerrar()` no banco pelo complemento.
+ */
+export const NF_STATUS_ENCERRADAS: NotaStatus[] = ["substituida", "cancelada"];
+
 export const NF_STATUS_ABERTOS: NotaStatus[] = [
   "pendente",
   "em_rota",
@@ -100,6 +108,11 @@ export const NOTA_STATUS_META: Record<
   // Entregue, mas com pendência administrativa aberta (migration 0030) —
   // canhoto retido ou nota de devolução. Não é "a fazer" nem "concluída".
   pendencia: { label: "Pendência", tone: "warning" },
+  // Refaturamento (0031): saiu de circulação, veio outra no lugar. O motorista
+  // ESPERA a nova aparecer — por isso não é a mesma coisa que cancelada.
+  substituida: { label: "Substituída", tone: "neutral" },
+  // Pedido caiu: não há entrega nem nota nova.
+  cancelada: { label: "Cancelada", tone: "neutral" },
 };
 
 // Ordem importa: é a ordem dos botões na tela do motorista. Os dois primeiros

@@ -55,6 +55,8 @@ const TONE_VAR: Record<NotaStatus, string> = {
   recusada: "--color-danger",
   ocorrencia: "--color-warning",
   pendencia: "--color-warning",
+  substituida: "--color-gray-600",
+  cancelada: "--color-gray-600",
 };
 
 // Componente só é montado no browser (dynamic import com ssr:false nos dois
