@@ -83,6 +83,23 @@ export async function getHistoricoRomaneios(): Promise<RomaneioHistorico[]> {
   });
 }
 
+export async function getAjudanteDoRomaneio(
+  romaneioId: string,
+): Promise<{ ajudante_nome: string | null; status: RomaneioStatus } | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("romaneios")
+    .select("ajudante_nome,status")
+    .eq("id", romaneioId)
+    .maybeSingle();
+  if (error) console.error("[getAjudanteDoRomaneio] query falhou:", error.message);
+  if (!data) return null;
+  return {
+    ajudante_nome: (data.ajudante_nome as string) ?? null,
+    status: data.status as RomaneioStatus,
+  };
+}
+
 const NF_COLS =
   "id,numero_nf,destinatario_nome,destinatario_endereco,cidade,status,lat,lng";
 

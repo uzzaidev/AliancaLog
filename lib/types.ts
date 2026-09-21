@@ -160,6 +160,9 @@ export type ComprovanteDetalhe = {
     tipo: OcorrenciaTipo;
     descricao: string | null;
     criado_em: string;
+    /** Preenchidos quando a gerência resolve a pendência (0029). */
+    resolvida_em: string | null;
+    resolucao: string | null;
   }[];
   // Uma NF pode ter mais de uma tentativa de entrega (A-007: recusada/ocorrência
   // volta pro painel para nova tentativa) — histórico completo, em ordem.

@@ -32,7 +32,7 @@ export async function getComprovante(
 
   const { data: ocorrencias, error: erroGetComprovante } = await supabase
     .from("ocorrencias")
-    .select("tipo,descricao,created_at")
+    .select("tipo,descricao,created_at,resolvida_em,resolucao")
     .eq("nota_fiscal_id", nfId)
     .order("created_at", { ascending: true });
   // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
@@ -116,6 +116,8 @@ export async function getComprovante(
       tipo: o.tipo as OcorrenciaTipo,
       descricao: (o.descricao as string) ?? null,
       criado_em: o.created_at as string,
+      resolvida_em: (o.resolvida_em as string) ?? null,
+      resolucao: (o.resolucao as string) ?? null,
     })),
     tentativas,
   };

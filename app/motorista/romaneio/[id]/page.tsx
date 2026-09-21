@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { IconChevronLeft } from "@tabler/icons-react";
 import { RomaneioView } from "@/components/motorista/romaneio-view";
-import { getNotasDoRomaneio } from "@/lib/data/motorista";
+import { AjudanteButton } from "@/components/motorista/ajudante-button";
+import { getAjudanteDoRomaneio, getNotasDoRomaneio } from "@/lib/data/motorista";
 
 export default async function RomaneioPage({
   params,
@@ -9,7 +10,10 @@ export default async function RomaneioPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const notas = await getNotasDoRomaneio(id);
+  const [notas, romaneio] = await Promise.all([
+    getNotasDoRomaneio(id),
+    getAjudanteDoRomaneio(id),
+  ]);
 
   return (
     <div className="space-y-4">
@@ -22,6 +26,16 @@ export default async function RomaneioPage({
           <IconChevronLeft size={16} /> Voltar
         </Link>
       </div>
+      {romaneio &&
+        (romaneio.status === "fechado" ? (
+          romaneio.ajudante_nome && (
+            <p className="text-sm text-muted">
+              Ajudante: <span className="font-medium text-ink">{romaneio.ajudante_nome}</span>
+            </p>
+          )
+        ) : (
+          <AjudanteButton romaneioId={id} ajudanteAtual={romaneio.ajudante_nome} />
+        ))}
       <RomaneioView notas={notas} romaneioId={id} />
     </div>
   );

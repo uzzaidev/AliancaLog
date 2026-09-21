@@ -20,7 +20,12 @@ export type NotaCliente = {
    * no detalhe expandido — porque o cliente precisa enxergar O QUE aconteceu sem
    * abrir NF por NF: um selo "Ocorrência" sozinho obriga a caçar a informação.
    */
-  ocorrencia: { tipo: OcorrenciaTipo; descricao: string | null } | null;
+  ocorrencia: {
+    tipo: OcorrenciaTipo;
+    descricao: string | null;
+    /** Quando a gerência resolveu (null = ainda aberta). */
+    resolvida_em: string | null;
+  } | null;
 };
 
 export type ClienteFiltro = {
@@ -42,7 +47,7 @@ export async function getNotasCliente(f: ClienteFiltro): Promise<NotaCliente[]> 
   let q = supabase
     .from("notas_fiscais")
     .select(
-      "id,numero_nf,status,destinatario_nome,cidade,data_entrega,updated_at,ocorrencias(tipo,descricao,created_at)",
+      "id,numero_nf,status,destinatario_nome,cidade,data_entrega,updated_at,ocorrencias(tipo,descricao,created_at,resolvida_em)",
     )
     .order("updated_at", { ascending: false })
     .limit(200);
@@ -65,6 +70,7 @@ export async function getNotasCliente(f: ClienteFiltro): Promise<NotaCliente[]> 
       tipo: OcorrenciaTipo;
       descricao: string | null;
       created_at: string;
+      resolvida_em: string | null;
     }[];
     const ultima = [...todas].sort((a, b) =>
       b.created_at.localeCompare(a.created_at),
@@ -78,7 +84,11 @@ export async function getNotasCliente(f: ClienteFiltro): Promise<NotaCliente[]> 
       data_entrega: r.data_entrega as string,
       updated_at: r.updated_at as string,
       ocorrencia: ultima
-        ? { tipo: ultima.tipo, descricao: ultima.descricao }
+        ? {
+            tipo: ultima.tipo,
+            descricao: ultima.descricao,
+            resolvida_em: ultima.resolvida_em ?? null,
+          }
         : null,
     };
   });

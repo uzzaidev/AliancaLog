@@ -79,6 +79,17 @@ function montarTimeline(c: ComprovanteDetalhe): TimelineStep[] {
       label: `${OCORRENCIA_LABEL[o.tipo]}${o.descricao ? ` — ${o.descricao}` : ""}`,
       tone: "danger" as const,
     })),
+    ...c.ocorrencias.flatMap((o) =>
+      o.resolvida_em
+        ? [
+            {
+              quando: o.resolvida_em,
+              label: `${OCORRENCIA_LABEL[o.tipo]} resolvida${o.resolucao ? ` — ${o.resolucao}` : ""}`,
+              tone: "done" as const,
+            },
+          ]
+        : [],
+    ),
     ...c.tentativas.map((t) => {
       const meta = TENTATIVA_META[t.status] ?? { label: "Canhoto registrado", tone: "done" as const };
       return { quando: t.registrado_em, label: meta.label, tone: meta.tone };
@@ -158,14 +169,30 @@ export function NotasListCliente({ notas }: { notas: NotaCliente[] }) {
                     status: o cliente via "ocorrência" e precisava abrir NF por NF
                     para descobrir o motivo. */}
                 {nf.ocorrencia && (
-                  <div className="mt-1 flex items-start gap-1 text-xs font-medium text-danger">
-                    <IconAlertTriangle size={13} className="mt-0.5 shrink-0" />
+                  <div
+                    className={`mt-1 flex items-start gap-1 text-xs font-medium ${
+                      nf.ocorrencia.resolvida_em ? "text-success" : "text-danger"
+                    }`}
+                  >
+                    {nf.ocorrencia.resolvida_em ? (
+                      <IconCircleCheck size={13} className="mt-0.5 shrink-0" />
+                    ) : (
+                      <IconAlertTriangle size={13} className="mt-0.5 shrink-0" />
+                    )}
                     <span className="min-w-0">
                       {OCORRENCIA_LABEL[nf.ocorrencia.tipo]}
                       {nf.ocorrencia.descricao && (
                         <span className="font-normal text-gray-600">
                           {" "}
                           — {nf.ocorrencia.descricao}
+                        </span>
+                      )}
+                      {nf.ocorrencia.resolvida_em && (
+                        <span className="block">
+                          {nf.status === "aceita"
+                            ? "Resolvida e nota aceita em "
+                            : "Resolvida em "}
+                          {dataHora(nf.ocorrencia.resolvida_em)}
                         </span>
                       )}
                     </span>

@@ -65,6 +65,16 @@ export function ComprovanteModal({
           quando: o.criado_em,
           texto: `${OCORRENCIA_LABEL[o.tipo]}${o.descricao ? ` — ${o.descricao}` : ""}`,
         })),
+        ...dados.ocorrencias.flatMap((o) =>
+          o.resolvida_em
+            ? [
+                {
+                  quando: o.resolvida_em,
+                  texto: `${OCORRENCIA_LABEL[o.tipo]} resolvida${o.resolucao ? ` — ${o.resolucao}` : ""}`,
+                },
+              ]
+            : [],
+        ),
         ...dados.tentativas.map((t, i) => ({
           quando: t.registrado_em,
           texto:
