@@ -152,6 +152,7 @@ async function importarMotoristas(caminhoArquivo) {
     const email = reg.email;
     const senha = reg.senha || SENHA_PADRAO_MOTORISTA;
     const telefone = reg.telefone || null;
+    const cpf = reg.cpf || null;
     const placa = reg.placa ? reg.placa.toUpperCase().trim() : null;
     const tipoVeiculo = reg.tipo_veiculo || null;
 
@@ -187,6 +188,7 @@ async function importarMotoristas(caminhoArquivo) {
         {
           id: userId,
           telefone,
+          cpf,
           veiculo_id: veiculoId,
         },
         { onConflict: "id" },

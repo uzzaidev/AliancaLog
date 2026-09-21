@@ -19,6 +19,8 @@ export type RomaneioMotorista = {
   confirmado_em: string | null;
   total: number;
   concluidas: number;
+  /** Ajudante do dia (migration 0032) — texto livre, sem cadastro. */
+  ajudante_nome: string | null;
 };
 
 // "Minhas entregas" reúne o trabalho em aberto (mesmo de dias anteriores) e os
@@ -28,7 +30,7 @@ export async function getRomaneiosDoDia(): Promise<RomaneioMotorista[]> {
   const supabase = await createClient();
   const { data, error: erro } = await supabase
     .from("romaneios")
-    .select("id,status,confirmado_em,created_at,notas_fiscais(status)")
+    .select("id,status,confirmado_em,created_at,ajudante_nome,notas_fiscais(status)")
     .or(`status.eq.ativo,and(status.eq.fechado,data.eq.${hoje()})`)
     .order("created_at", { ascending: true });
   // Lista vazia e erro de query sao indistinguiveis na tela — por isso o erro
@@ -43,6 +45,7 @@ export async function getRomaneiosDoDia(): Promise<RomaneioMotorista[]> {
       confirmado_em: (r.confirmado_em as string) ?? null,
       total: nfs.length,
       concluidas: nfs.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length,
+      ajudante_nome: (r.ajudante_nome as string) ?? null,
     };
   });
 }
@@ -58,7 +61,7 @@ export async function getHistoricoRomaneios(): Promise<RomaneioHistorico[]> {
   const supabase = await createClient();
   const { data, error: erro } = await supabase
     .from("romaneios")
-    .select("id,status,confirmado_em,data,notas_fiscais(status)")
+    .select("id,status,confirmado_em,data,ajudante_nome,notas_fiscais(status)")
     .neq("data", hoje())
     .order("data", { ascending: false })
     .limit(HISTORICO_LIMITE);
@@ -75,6 +78,7 @@ export async function getHistoricoRomaneios(): Promise<RomaneioHistorico[]> {
       data: r.data as string,
       total: nfs.length,
       concluidas: nfs.filter((n) => NF_STATUS_FINAIS.includes(n.status)).length,
+      ajudante_nome: (r.ajudante_nome as string) ?? null,
     };
   });
 }

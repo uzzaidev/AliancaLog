@@ -47,6 +47,11 @@ next-env.d.ts
 # database backups (podem conter dados sensíveis — nunca versionar)
 /backups
 
+# dados reais de cadastro (CPF/CNPJ + senha em texto puro) — nunca versionar.
+# Os .template.csv continuam versionados (são só exemplo, sem dado real).
+/scripts/dados/*.csv
+!/scripts/dados/*.template.csv
+
 # material de estudo pessoal — não faz parte do produto
 /material_estudo
 /material_estudo.zip

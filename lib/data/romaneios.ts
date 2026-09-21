@@ -41,6 +41,8 @@ export type RomaneioDetalhe = {
   status: RomaneioStatus;
   motorista_nome: string | null;
   confirmado_em: string | null;
+  /** Ajudante do dia (migration 0032) — texto livre, registrado pelo motorista. */
+  ajudante_nome: string | null;
   notas: {
     id: string;
     numero_nf: string;
@@ -55,7 +57,7 @@ export async function getRomaneio(id: string): Promise<RomaneioDetalhe | null> {
   const { data, error: erro } = await supabase
     .from("romaneios")
     .select(
-      "id,data,status,confirmado_em,motoristas(usuarios(nome)),notas_fiscais(id,numero_nf,status,destinatario_nome,empresas_clientes(nome))",
+      "id,data,status,confirmado_em,ajudante_nome,motoristas(usuarios(nome)),notas_fiscais(id,numero_nf,status,destinatario_nome,empresas_clientes(nome))",
     )
     .eq("id", id)
     .maybeSingle();
@@ -74,6 +76,7 @@ export async function getRomaneio(id: string): Promise<RomaneioDetalhe | null> {
     status: r.status as RomaneioStatus,
     confirmado_em: (r.confirmado_em as string) ?? null,
     motorista_nome: mot?.usuarios?.nome ?? null,
+    ajudante_nome: (r.ajudante_nome as string) ?? null,
     notas: nfs.map((n) => {
       const emp = n.empresas_clientes as { nome?: string } | null;
       return {

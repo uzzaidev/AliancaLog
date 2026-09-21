@@ -5,6 +5,7 @@ import Link from "next/link";
 import { IconBarcode, IconChevronRight, IconRoute } from "@tabler/icons-react";
 import { Badge, Button, Card } from "@/components/ui";
 import { Progress } from "@/components/ui/progress";
+import { AjudanteButton } from "@/components/motorista/ajudante-button";
 import { ConfirmarButton } from "@/components/motorista/confirmar-button";
 import type { RomaneioMotorista } from "@/lib/data/motorista";
 import { obterRomaneiosCache, salvarRomaneiosCache } from "@/lib/offline/cache";
@@ -93,6 +94,17 @@ export function EntregasView({
             {r.confirmado_em || fechado ? (
               <>
                 <Progress done={r.concluidas} total={r.total} />
+                {/* Só edita enquanto o romaneio está ativo — fechado é RLS
+                    read-only (0025), o botão vira só leitura do que foi salvo. */}
+                {fechado ? (
+                  r.ajudante_nome && (
+                    <p className="text-sm text-muted">
+                      Ajudante: <span className="font-medium text-ink">{r.ajudante_nome}</span>
+                    </p>
+                  )
+                ) : (
+                  <AjudanteButton romaneioId={r.id} ajudanteAtual={r.ajudante_nome} />
+                )}
                 <Link href={`/motorista/romaneio/${r.id}`} className="block">
                   <Button
                     variant={fechado ? "secondary" : "primary"}

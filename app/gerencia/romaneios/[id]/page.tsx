@@ -36,6 +36,11 @@ export default async function RomaneioDetalhe({
           <p className="text-sm text-muted">
             {new Date(romaneio.data + "T00:00:00").toLocaleDateString("pt-BR")}
           </p>
+          {romaneio.ajudante_nome && (
+            <p className="mt-0.5 text-sm text-muted">
+              Ajudante: <span className="font-medium text-ink">{romaneio.ajudante_nome}</span>
+            </p>
+          )}
         </div>
         <Badge tone={STATUS[romaneio.status].tone}>
           {STATUS[romaneio.status].label}

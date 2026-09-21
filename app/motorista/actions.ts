@@ -22,6 +22,30 @@ export async function confirmarRomaneio(romaneioId: string) {
   return { ok: true };
 }
 
+// Ajudante do dia (migration 0032): texto livre, sem cadastro — o motorista
+// registra quem foi com ele no romaneio. Nenhuma RPC: a policy mot_romaneios_update
+// (0025) já cobre a linha inteira do romaneio, contanto que seja do próprio
+// motorista e ainda não esteja fechado — validado por teste antes desta action.
+export async function definirAjudante(romaneioId: string, nome: string) {
+  await requireRole("motorista");
+  const supabase = await createClient();
+
+  const limpo = nome.trim();
+  const { error, data } = await supabase
+    .from("romaneios")
+    .update({ ajudante_nome: limpo || null })
+    .eq("id", romaneioId)
+    .select("id");
+  if (error) return { error: `Não consegui salvar: ${error.message}` };
+  // RLS derruba silenciosamente updates fora do alcance (romaneio de outro
+  // motorista, ou já fechado) — 0 linhas é o sinal disso, não um erro do Postgres.
+  if (!data || data.length === 0)
+    return { error: "Esse romaneio não pode mais ser editado." };
+
+  revalidatePath("/motorista/entregas");
+  return { ok: true, ajudante: limpo || null };
+}
+
 // Motorista bipa o DANFE de uma nota que está na mão dele e a assume — sem
 // depender da gerência atribuir (migration 0026). Toda a regra mora na RPC
 // `assumir_nf_motorista`, porque a RLS do motorista não enxerga NF de terceiro.
