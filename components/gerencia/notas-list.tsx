@@ -308,6 +308,7 @@ export function NotasList({
             <tbody>
               {filtradas.map((nf) => {
                 const aberto = expandida === nf.id;
+                const encerrada = NF_STATUS_ENCERRADAS.includes(nf.status);
                 return (
                   <Fragment key={nf.id}>
                     <tr
@@ -316,7 +317,7 @@ export function NotasList({
                         aberto
                           ? "bg-brand-100"
                           : "hover:bg-brand-50"
-                      }`}
+                      } ${encerrada ? "opacity-60" : ""}`}
                     >
                       <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -332,7 +333,14 @@ export function NotasList({
                           idsDuplicados.has(nf.id) ? "text-warning" : ""
                         }`}
                       >
-                        {nf.numero_nf}
+                        <span className={encerrada ? "line-through" : ""}>
+                          {nf.numero_nf}
+                        </span>
+                        {nf.substituida_por_numero && (
+                          <span className="ml-1.5 text-xs font-medium text-info">
+                            → NF {nf.substituida_por_numero}
+                          </span>
+                        )}
                         {idsDuplicados.has(nf.id) && (
                           <IconCopy
                             size={12}
@@ -342,7 +350,9 @@ export function NotasList({
                         )}
                       </td>
                       <td className="px-3 py-2.5">
-                        <div className="font-medium text-ink">
+                        <div
+                          className={`font-medium text-ink ${encerrada ? "line-through" : ""}`}
+                        >
                           {nf.destinatario_nome}
                           {nf.empresa_nome && (
                             <span className="ml-1.5 rounded bg-info-50 px-1.5 py-0.5 text-[10px] font-medium text-info">
